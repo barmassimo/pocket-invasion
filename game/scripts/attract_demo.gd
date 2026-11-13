@@ -8,7 +8,6 @@ const Art = preload("res://scripts/target_art.gd")
 const LESSON_SECONDS: float = 9.0
 const LOOP_SECONDS: float = LESSON_SECONDS * 3.0
 var clock: float = 0.0
-var defeated: bool = false
 var font := SystemFont.new()
 
 
@@ -54,8 +53,7 @@ func _draw() -> void:
 	var time: float = fposmod(clock, LESSON_SECONDS)
 	# Hold the result completely still for the last three seconds of each lesson.
 	var action: float = minf(time, 6.0)
-	text_at(0, "FLEET LOST" if defeated else "HOW TO PLAY", 20)
-	text_at(27, "HOW TO PLAY / DEMO" if defeated else "SILENT DEMONSTRATION", 12)
+	text_at(0, "HOW TO PLAY", 20)
 	draw_line(Vector2(0, 48), Vector2(280, 48), INK)
 	text_at(80, ["01 / BUILD YOUR FLEET", "02 / EARN POINTS", "03 / WATCH YOUR HULL"][lesson], 16)
 	draw_rect(Rect2(10, 104, 260, 350), INK, false)
@@ -73,11 +71,12 @@ func _draw() -> void:
 			text_at(512 + i * 25, lines[i], 16)
 	else:
 		text_at(519, "WATCH AND LEARN", 16)
-		text_at(546, "FIRE IS AUTOMATIC" if lesson < 2 else "MOVE WITH WASD / ARROWS", 14)
+		text_at(546, "FIRE IS AUTOMATIC" if lesson < 2 else "MOVE [W][A][S][D] / [ARROWS]", 14)
 	for i: int in range(3):
 		draw_circle(Vector2(122 + i * 18, 602), 4, INK if i == lesson else Color("98a580"))
-	text_at(648, "PRESS ENTER TO PLAY", 18)
-	text_at(679, "P PAUSE    ENTER RESTART    M SOUND", 12)
+	text_at(648, "PRESS [ENTER] TO PLAY", 18)
+	text_at(677, "[P] PAUSE    [M] MUTE", 12)
+	text_at(699, "[ENTER] RESTART", 12)
 
 func draw_shooting(time: float, kind: int) -> void:
 	var impact: Vector2 = Vector2(140, 213)

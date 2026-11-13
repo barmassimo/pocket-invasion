@@ -24,7 +24,6 @@ var wave: int = 0
 var score: int = 0
 var running: bool = false
 var started: bool = false
-var audio_status: Label
 var message: Label
 var toast: Label
 var toast_clock: float = 0.0
@@ -145,18 +144,18 @@ func build_ui() -> void:
 	add_child(layer)
 	lcd = Display.new() as LcdDisplay
 	layer.add_child(lcd)
-	audio_status = label_at(Vector2(46, 650), 15, Color("ffc477"))
-	layer.add_child(audio_status)
+	lcd.volume_changed.connect(set_sound_volume)
+	lcd.mute_requested.connect(toggle_sound_mute)
 	message = label_at(Vector2(380, 310), 22, Color.WHITE)
 	message.size = Vector2(340, 220)
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layer.add_child(message)
-	toast = label_at(Vector2(80, 716), 18, Color("90ffe0"))
+	toast = label_at(Vector2(80, 510), 18, Color("90ffe0"))
 	toast.size.x = 245
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layer.add_child(toast)
 	toast_icon = TextureRect.new()
-	toast_icon.position = Vector2(46, 716)
+	toast_icon.position = Vector2(46, 510)
 	toast_icon.size = Vector2(28, 28)
 	toast_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	toast_icon.modulate = Color("253820")
@@ -198,7 +197,6 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	started = play
 	defeat_hold_remaining = 0.0
 	lcd.set_playing(play)
-	lcd.demo.defeated = false
 	message.visible = play
 	message.text = "" if play else "POCKET INVASION\n\nREADY"
 	update_hud()
@@ -243,8 +241,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 		reset_run()
 	elif event.keycode == KEY_M:
-		sound.toggle_mute()
-		update_hud()
+		toggle_sound_mute()
+	elif event.keycode == KEY_F11 or event.keycode == KEY_F:
+		var mode: DisplayServer.WindowMode = DisplayServer.window_get_mode()
+		var fullscreen: bool = mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)
 	elif event.keycode == KEY_P and started and not squad.is_empty():
 		running = not running
 		lcd.set_playing(true)
@@ -404,13 +405,22 @@ func finish() -> void:
 	running = false
 	defeat_hold_remaining = DEFEAT_HOLD_SECONDS
 	lcd.set_playing(true)
-	lcd.demo.defeated = true
 	message.visible = true
 	sound.play_effect("defeat")
-	message.text = "FLEET LOST\n\nPRESS ENTER TO PLAY"
+	message.text = "FLEET LOST\n\nPRESS [ENTER] TO PLAY"
 
 func update_hud() -> void:
 	lcd.update_status(squad.size(), score, elapsed)
-	audio_status.text = "MODE  ENDLESS\nSOUND %s" % ("OFF" if sound.muted else "ON")
+	lcd.muted = sound.muted or sound.volume_percent <= 0.0
+
+func set_sound_volume(percent: float) -> void:
+	sound.set_volume(percent)
+	if percent > 0.0:
+		sound.muted = false
+	update_hud()
+
+func toggle_sound_mute() -> void:
+	sound.toggle_mute()
+	update_hud()
 
 

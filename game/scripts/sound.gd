@@ -2,8 +2,11 @@ class_name ArcadeSound
 extends Node
 
 const SAMPLE_RATE: int = 22050
+# At half travel, effects are about 3.5 dB above the original mix.
+const VOLUME_GAIN_DB: float = 9.5
 var players: Dictionary[String, AudioStreamPlayer] = {}
 var muted: bool = false
+var volume_percent: float = 50.0
 var hit_clock: float = 0.0
 
 func _ready() -> void:
@@ -40,7 +43,8 @@ func create_effect(id: String, notes: Array[float], duration: float, noise_mix: 
 	stream.data = data
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
-	player.volume_db = volume
+	player.set_meta("base_volume_db", volume)
+	player.volume_db = volume + VOLUME_GAIN_DB + linear_to_db(volume_percent / 100.0)
 	player.max_polyphony = 3
 	add_child(player)
 	players[id] = player
@@ -49,7 +53,7 @@ func tick(delta: float) -> void:
 	hit_clock = maxf(0.0, hit_clock - delta)
 
 func play_effect(id: String) -> void:
-	if muted:
+	if muted or volume_percent <= 0.0:
 		return
 	if id == "hit":
 		if hit_clock > 0.0:
@@ -65,4 +69,11 @@ func stop_all() -> void:
 func toggle_mute() -> void:
 	muted = not muted
 	if muted:
+		stop_all()
+
+func set_volume(percent: float) -> void:
+	volume_percent = clampf(percent, 0.0, 100.0)
+	for player: AudioStreamPlayer in players.values():
+		player.volume_db = float(player.get_meta("base_volume_db")) + VOLUME_GAIN_DB + linear_to_db(maxf(volume_percent / 100.0, 0.0001))
+	if volume_percent <= 0.0:
 		stop_all()

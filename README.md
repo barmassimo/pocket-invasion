@@ -39,8 +39,10 @@ The bootstrap also verifies both extracted executables. An existing mismatched o
 - W / A / S / D or all four arrow keys: move up, left, down and right.
 - Normal fire is automatic while the run is active; no Ctrl input is needed.
 - P: pause or resume.
+- F11 or F: toggle fullscreen, preserving the game's aspect ratio.
 - Enter: immediately start a fresh run, including after defeat.
-- M: mute or unmute sound effects. Mute is kept when restarting the run.
+- M: mute or unmute sound effects (M=MUTE). The speaker icon shows a cross when muted. Mute is kept when restarting the run.
+- Drag the horizontal slider beside the speaker to adjust effects volume (0–100%, initially 50%). Raising it unmutes audio; volume and mute survive a run restart. The default effects level is about 3.5 dB louder than the original mix.
 
 Start with four ships and a fixed capacity of 48 for the entire run. Reinforcement rewards fill the fleet up to this cap. The LCD displays the current ship count and capacity. Restarting restores four ships.
 

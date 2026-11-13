@@ -1,6 +1,9 @@
 class_name LcdDisplay
 extends Control
 
+signal volume_changed(percent: float)
+signal mute_requested
+
 const Rules = preload("res://scripts/invasion_rules.gd")
 const Demo = preload("res://scripts/attract_demo.gd")
 const WINDOW_WIDTH: int = 775
@@ -12,6 +15,8 @@ var demo: AttractDemo
 var soldiers: int = 4
 var score: int = 0
 var seconds: int = 0
+var muted: bool = false
+var volume_slider: HSlider
 var lcd_font := SystemFont.new()
 
 func _ready() -> void:
@@ -22,6 +27,40 @@ func _ready() -> void:
 	demo = Demo.new() as AttractDemo
 	demo.position = Vector2(PLAYFIELD_CENTER_X - 140, 65)
 	add_child(demo)
+	volume_slider = HSlider.new()
+	volume_slider.position = Vector2(87, 742)
+	volume_slider.size = Vector2(190, 28)
+	volume_slider.min_value = 0
+	volume_slider.max_value = 100
+	volume_slider.step = 1
+	volume_slider.value = 50
+	volume_slider.focus_mode = Control.FOCUS_NONE
+	volume_slider.mouse_filter = Control.MOUSE_FILTER_STOP
+	volume_slider.tooltip_text = "Volume"
+	for style_name: String in ["slider", "grabber_area", "grabber_area_highlight"]:
+		var track := StyleBoxFlat.new()
+		track.bg_color = Color("98a580") if style_name == "slider" else INK
+		track.content_margin_top = 1.5
+		track.content_margin_bottom = 1.5
+		track.corner_radius_top_left = 2
+		track.corner_radius_top_right = 2
+		track.corner_radius_bottom_left = 2
+		track.corner_radius_bottom_right = 2
+		volume_slider.add_theme_stylebox_override(style_name, track)
+	for icon_name: String in ["grabber", "grabber_highlight", "grabber_disabled"]:
+		volume_slider.add_theme_icon_override(icon_name, preload("res://assets/icons/volume_knob.svg"))
+	volume_slider.value_changed.connect(func(value: float) -> void: volume_changed.emit(value))
+	add_child(volume_slider)
+	var speaker_button := Button.new()
+	speaker_button.position = Vector2(40, 740)
+	speaker_button.size = Vector2(40, 30)
+	speaker_button.flat = true
+	speaker_button.focus_mode = Control.FOCUS_NONE
+	speaker_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	for style_name: String in ["normal", "hover", "pressed", "focus"]:
+		speaker_button.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
+	speaker_button.pressed.connect(func() -> void: mute_requested.emit())
+	add_child(speaker_button)
 
 func set_playing(playing: bool) -> void:
 	demo.set_playing(playing)
@@ -61,6 +100,22 @@ func _draw() -> void:
 	caption(Vector2(46, 427), "THREAT LEVEL")
 	segment_text("%02d" % Rules.threat_level(float(seconds)), Vector2(47, 443), 34)
 	draw_line(Vector2(46, 626), Vector2(329, 626), INK)
+	draw_set_transform(Vector2(46, 745.5), 0.0, Vector2(0.75, 0.75))
+	draw_speaker(Vector2.ZERO)
+	draw_set_transform(Vector2.ZERO)
+
+func draw_speaker(at: Vector2) -> void:
+	# A compact filled speaker with sound waves or a mute cross.
+	draw_colored_polygon(PackedVector2Array([
+		at + Vector2(0, 8), at + Vector2(7, 8), at + Vector2(17, 0),
+		at + Vector2(17, 28), at + Vector2(7, 20), at + Vector2(0, 20)
+	]), INK)
+	if muted:
+		draw_line(at + Vector2(23, 8), at + Vector2(35, 20), INK, 3, true)
+		draw_line(at + Vector2(23, 20), at + Vector2(35, 8), INK, 3, true)
+	else:
+		draw_arc(at + Vector2(15, 14), 11, -PI / 3, PI / 3, 16, INK, 2, true)
+		draw_arc(at + Vector2(15, 14), 19, -PI / 3, PI / 3, 24, INK, 2, true)
 
 func segment_text(text: String, at: Vector2, height: float) -> void:
 	var cursor: Vector2 = at
