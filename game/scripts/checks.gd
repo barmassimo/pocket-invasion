@@ -410,7 +410,18 @@ func run() -> void:
 	threat.half = Vector2(0.05, 0.05)
 	game.resolve_contacts()
 	check(game.squad.size() == 3, "Contact removes only touched soldier")
+	check(game.recapture.flashes.size() == 1 and game.particles.is_empty() and threat.hp == 100 and game.score == 0, "Alien contact shows recapture without explosion, damage or rewards")
 	check(game.squad[0].position.x > -1.45, "Formation compacts after casualty")
+	game.recapture.advance(0.3)
+	check(game.recapture.flashes.is_empty(), "Recapture beam expires after its brief visual lifetime")
+	game.reset_run(true, 123)
+	for i: int in range(4 - Rules.START_SOLDIERS):
+		game.add_soldier()
+	game.arrange()
+	var egg: CourseTarget = game.spawn_target(game.squad[0].position.x, game.squad[0].position.z, 0, 100, 1)
+	egg.half = Vector2(0.05, 0.05)
+	game.resolve_contacts()
+	check(game.squad.size() == 3 and game.recapture.flashes.is_empty() and game.particles.size() == 8 and egg.hp == 100 and game.score == 0, "Egg contact keeps the micro-explosion and identical contact losses without rewards")
 	game.reset_run(true, 123)
 	for i: int in range(4 - Rules.START_SOLDIERS):
 		game.add_soldier()
@@ -424,7 +435,12 @@ func run() -> void:
 	game.spawn_target(0, 5, 1, 100, 20).half.x = 6
 	game._physics_process(0.016)
 	check(game.squad.is_empty() and not game.running and game.message.text.begins_with("FLEET LOST"), "Zero ships ends run")
+	check(not game.recapture.flashes.is_empty(), "Last ship loss still starts the recapture beam")
+	game._physics_process(0.3)
+	check(game.recapture.flashes.is_empty(), "Last ship recapture finishes during the defeat hold")
+	game.recapture.play(Vector3.ZERO, game.targets[0], Vector2.ONE)
 	game.reset_run()
+	check(game.recapture.flashes.is_empty(), "Restart clears pending recapture visuals")
 	check(game.squad.size() == Rules.START_SOLDIERS and game.targets.is_empty() and game.bullets.is_empty() and game.particles.is_empty() and game.score == 0 and game.elapsed == 0 and game.wave == 0 and game.running and game.player_z == Main.PLAYER_Z and game.ship_previous.is_empty() and game.bullet_batch.multimesh.visible_instance_count == 0 and game.soldier_batches[0].multimesh.visible_instance_count == 1, "Restart clears run state, flight position, movement history and rendered instances")
 	game.elapsed = 59.99
 	game._physics_process(0.016)

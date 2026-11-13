@@ -3,6 +3,8 @@ extends RefCounted
 # Original 24-bar handheld loop: three phrases with a busier bass and chip drums.
 const SAMPLE_RATE: int = 22050
 const BPM: float = 132.0
+const MELODY_GAIN: float = 0.195
+const BASS_GAIN: float = 0.32
 const MELODY: Array[int] = [
 	76, 0, 79, 0, 83, 79, 0, 74,
 	76, 0, 79, 83, 81, 0, 79, 0,
@@ -58,10 +60,10 @@ static func build() -> AudioStreamWAV:
 			var lead_env: float = minf(t / 0.006, 1.0) * clampf((step_seconds * 0.78 - t) / 0.035, 0.0, 1.0)
 			var phase: float = TAU * lead_hz * t
 			# A few pulse harmonics retain the chip character without harsh aliasing.
-			var lead: float = (sin(phase) + sin(phase * 3.0) / 3.0 + sin(phase * 5.0) / 5.0) * 0.22 * lead_env if MELODY[step] > 0 else 0.0
+			var lead: float = (sin(phase) + sin(phase * 3.0) / 3.0 + sin(phase * 5.0) / 5.0) * MELODY_GAIN * lead_env if MELODY[step] > 0 else 0.0
 			var bass_env: float = minf(t / 0.008, 1.0) * clampf((step_seconds * 0.80 - t) / 0.035, 0.0, 1.0)
 			var triangle: float = 1.0 - 4.0 * absf(fposmod(bass_hz * t, 1.0) - 0.5)
-			var bass: float = triangle * 0.29 * bass_env
+			var bass: float = triangle * BASS_GAIN * bass_env
 			var hat_env: float = minf(t / 0.002, 1.0) * pow(maxf(0.0, 1.0 - t / 0.035), 2.0)
 			var hat: float = rng.randf_range(-1.0, 1.0) * hat_env * (0.07 if step % 2 else 0.035)
 			var drum: float = 0.0

@@ -5,6 +5,7 @@ extends Control
 const INK := Color("253820")
 const PAPER := Color("c4cca5")
 const Art = preload("res://scripts/target_art.gd")
+const Recapture = preload("res://scripts/recapture_flash.gd")
 const LESSON_SECONDS: float = 9.0
 const LOOP_SECONDS: float = LESSON_SECONDS * 3.0
 var clock: float = 0.0
@@ -108,8 +109,8 @@ func draw_contact(time: float) -> void:
 		target(Vector2(104, y), 5, 1)
 	if time < 3.0:
 		ship(Vector2(104 + dodge, 407))
-	elif time < 3.8:
-		explosion(Vector2(104 + dodge, 407), (time - 3.0) / 0.8)
+	elif time < 3.0 + Recapture.DURATION:
+		Recapture.paint(self, Vector2(104, y), Vector2(104 + dodge, 407), Vector2(34, 46), (time - 3.0) / Recapture.DURATION)
 	ship(Vector2(140 + dodge, 407))
 	if time >= 4.4:
 		text_at(265, "1 SHIP LOST", 20)

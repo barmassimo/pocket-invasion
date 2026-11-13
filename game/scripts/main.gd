@@ -6,6 +6,7 @@ const Sound = preload("res://scripts/sound.gd")
 const Encounters = preload("res://scripts/encounters.gd")
 const Motion = preload("res://scripts/target_motion.gd")
 const Display = preload("res://scripts/lcd_display.gd")
+const Recapture = preload("res://scripts/recapture_flash.gd")
 const PLAYER_Z: float = 5.0
 const DEFEAT_HOLD_SECONDS: float = 10.0
 var defeat_hold_remaining: float = 0.0
@@ -34,6 +35,7 @@ var sound: ArcadeSound
 var encounters: CourseEncounters = Encounters.new() as CourseEncounters
 var debug_seed: int = -1
 var lcd: LcdDisplay
+var recapture: RecaptureFlash
 var bullet_batch: MultiMeshInstance3D
 var soldier_batches: Array[MultiMeshInstance3D] = []
 var bullet_mesh: BoxMesh
@@ -147,6 +149,9 @@ func build_ui() -> void:
 	layer.add_child(lcd)
 	lcd.volume_changed.connect(set_sound_volume)
 	lcd.mute_requested.connect(toggle_sound_mute)
+	recapture = Recapture.new() as RecaptureFlash
+	recapture.camera = camera
+	layer.add_child(recapture)
 	message = label_at(Vector2(380, 310), 22, Color.WHITE)
 	message.size = Vector2(340, 220)
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -175,6 +180,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	if play:
 		print("RUN_SEED=", encounters.run_seed)
 	sound.stop_all()
+	recapture.clear()
 	for collection: Array in [squad, targets, bullets, particles]:
 		for item: Node in collection:
 			item.free()
@@ -264,6 +270,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		message.text = "PAUSED" if not running else ""
 
 func _physics_process(delta: float) -> void:
+	# Finish the brief cosmetic beam even when the last ship was just lost.
+	# Pause still freezes it; restart clears it with the rest of the presentation.
+	if running or defeat_hold_remaining > 0.0:
+		recapture.advance(delta)
 	if not running:
 		if defeat_hold_remaining > 0.0:
 			defeat_hold_remaining = maxf(0.0, defeat_hold_remaining - delta)
@@ -394,6 +404,7 @@ func destroy_target(target: CourseTarget) -> void:
 func resolve_contacts() -> void:
 	# Collect all touched soldiers before compacting the formation.
 	var casualties: Array[Node3D] = []
+	var captors: Dictionary[Node3D, CourseTarget] = {}
 	for soldier: Node3D in squad:
 		for target: CourseTarget in targets:
 			var before: Vector3 = ship_previous.get(soldier, soldier.position)
@@ -401,9 +412,14 @@ func resolve_contacts() -> void:
 			var relative_to := Vector3(soldier.position.x - target.position.x, 0, soldier.position.z - target.position.z)
 			if Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half, 0.20) != INF:
 				casualties.append(soldier)
+				captors[soldier] = target
 				break
+	var icon_scale := Vector2(0.70, 0.43) if squad.size() > 24 else Vector2.ONE
 	for soldier: Node3D in casualties:
-		burst(soldier.position)
+		if captors[soldier].kind == 0:
+			burst(soldier.position)
+		else:
+			recapture.play(soldier.position, captors[soldier], icon_scale)
 		squad.erase(soldier)
 		ship_previous.erase(soldier)
 		soldier.free()
