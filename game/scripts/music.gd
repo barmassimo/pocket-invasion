@@ -61,7 +61,7 @@ static func build() -> AudioStreamWAV:
 			var lead: float = (sin(phase) + sin(phase * 3.0) / 3.0 + sin(phase * 5.0) / 5.0) * 0.22 * lead_env if MELODY[step] > 0 else 0.0
 			var bass_env: float = minf(t / 0.008, 1.0) * clampf((step_seconds * 0.80 - t) / 0.035, 0.0, 1.0)
 			var triangle: float = 1.0 - 4.0 * absf(fposmod(bass_hz * t, 1.0) - 0.5)
-			var bass: float = triangle * 0.23 * bass_env
+			var bass: float = triangle * 0.29 * bass_env
 			var hat_env: float = minf(t / 0.002, 1.0) * pow(maxf(0.0, 1.0 - t / 0.035), 2.0)
 			var hat: float = rng.randf_range(-1.0, 1.0) * hat_env * (0.07 if step % 2 else 0.035)
 			var drum: float = 0.0
