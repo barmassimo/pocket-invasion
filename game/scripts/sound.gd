@@ -35,7 +35,11 @@ func update_music() -> void:
 	# Keep the musical position through pause, mute and zero volume.
 	if music_active and not music.playing:
 		music.play()
-	music.stream_paused = not music_active or muted or volume_percent <= 0.0
+	var should_pause: bool = not music_active or muted or volume_percent <= 0.0
+	# Web Sample playback can restart its source on a redundant unpause.
+	# Volume-only changes must leave the playback state and position alone.
+	if music.stream_paused != should_pause:
+		music.stream_paused = should_pause
 
 func create_effect(id: String, notes: Array[float], duration: float, noise_mix: float, volume: float) -> void:
 	var data := PackedByteArray()

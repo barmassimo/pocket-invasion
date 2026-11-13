@@ -33,6 +33,32 @@ Official source: [Godot 4.7.2 release](https://github.com/godotengine/godot-buil
 
 The bootstrap also verifies both extracted executables. An existing mismatched or incomplete environment is rejected without replacement or upgrade.
 
+## Web export (desktop browsers)
+
+The Web build uses this same Godot project and GDScript code. Export using the pinned local engine:
+
+```powershell
+.\scripts\Export-Web.ps1 -Download
+```
+
+The first setup downloads the official standard 4.7.2 export-template archive (about 1.19 GiB), verifies SHA-256 `f298490b8d44d934be425a5a65a51bf15f422428b229a06a6e11d9ffea248011`, and extracts only `web_nothreads_release.zip` and `web_nothreads_debug.zip` into `tools/godot/editor_data/export_templates/4.7.2.stable/`. It records and checks their hashes on reuse, rejecting changed files. The archive stays in `artifacts/`. Source: [official release](https://github.com/godotengine/godot-builds/releases/tag/4.7.2-stable). Subsequent exports work offline with `.\scripts\Export-Web.ps1`.
+
+Output is `artifacts/web/index.html` and its companion files. Serve the entire directory, keeping filenames together. For local testing:
+
+```powershell
+.\scripts\Serve-Web.ps1
+```
+
+Open [the local game](http://127.0.0.1:8060/) in a desktop browser. Stop the server with Ctrl+C. This loopback-only server is for local testing, not production hosting. Opening the HTML directly as a file does not work. Deployment requires static web hosting, preferably HTTPS, with `.wasm` served as `application/wasm`.
+
+Exports include `web.config` for IIS hosting: it maps `.wasm` to `application/wasm` and `.pck` to `application/octet-stream` within the game directory, removing inherited entries for these extensions before adding them to avoid duplicates. Upload it alongside `index.html`; merge the `staticContent` entries if that directory already has its own `web.config`. The host must allow configuration of this section. Other static hosts do not need this file.
+
+The preset uses Compatibility/WebGL 2.0, single-threaded execution, an adaptive canvas and no PWA/service worker. No special COOP/COEP headers are needed. Keyboard controls are shared with Windows; click the canvas if it lacks focus. Browser-reserved keys may behave differently (especially F11/Esc); F is the game's alternative fullscreen key. Audio requires initial user interaction. Mobile/touch controls are not implemented. System fonts fall back to Godot's default font on Web, so text appearance can differ from Windows. Browser performance, audio and cross-browser behavior require testing; native validation does not establish Web compatibility.
+
+The first Web build was verified on 2026-11-13 in the in-app Chromium browser: introduction, Enter to start, automatic shooting, targets/rewards and P to pause were observed, with no console warnings/errors. Audio, fullscreen, movement limits, performance and other browsers remain unverified. Details are in `artifacts/web-verification.md`.
+
+Volume changes only update the music pause state when it actually changes, avoiding redundant unpause calls that can restart Web Sample playback in Godot 4.7.2. The Web build was regenerated after this correction; native checks passed and changing the slider in the browser produced no console warnings/errors. The user confirmed that deployment on IIS works with the included MIME mappings and reported that the audio glitch appears resolved. This is user listening feedback, not an exhaustive load test; Web loop resume after an actual pause/mute remains unverified.
+
 ## Controls and rules
 
 - Enter / Space: start from the introduction, demo or defeat screen. These keys do nothing during play or pause.
@@ -104,7 +130,7 @@ The first sandboxed verification could not create the default user-data director
 
 ## Prototype limits
 
-One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects and an original minimal chiptune loop. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, exports, third-party assets, network features, or services. Rules and tuning are in `game/scripts/invasion_rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
+One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects and an original minimal chiptune loop. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, third-party assets, network features, or services. Web export is available as described above. Rules and tuning are in `game/scripts/invasion_rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
 
 
 
