@@ -17,7 +17,7 @@ func _ready() -> void:
 	font.font_weight = 700
 
 func set_playing(playing: bool) -> void:
-	if visible and playing:
+	if playing:
 		clock = 0.0
 	visible = not playing
 	set_process(not playing)
@@ -28,7 +28,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func text_at(y: float, text: String, size: int = 16) -> void:
-	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 280, size, INK)
+	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 348, size, INK)
 
 func ship(at: Vector2) -> void:
 	draw_texture_rect(LcdIcons.SHIP, Rect2(at - Vector2(17, 23), Vector2(34, 46)), false, INK)
@@ -54,14 +54,16 @@ func _draw() -> void:
 	# Hold the result completely still for the last three seconds of each lesson.
 	var action: float = minf(time, 6.0)
 	text_at(0, "HOW TO PLAY", 20)
-	draw_line(Vector2(0, 48), Vector2(280, 48), INK)
-	text_at(80, ["01 / BUILD YOUR FLEET", "02 / EARN POINTS", "03 / WATCH YOUR HULL"][lesson], 16)
-	draw_rect(Rect2(10, 104, 260, 350), INK, false)
+	draw_line(Vector2(0, 48), Vector2(348, 48), INK)
+	text_at(80, ["02 / BUILD YOUR FLEET", "03 / EARN POINTS", "04 / WATCH YOUR HULL"][lesson], 16)
+	draw_rect(Rect2(10, 104, 328, 350), INK, false)
+	draw_set_transform(Vector2(34, 0))
 	if lesson < 2:
 		draw_shooting(action, lesson)
 	else:
 		draw_contact(action)
-	draw_line(Vector2(0, 480), Vector2(280, 480), INK)
+	draw_set_transform(Vector2.ZERO)
+	draw_line(Vector2(0, 480), Vector2(348, 480), INK)
 	if time >= 5.5:
 		var lines: Array = [
 			["BREAK THE EGG SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
@@ -72,11 +74,14 @@ func _draw() -> void:
 	else:
 		text_at(519, "WATCH AND LEARN", 16)
 		text_at(546, "FIRE IS AUTOMATIC" if lesson < 2 else "MOVE [W][A][S][D] / [ARROWS]", 14)
-	for i: int in range(3):
-		draw_circle(Vector2(122 + i * 18, 602), 4, INK if i == lesson else Color("98a580"))
+	for i: int in range(4):
+		draw_circle(Vector2(147 + i * 18, 602), 4, INK if i == lesson + 1 else Color("98a580"))
 	text_at(648, "[ENTER / SPACE] START", 18)
 	text_at(677, "[P] PAUSE    [M] MUTE", 12)
 	text_at(699, "[F / F11] FULLSCREEN", 12)
+
+func action_text(y: float, text: String, size: int = 16) -> void:
+	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 280, size, INK)
 
 func draw_shooting(time: float, kind: int) -> void:
 	var impact: Vector2 = Vector2(140, 213)
@@ -97,20 +102,21 @@ func draw_shooting(time: float, kind: int) -> void:
 		var y: float = lerpf(407, 233, approach)
 		if time >= 4.25 and time < 5.5:
 			var angle: float = (time - 4.25) * InvasionRules.PICKUP_SPIN_SPEED
-			draw_set_transform(Vector2(140, 213), angle)
+			draw_set_transform(Vector2(174, 213), angle)
 			ship(Vector2.ZERO)
-			draw_set_transform(Vector2.ZERO)
-			text_at(285, "MOVE TO COLLECT", 16)
+			# Restore the panel offset after drawing the rotating pickup.
+			draw_set_transform(Vector2(34, 0))
+			action_text(285, "MOVE TO COLLECT", 16)
 		var spread: float = smoothstep(5.5, 6.0, time)
 		ship(Vector2(140 - spread * 18, y))
 		if time >= 5.5:
 			ship(Vector2(140 + 18, y))
-			text_at(312, "+1 SHIP", 21)
+			action_text(312, "+1 SHIP", 21)
 	else:
 		ship(Vector2(140, 407))
 		if time >= 4.9:
-			text_at(312, "+50 POINTS", 21)
-	text_at(125, "SHIPS  %d" % (2 if kind == 0 and time >= 5.5 else 1), 14)
+			action_text(312, "+50 POINTS", 21)
+	action_text(125, "SHIPS  %d" % (2 if kind == 0 and time >= 5.5 else 1), 14)
 
 func draw_contact(time: float) -> void:
 	# Keep the reward label above the panel border, including the final hold.
@@ -125,6 +131,6 @@ func draw_contact(time: float) -> void:
 		explosion(Vector2(104 + dodge, 382), (time - 3.0) / 0.8)
 	ship(Vector2(140 + dodge, 382))
 	if time >= 4.4:
-		text_at(240, "1 SHIP LOST", 20)
-		text_at(271, "1 SHIP SURVIVES", 16)
+		action_text(240, "1 SHIP LOST", 20)
+		action_text(271, "1 SHIP SURVIVES", 16)
 

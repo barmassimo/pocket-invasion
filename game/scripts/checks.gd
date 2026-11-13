@@ -204,10 +204,23 @@ func run() -> void:
 	# Accelerated simulation must not queue thousands of real-time audio voices.
 	game.sound.muted = true
 	game.set_physics_process(false)
-	check(game.lcd.demo.visible, "Silent demonstration appears on the ready screen")
-	game.lcd.demo.set_process(false)
-	game.lcd.demo._process(28.0)
-	check(is_equal_approx(game.lcd.demo.clock, 1.0) and game.squad.size() == Rules.START_SOLDIERS and game.targets.is_empty() and game.bullets.is_empty() and game.score == 0 and game.elapsed == 0.0, "Idle demonstration loops without changing gameplay state")
+	check(game.lcd.intro.visible and not game.lcd.demo.visible, "Ready cycle starts with the briefing")
+	control_key.keycode = KEY_D
+	game._unhandled_key_input(control_key)
+	check(game.lcd.intro.visible and game.lcd.attract_clock == 0.0, "D no longer skips the briefing")
+	game.lcd.set_process(false)
+	for page: int in range(3):
+		game.lcd._process(11.0 if page == 0 else 9.0)
+		check(game.lcd.demo.visible and not game.lcd.intro.visible and is_equal_approx(game.lcd.demo.clock, page * 9.0), "Cycle advances to manual page %d" % (page + 2))
+		control_key.keycode = KEY_ENTER
+		game._unhandled_key_input(control_key)
+		check(game.running and not game.lcd.demo.visible and not game.lcd.intro.visible, "Enter starts from manual page %d" % (page + 2))
+		game.reset_run(false)
+		game.lcd._process(11.0 + page * 9.0)
+	game.lcd._process(9.0)
+	check(game.lcd.intro.visible and not game.lcd.demo.visible and game.lcd.attract_clock == 0.0, "Four-page cycle returns to the briefing")
+	game.lcd._process(39.0)
+	check(is_equal_approx(game.lcd.attract_clock, 1.0) and game.squad.size() == Rules.START_SOLDIERS and game.targets.is_empty() and game.bullets.is_empty() and game.score == 0 and game.elapsed == 0.0, "Idle cycle loops without changing gameplay state")
 	game.reset_run(true, 123)
 	check(not game.lcd.demo.visible and not game.lcd.demo.is_processing() and game.lcd.demo.clock == 0.0, "Starting a run hides and resets the demonstration")
 	var demo_pause := InputEventKey.new()
@@ -227,7 +240,7 @@ func run() -> void:
 	game._physics_process(9.99)
 	check(not game.lcd.demo.visible and frozen_target.position == frozen_position and game.elapsed == frozen_elapsed, "Final course stays frozen before ten seconds")
 	game._physics_process(0.02)
-	check(game.lcd.demo.visible and game.lcd.demo.is_processing() and not game.message.visible and game.lcd.demo.clock == 0.0, "Demo starts from the beginning after the ten-second hold")
+	check(game.lcd.intro.visible and not game.lcd.demo.visible and game.lcd.is_processing() and not game.message.visible and game.lcd.attract_clock == 0.0, "Four-page cycle starts with the briefing after the ten-second hold")
 	game.reset_run(true, 123)
 	game.finish()
 	game._physics_process(2.0)

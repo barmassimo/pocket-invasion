@@ -52,7 +52,6 @@ func _ready() -> void:
 	build_world()
 	build_ui()
 	reset_run(false)
-	lcd.show_intro()
 	print("USER_DATA_DIR=", OS.get_user_data_dir())
 
 func mat(color: Color, glow: bool = false) -> StandardMaterial3D:
@@ -256,8 +255,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		var mode: DisplayServer.WindowMode = DisplayServer.window_get_mode()
 		if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	elif event.keycode == KEY_D and not started:
-		lcd.set_playing(false)
 	elif event.keycode == KEY_M:
 		toggle_sound_mute()
 	elif event.keycode == KEY_F11 or event.keycode == KEY_F:

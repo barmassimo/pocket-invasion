@@ -14,6 +14,8 @@ const GHOST := Color(0.16, 0.22, 0.12, 0.09)
 const DIGITS: Array[int] = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 var demo: AttractDemo
 var intro: StoryIntro
+var attract_clock: float = 0.0
+var attract_active: bool = false
 var soldiers: int = 4
 var score: int = 0
 var seconds: int = 0
@@ -27,7 +29,7 @@ func _ready() -> void:
 	lcd_font.font_names = PackedStringArray(["Consolas", "Courier New"])
 	lcd_font.font_weight = 700
 	demo = Demo.new() as AttractDemo
-	demo.position = Vector2(PLAYFIELD_CENTER_X - 140, 65)
+	demo.position = Vector2(379, 65)
 	add_child(demo)
 	intro = Intro.new() as StoryIntro
 	intro.position = Vector2(349, 18)
@@ -69,13 +71,23 @@ func _ready() -> void:
 	add_child(speaker_button)
 
 func set_playing(playing: bool) -> void:
-	intro.visible = false
-	demo.set_playing(playing)
+	attract_active = not playing
+	attract_clock = 0.0
+	demo.set_playing(true)
+	intro.animation_time = 0.0
+	intro.visible = not playing
+	set_process(not playing)
 	queue_redraw()
 
-func show_intro() -> void:
-	demo.set_playing(true)
-	intro.visible = true
+func _process(delta: float) -> void:
+	if not attract_active:
+		return
+	attract_clock = fposmod(attract_clock + delta, Intro.LOOP_SECONDS + Demo.LOOP_SECONDS)
+	intro.visible = attract_clock < Intro.LOOP_SECONDS
+	demo.visible = not intro.visible
+	if demo.visible:
+		demo.clock = attract_clock - Intro.LOOP_SECONDS
+		demo.queue_redraw()
 	queue_redraw()
 
 func update_status(count: int, points: int, time: float) -> void:
