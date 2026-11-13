@@ -33,6 +33,21 @@ Official source: [Godot 4.7.2 release](https://github.com/godotengine/godot-buil
 
 The bootstrap also verifies both extracted executables. An existing mismatched or incomplete environment is rejected without replacement or upgrade.
 
+## Windows portable export (x64)
+
+```powershell
+.\scripts\Export-Windows.ps1
+.\artifacts\windows\PocketInvasion.exe
+```
+
+The script reuses the pinned local engine and the official export-template archive already downloaded for Web. On first Windows setup it verifies the archive SHA-256 shown below and extracts only the four Windows x64 release/debug templates into `tools/godot/editor_data/export_templates/4.7.2.stable/`. Their hashes are recorded in `windows-sha256.json` and checked on subsequent exports. Changed or unverified existing templates are rejected without replacement. If the archive is missing, explicitly allow its download with `.\scripts\Export-Windows.ps1 -Download`; otherwise export works offline.
+
+Output is `artifacts/windows/PocketInvasion.exe` and `PocketInvasion.pck`. Copy both files together to run on a compatible Windows x64 PC without installing Godot. The preset uses Compatibility rendering, with no installer, code signing, console wrapper or external Windows build tools. Export errors are recorded in `artifacts/windows-export.log`. This is portable in the sense of requiring no installation; default runtime caches and logs can still be written under `%APPDATA%\Godot\app_userdata\Pocket Invasion\`.
+
+The project and Windows executable share the original flat LCD fighter icon in `game/assets/icons/app-icon.svg`. Windows export embeds the icon and application name using Godot's built-in resource editing, with no additional tool download.
+
+Verified on 2026-11-14: local export with archive verification, subsequent reuse of installed template hashes, and visual inspection of the exported executable's briefing, start, automatic fire, targets, defeat, restart and pause. Export completed without reported errors. This was a startup smoke check, not a full gameplay, audio, performance or other-PC compatibility test. Details are in `artifacts/windows-verification.md`.
+
 ## Web export (desktop browsers)
 
 The Web build uses this same Godot project and GDScript code. Export using the pinned local engine:
