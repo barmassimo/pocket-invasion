@@ -48,4 +48,25 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 		result.append({"x": x, "z": -24.0 - float(i) * rng.randf_range(2.0, 3.5), "kind": kind, "tier": tier, "hp": hp, "reward": Rules.target_reward(kind, tier, rng.randi_range(4, 7))})
 	for item: Dictionary in result:
 		item["drift"] = rng.randf_range(TargetMotion.DRIFT_MIN, TargetMotion.DRIFT_MAX) * (-1.0 if rng.randf() < 0.5 else 1.0)
+	ease_opening(result, elapsed)
 	return result
+
+func ease_opening(result: Array[Dictionary], elapsed: float) -> void:
+	var survival: float = elapsed - Rules.START_DIFFICULTY_SECONDS
+	if survival < 0.0 or survival >= Rules.OPENING_SCORE_SECONDS:
+		return
+	# Post-process without drawing random numbers: supplies and future rolls stay intact.
+	var has_alien: bool = false
+	for item: Dictionary in result:
+		if item.kind == 0:
+			continue
+		has_alien = true
+		item["reward"] = int(item.reward) >> int(item.tier)
+		item["tier"] = 0
+		item["hp"] = Rules.OPENING_SCORE_HEALTH[item.kind]
+	if not has_alien:
+		# A supply-only wave still offers a separate, affordable score target.
+		var supply: Dictionary = result[0]
+		result.append({"x": -3.4 if supply.x >= 0.0 else 3.4, "z": -27.0,
+			"kind": 1, "tier": 0, "hp": Rules.OPENING_SCORE_HEALTH[1],
+			"reward": Rules.target_reward(1, 0), "drift": -float(supply.drift)})

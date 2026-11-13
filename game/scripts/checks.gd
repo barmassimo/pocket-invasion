@@ -47,6 +47,42 @@ func parallel_damage(game: Node3D, count: int) -> int:
 	send_key(KEY_CTRL, false)
 	return 1000 - target.hp
 
+func check_opening_score_targets(game: Node3D) -> void:
+	var valid: bool = true
+	for seed_value: int in [42, 123, 456, 789, 2026]:
+		var generator := Encounters.new()
+		generator.reset(seed_value)
+		for wave_index: int in range(20):
+			var survival: float = wave_index * 1.5
+			var plan: Array[Dictionary] = generator.plan(Rules.difficulty_time(survival), wave_index)
+			var aliens: int = 0
+			for item: Dictionary in plan:
+				if item.kind != 0:
+					aliens += 1
+					valid = valid and item.tier == 0 and item.hp >= 5 and item.hp <= 6 and item.reward >= 40 and item.reward <= 70
+			valid = valid and aliens > 0 and plan.size() <= 3
+	check(valid, "Every opening wave offers small 5-6 HP score aliens across seeds")
+	var generator := Encounters.new()
+	generator.reset(123)
+	for survival: float in [0.0, 29.99, 30.0, 300.0]:
+		var sample: Array[Dictionary] = [{"kind": 0, "tier": 0, "hp": 5, "reward": 1, "x": 0.0, "z": -24.0, "drift": 0.4}]
+		var original: Array[Dictionary] = sample.duplicate(true)
+		var rng_state: int = generator.rng.state
+		generator.ease_opening(sample, Rules.difficulty_time(survival))
+		check(sample[0] == original[0] and generator.rng.state == rng_state, "Opening adjustment preserves the entire egg and RNG state at %.2fs" % survival)
+		check(sample.size() == (2 if survival < 30.0 else 1), "Guaranteed score target ends at exactly 30 seconds (%.2fs)" % survival)
+		var normal: Array[Dictionary] = [{"kind": 2, "tier": 2, "hp": 150, "reward": 240}]
+		generator.ease_opening(normal, Rules.difficulty_time(survival))
+		check(normal[0].hp == (6 if survival < 30.0 else 150) and normal[0].reward == (60 if survival < 30.0 else 240), "Opening discount affects only early aliens (%.2fs)" % survival)
+	for kind: int in [1, 2]:
+		game.reset_run(true, 123)
+		game.spawn_clock = 999.0
+		game.elapsed = 29.0
+		var target: CourseTarget = game.spawn_target(0, -24, kind, Rules.OPENING_SCORE_HEALTH[kind], 50, 0)
+		for step: int in range(180):
+			game._physics_process(1.0 / 60.0)
+		check(not is_instance_valid(target) and game.targets.is_empty() and game.score == 50 and game.squad.size() == 1 and game.pickups.is_empty(), "Lone fighter destroys opening alien kind %d with normal fire before contact, awarding only points" % kind)
+
 func check_pickup_recapture(game: Node3D) -> void:
 	game.reset_run(true, 123)
 	game.spawn_pickup(Vector3(3, 0, -20), 4)
@@ -178,6 +214,7 @@ func run() -> void:
 	check(not Rules.shot_hits(Vector3(-2, 0, 0), Vector3(2, 0, -8), Vector3(1.8, 0, -3), Vector2(0.2, 0.2)), "Diagonal near-misses do not damage targets")
 	check(course_plan(123) == course_plan(123), "Same seed reproduces complete encounter sequence")
 	check(course_plan(123) != course_plan(456), "Different seeds produce different encounter sequences")
+	check_opening_score_targets(game)
 	var generation_valid: bool = true
 	for seed_value: int in [42, 123, 456, 789, 2026]:
 		var generator := Encounters.new()
