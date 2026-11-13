@@ -32,7 +32,7 @@ func setup(type: int, health: int, gain: int, tier: int = 1) -> void:
 	add_child(body)
 	material = body.material_override as StandardMaterial3D
 	if kind == 0:
-		# Hull and treasure scale together, unlike the fixed-size score pilots.
+		# Hull, captive fighter and clamps scale together, unlike the score pilots.
 		emblem = Art.layer(Art.FLEET, Vector2.ONE * radius * 2.0, Vector3(0, Art.PLANE_HEIGHT + 0.002, 0))
 		(emblem.material_override as StandardMaterial3D).render_priority = 1
 		add_child(emblem)

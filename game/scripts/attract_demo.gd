@@ -66,7 +66,7 @@ func _draw() -> void:
 	draw_line(Vector2(0, 480), Vector2(348, 480), INK)
 	if time >= 5.5:
 		var lines: Array = [
-			["BREAK THE EGG SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
+			["BREAK THE CAPTURE SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
 			["BREAK ALIEN SHIPS", "TO EARN POINTS.", "HP = HITS REMAINING"],
 			["AVOID INTACT TARGETS.", "ONLY SHIPS THEY TOUCH", "ARE LOST. KEEP MOVING!"]][lesson]
 		for i: int in range(lines.size()):

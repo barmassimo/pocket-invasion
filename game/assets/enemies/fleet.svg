@@ -1,6 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256">
-  <circle cx="128" cy="112" r="44" fill="#65734a"/>
-  <circle cx="128" cy="107" r="29" fill="none" stroke="#c4cca5" stroke-width="4"/>
-  <circle cx="128" cy="107" r="15" fill="#20341f"/>
-  <g fill="#20341f"><circle cx="166" cy="67" r="3.2"/><circle cx="175" cy="76" r="2.4"/></g>
+  <!-- A3: an intact allied fighter nearly fills the existing round window. -->
+  <path fill="#20341f" d="M128 31 145 91 198 109Q202 111 201 118L198 130 146 144 140 169H116L110 144 58 130Q54 118 58 109L111 91Z"/>
+  <path fill="#20341f" d="M110 145 113 169 95 185 95 169Z M146 145 161 169 161 185 143 169Z"/>
+  <rect x="123" y="66" width="10" height="65" rx="5" fill="#c4cca5"/>
+  <!-- Short arms and large open jaws distinguish capture clamps from a badge. -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M47 112H61 M209 112H195" stroke="#65734a" stroke-width="16"/>
+    <path d="M88 94A22 22 0 1 0 88 130 M168 94A22 22 0 1 1 168 130" stroke="#c4cca5" stroke-width="20"/>
+    <path d="M88 94A22 22 0 1 0 88 130 M168 94A22 22 0 1 1 168 130" stroke="#65734a" stroke-width="14"/>
+  </g>
 </svg>

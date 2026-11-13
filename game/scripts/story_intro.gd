@@ -86,7 +86,7 @@ func draw_capture_sequence() -> void:
 		draw_texture_rect(LcdIcons.SHIP, Rect2(fighter - size * 0.5, size), false, INK)
 	if conversion > 0.0:
 		var center := fighter + Vector2(70, -40) * departure
-		draw_egg_ship(center, conversion)
+		draw_captive_ship(center, conversion)
 	var caption: String = "EARTH / OCCUPIED"
 	if t >= 0.0 and t < 2.7:
 		caption = "FIGHTER CAPTURED"
@@ -96,7 +96,7 @@ func draw_capture_sequence() -> void:
 		caption = "PILOT / CAPTIVE"
 	draw_string(font, Vector2(30, 309), caption, HORIZONTAL_ALIGNMENT_CENTER, 348, 12, INK)
 
-func draw_egg_ship(center: Vector2, growth: float) -> void:
+func draw_captive_ship(center: Vector2, growth: float) -> void:
 	# Reuse the exact hull and containment emblem of the rescue targets.
 	var size := Vector2(60, 60) * growth
 	var bounds := Rect2(center - size * 0.5, size)
