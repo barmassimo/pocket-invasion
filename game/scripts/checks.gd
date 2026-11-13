@@ -106,18 +106,19 @@ func run() -> void:
 	check(generation_valid, "Random encounters stay inside road and preserve reinforcement opportunities")
 	game.reset_run(true, 123)
 	game.spawn_wave()
-	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 0.0 and game.targets.size() >= 2, "Run starts at first-minute difficulty with a fresh survival timer and immediate threats")
-	check(Rules.threat_level(0.0) == 1 and Rules.threat_level(59.99) == 1 and Rules.threat_level(60.0) == 2 and Rules.threat_level(120.0) == 3, "Threat level starts at one and advances at minute boundaries")
+	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and game.targets.size() >= 2, "Run starts at internal level two with a fresh survival timer and immediate threats")
+	check(Rules.threat_level(0.0) == 1 and Rules.threat_level(59.99) == 1 and Rules.threat_level(60.0) == 2 and Rules.threat_level(120.0) == 3, "Displayed threat starts at one and advances at survival-minute boundaries")
+	check(Rules.target_health(1, Rules.difficulty_time(0.0), 1.0) == 66 and Rules.encounter_pressure(Rules.difficulty_time(0.0)) > 1.28, "Opening offset increases normal health and wave pressure, including nonlinear growth")
 	var previous_speed: float = Rules.course_speed(Rules.difficulty_time(0.0))
 	var previous_gain: float = 0.0
-	var speed_accelerates: bool = previous_speed < 4.0
+	var speed_accelerates: bool = is_equal_approx(previous_speed, 6.08816)
 	for step: int in range(1, 36001):
 		var speed: float = Rules.course_speed(Rules.difficulty_time(float(step) / 60.0))
 		var gain: float = speed - previous_speed
 		speed_accelerates = speed_accelerates and gain > previous_gain
 		previous_speed = speed
 		previous_gain = gain
-	check(speed_accelerates, "Gentle opening speed grows every physics tick with increasing gains for ten minutes")
+	check(speed_accelerates, "Faster opening speed grows every physics tick with increasing gains for ten minutes")
 	var recoveries_present: bool = true
 	for seed_value: int in [42, 123, 456, 789, 2026]:
 		for survival: float in [0.0, 300.0, 1800.0]:
@@ -172,7 +173,7 @@ func run() -> void:
 		limits_valid = limits_valid and game.squad.size() == 48
 	check(limits_valid, "Fleet capacity stays at 48 at start, former unlock times and thirty minutes")
 	game.reset_run(true, 123)
-	check(Rules.MAX_SOLDIERS == 48 and game.squad.size() == Rules.START_SOLDIERS, "Restart clears the full fleet and restores four ships with fixed capacity")
+	check(Rules.MAX_SOLDIERS == 48 and game.squad.size() == Rules.START_SOLDIERS and game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and Rules.threat_level(game.elapsed) == 1, "Restart restores four ships, internal level two and displayed level one")
 	game.reset_run(true, 123)
 	var small: CourseTarget = game.spawn_target(-3, -4, 0, Rules.target_health(0, 20, 1.0, 0), Rules.target_reward(0, 0), 0)
 	var large: CourseTarget = game.spawn_target(3, -4, 0, Rules.target_health(0, 20, 1.0, 2), Rules.target_reward(0, 2), 2)

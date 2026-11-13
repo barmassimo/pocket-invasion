@@ -9,7 +9,9 @@ const CAMERA_FOCUS := Vector3(0, 0, -8.2)
 const SPACING: float = 0.58
 const SHOT_INTERVAL: float = 0.45
 const MAX_BULLETS: int = 768
-const START_DIFFICULTY_SECONDS: float = 0.0
+const START_DIFFICULTY_SECONDS: float = 60.0
+const DISPLAY_START_THREAT: int = 1
+const COURSE_SPEED_MULTIPLIER: float = 1.3
 const RECOVERY_HEALTH: int = 5
 const BULLET_SPEED: float = 28.0
 const SIZE_SCALES: Array[float] = [0.8, 1.0, 1.25, 1.5, 1.8]
@@ -23,7 +25,7 @@ static func target_health(kind: int, elapsed: float, variation: float, tier: int
 	# Modest time-based growth, independent of squad size: gaining soldiers pays off.
 	var base: float = [18.0, 24.0, 32.0][kind]
 	var growth: float = [0.30, 0.40, 0.50][kind]
-	var minutes: float = maxf(0.0, elapsed - START_DIFFICULTY_SECONDS) / 60.0
+	var minutes: float = maxf(0.0, elapsed) / 60.0
 	var escalation: float = [12.0, 18.0, 24.0][kind] * pow(minutes, 2.2)
 	return maxi(1, roundi((base + elapsed * growth + escalation) * variation * SIZE_HEALTH[tier]))
 
@@ -31,12 +33,12 @@ static func difficulty_time(survival_time: float) -> float:
 	return START_DIFFICULTY_SECONDS + survival_time
 
 static func course_speed(elapsed: float) -> float:
-	var active: float = maxf(0.0, elapsed - START_DIFFICULTY_SECONDS)
-	# A gentler opening, with continuously increasing acceleration as the run lasts.
-	return 3.8 + active * 0.014 + active * active * 0.000012
+	var active: float = maxf(0.0, elapsed)
+	# Apply the opening offset to speed too, then shorten the firing opportunity.
+	return COURSE_SPEED_MULTIPLIER * (3.8 + active * 0.014 + active * active * 0.000012)
 
 static func threat_level(survival_time: float) -> int:
-	return 1 + floori(difficulty_time(survival_time) / 60.0)
+	return DISPLAY_START_THREAT + floori(survival_time / 60.0)
 
 static func shot_damage(_count: int) -> int:
 	return 1
@@ -45,7 +47,7 @@ static func shot_interval(count: int) -> float:
 	return maxf(0.20, SHOT_INTERVAL / sqrt(maxf(1.0, float(count) / START_SOLDIERS)))
 
 static func encounter_pressure(elapsed: float) -> float:
-	var minutes: float = maxf(0.0, elapsed - START_DIFFICULTY_SECONDS) / 60.0
+	var minutes: float = maxf(0.0, elapsed) / 60.0
 	return 1.0 + 0.22 * log(1.0 + maxf(0.0, elapsed) / 45.0) + 0.1 * pow(minutes, 1.3)
 
 static func target_reward(kind: int, tier: int, score_roll: int = 5) -> int:
