@@ -113,17 +113,18 @@ func draw_shooting(time: float, kind: int) -> void:
 	text_at(125, "SHIPS  %d" % (2 if kind == 0 and time >= 5.5 else 1), 14)
 
 func draw_contact(time: float) -> void:
-	var y: float = lerpf(210, 395, smoothstep(0.7, 4.2, time))
+	# Keep the reward label above the panel border, including the final hold.
+	var y: float = lerpf(210, 370, smoothstep(0.7, 4.2, time))
 	# Both ships share the player's formation movement; only the left hull is hit.
 	var dodge: float = smoothstep(0.7, 2.8, time) * 45
 	if time < 5.3:
 		target(Vector2(104, y), 5, 1)
 	if time < 3.0:
-		ship(Vector2(104 + dodge, 407))
+		ship(Vector2(104 + dodge, 382))
 	elif time < 3.8:
-		explosion(Vector2(104 + dodge, 407), (time - 3.0) / 0.8)
-	ship(Vector2(140 + dodge, 407))
+		explosion(Vector2(104 + dodge, 382), (time - 3.0) / 0.8)
+	ship(Vector2(140 + dodge, 382))
 	if time >= 4.4:
-		text_at(265, "1 SHIP LOST", 20)
-		text_at(296, "1 SHIP SURVIVES", 16)
+		text_at(240, "1 SHIP LOST", 20)
+		text_at(271, "1 SHIP SURVIVES", 16)
 
