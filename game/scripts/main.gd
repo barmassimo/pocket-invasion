@@ -48,6 +48,7 @@ func _ready() -> void:
 	build_world()
 	build_ui()
 	reset_run(false)
+	lcd.show_intro()
 	print("USER_DATA_DIR=", OS.get_user_data_dir())
 
 func mat(color: Color, glow: bool = false) -> StandardMaterial3D:
@@ -239,8 +240,13 @@ func vertical_limits() -> Vector2:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is not InputEventKey or not event.pressed or event.echo:
 		return
-	if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-		reset_run()
+	if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+		if not started or squad.is_empty():
+			reset_run()
+	elif event.keycode == KEY_ESCAPE:
+		reset_run(false)
+	elif event.keycode == KEY_D and not started:
+		lcd.set_playing(false)
 	elif event.keycode == KEY_M:
 		toggle_sound_mute()
 	elif event.keycode == KEY_F11 or event.keycode == KEY_F:
@@ -405,12 +411,13 @@ func resolve_contacts() -> void:
 
 func finish() -> void:
 	running = false
+	started = false
 	sound.set_music_playing(false)
 	defeat_hold_remaining = DEFEAT_HOLD_SECONDS
 	lcd.set_playing(true)
 	message.visible = true
 	sound.play_effect("defeat")
-	message.text = "FLEET LOST\n\nPRESS [ENTER] TO PLAY"
+	message.text = "FLEET LOST\n\n[ENTER / SPACE] START\n[ESC] DEMO"
 
 func update_hud() -> void:
 	lcd.update_status(squad.size(), score, elapsed)

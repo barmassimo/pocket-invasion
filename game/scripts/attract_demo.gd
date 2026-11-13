@@ -74,9 +74,9 @@ func _draw() -> void:
 		text_at(546, "FIRE IS AUTOMATIC" if lesson < 2 else "MOVE [W][A][S][D] / [ARROWS]", 14)
 	for i: int in range(3):
 		draw_circle(Vector2(122 + i * 18, 602), 4, INK if i == lesson else Color("98a580"))
-	text_at(648, "PRESS [ENTER] TO PLAY", 18)
+	text_at(648, "[ENTER / SPACE] START", 18)
 	text_at(677, "[P] PAUSE    [M] MUTE", 12)
-	text_at(699, "[ENTER] RESTART", 12)
+	text_at(699, "[ESC] END RUN / DEMO", 12)
 
 func draw_shooting(time: float, kind: int) -> void:
 	var impact: Vector2 = Vector2(140, 213)

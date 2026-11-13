@@ -6,12 +6,14 @@ signal mute_requested
 
 const Rules = preload("res://scripts/invasion_rules.gd")
 const Demo = preload("res://scripts/attract_demo.gd")
+const Intro = preload("res://scripts/story_intro.gd")
 const WINDOW_WIDTH: int = 775
 const PLAYFIELD_CENTER_X: float = 550.0
 const INK := Color("253820")
 const GHOST := Color(0.16, 0.22, 0.12, 0.09)
 const DIGITS: Array[int] = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
 var demo: AttractDemo
+var intro: StoryIntro
 var soldiers: int = 4
 var score: int = 0
 var seconds: int = 0
@@ -27,6 +29,10 @@ func _ready() -> void:
 	demo = Demo.new() as AttractDemo
 	demo.position = Vector2(PLAYFIELD_CENTER_X - 140, 65)
 	add_child(demo)
+	intro = Intro.new() as StoryIntro
+	intro.position = Vector2(349, 18)
+	intro.visible = false
+	add_child(intro)
 	volume_slider = HSlider.new()
 	volume_slider.position = Vector2(87, 742)
 	volume_slider.size = Vector2(190, 28)
@@ -63,7 +69,14 @@ func _ready() -> void:
 	add_child(speaker_button)
 
 func set_playing(playing: bool) -> void:
+	intro.visible = false
 	demo.set_playing(playing)
+	queue_redraw()
+
+func show_intro() -> void:
+	demo.set_playing(true)
+	intro.visible = true
+	queue_redraw()
 
 func update_status(count: int, points: int, time: float) -> void:
 	soldiers = count
@@ -94,7 +107,7 @@ func _draw() -> void:
 	segment_text("%02d/%02d" % [soldiers, Rules.MAX_SOLDIERS], Vector2(47, 109), 34)
 	caption(Vector2(46, 171), "SCORE")
 	segment_text("%07d" % score, Vector2(47, 181), 34)
-	caption(Vector2(46, 244), "SURVIVAL TIME")
+	caption(Vector2(46, 244), "MISSION TIME")
 	segment_text("%02d:%02d" % [seconds / 60, seconds % 60], Vector2(47, 254), 34)
 	draw_line(Vector2(46, 403), Vector2(329, 403), INK)
 	caption(Vector2(46, 427), "THREAT LEVEL")

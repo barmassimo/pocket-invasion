@@ -50,6 +50,25 @@ func parallel_damage(game: Node3D, count: int) -> int:
 func run() -> void:
 	var game := Main.new()
 	root.add_child(game)
+	check(game.lcd.intro.visible and not game.lcd.demo.visible and not game.running, "Startup shows the story without running the course or demo")
+	var control_key := InputEventKey.new()
+	control_key.pressed = true
+	control_key.keycode = KEY_SPACE
+	game._unhandled_key_input(control_key)
+	check(game.running and not game.lcd.intro.visible, "Space starts from the story")
+	game.score = 123
+	for code: Key in [KEY_ENTER, KEY_SPACE]:
+		control_key.keycode = code
+		game._unhandled_key_input(control_key)
+		check(game.score == 123 and game.running, "Start keys never restart an active run")
+	control_key.keycode = KEY_P
+	game._unhandled_key_input(control_key)
+	control_key.keycode = KEY_ENTER
+	game._unhandled_key_input(control_key)
+	check(not game.running and game.score == 123 and game.message.text == "PAUSED", "Enter never restarts a paused run")
+	control_key.keycode = KEY_ESCAPE
+	game._unhandled_key_input(control_key)
+	check(game.lcd.demo.visible and not game.lcd.intro.visible and not game.started and game.score == 0 and game.targets.is_empty() and game.bullets.is_empty() and game.defeat_hold_remaining == 0.0, "Escape ends the run and immediately shows a clean demo")
 	check(not game.sound.music.playing, "Ready demonstration stays silent")
 	game.set_physics_process(false)
 	game.reset_run(true, 123)
