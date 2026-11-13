@@ -4,6 +4,7 @@ extends Control
 # Presentation only: no gameplay entities, rewards, input or audio are created.
 const INK := Color("253820")
 const PAPER := Color("c4cca5")
+const Art = preload("res://scripts/target_art.gd")
 const LESSON_SECONDS: float = 9.0
 const LOOP_SECONDS: float = LESSON_SECONDS * 3.0
 var clock: float = 0.0
@@ -34,15 +35,13 @@ func ship(at: Vector2) -> void:
 	draw_texture_rect(LcdIcons.SHIP, Rect2(at - Vector2(17, 23), Vector2(34, 46)), false, INK)
 
 func target(at: Vector2, hp: int, kind: int) -> void:
-	var points := PackedVector2Array([
-		Vector2(-36, -44), Vector2(36, -44), Vector2(46, -34),
-		Vector2(46, 34), Vector2(36, 44), Vector2(-36, 44),
-		Vector2(-46, 34), Vector2(-46, -34)])
-	for i: int in range(points.size()):
-		points[i] += at
-	draw_colored_polygon(points, INK)
-	draw_texture_rect(LcdIcons.reward(kind), Rect2(at - Vector2(14, 31), Vector2(28, 28)), false, PAPER)
-	draw_string(font, at + Vector2(-30, 27), "+1" if kind == 0 else "+50", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, PAPER)
+	var rect := Rect2(at - Vector2(46, 46), Vector2(92, 92))
+	draw_texture_rect(Art.HULL, rect, false)
+	if kind == 0:
+		draw_texture_rect(Art.FLEET, rect, false)
+	else:
+		draw_texture_rect(Art.PILOT, Rect2(at - Vector2(19, 24), Vector2(38, 48)), false)
+	draw_string(font, at + Vector2(-30, 62), "+1" if kind == 0 else "+50", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, INK)
 	draw_string(font, at + Vector2(-50, -57), "HP %d" % hp, HORIZONTAL_ALIGNMENT_CENTER, 100, 18, INK)
 
 func explosion(at: Vector2, progress: float) -> void:
@@ -68,7 +67,7 @@ func _draw() -> void:
 	if time >= 5.5:
 		var lines: Array = [
 			["SHOOT THESE TARGETS", "TO GET MORE SHIPS.", "1 SHIP + 1 = 2 SHIPS"],
-			["BREAK MEDAL TARGETS", "TO EARN POINTS.", "HP = HITS REMAINING"],
+			["BREAK ALIEN SHIPS", "TO EARN POINTS.", "HP = HITS REMAINING"],
 			["AVOID INTACT TARGETS.", "ONLY SHIPS THEY TOUCH", "ARE LOST. KEEP MOVING!"]][lesson]
 		for i: int in range(lines.size()):
 			text_at(512 + i * 25, lines[i], 16)
@@ -77,8 +76,8 @@ func _draw() -> void:
 		text_at(546, "FIRE IS AUTOMATIC" if lesson < 2 else "MOVE WITH WASD / ARROWS", 14)
 	for i: int in range(3):
 		draw_circle(Vector2(122 + i * 18, 602), 4, INK if i == lesson else Color("98a580"))
-	text_at(648, "PRESS R TO PLAY", 18)
-	text_at(679, "P PAUSE    R RESTART    M SOUND", 12)
+	text_at(648, "PRESS ENTER TO PLAY", 18)
+	text_at(679, "P PAUSE    ENTER RESTART    M SOUND", 12)
 
 func draw_shooting(time: float, kind: int) -> void:
 	var impact: Vector2 = Vector2(140, 213)
@@ -95,9 +94,9 @@ func draw_shooting(time: float, kind: int) -> void:
 	elif time < 4.9:
 		explosion(impact, clampf((time - 4.25) / 0.65, 0, 1))
 	var spread: float = smoothstep(4.5, 5.5, time) if kind == 0 else 0.0
-	ship(Vector2(140 - spread * 26, 407))
+	ship(Vector2(140 - spread * 18, 407))
 	if spread > 0:
-		ship(Vector2(140 + 26, lerpf(310, 407, spread)))
+		ship(Vector2(140 + 18, lerpf(310, 407, spread)))
 	if time >= 4.9:
 		text_at(312, "+1 SHIP" if kind == 0 else "+50 POINTS", 21)
 	text_at(125, "SHIPS  %d" % (2 if kind == 0 and time >= 5.5 else 1), 14)
@@ -112,7 +111,7 @@ func draw_contact(time: float) -> void:
 		ship(Vector2(104 + dodge, 407))
 	elif time < 3.8:
 		explosion(Vector2(104 + dodge, 407), (time - 3.0) / 0.8)
-	ship(Vector2(164 + dodge, 407))
+	ship(Vector2(140 + dodge, 407))
 	if time >= 4.4:
 		text_at(265, "1 SHIP LOST", 20)
 		text_at(296, "1 SHIP SURVIVES", 16)

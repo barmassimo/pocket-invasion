@@ -6,8 +6,7 @@ const RESTITUTION: float = 0.65
 const DRIFT_MIN: float = 0.25
 const DRIFT_MAX: float = 0.55
 const SOLVER_PASSES: int = 16
-const CAPTION_CLEARANCE: float = 1.35
-const AXES: Array[Vector2] = [Vector2.RIGHT, Vector2.DOWN, Vector2(0.70710678, 0.70710678), Vector2(0.70710678, -0.70710678)]
+const CAPTION_CLEARANCE: float = 0.35
 
 static func advance(targets: Array[CourseTarget], course_speed: float, delta: float) -> void:
 	var fastest: float = 0.0
@@ -41,34 +40,17 @@ static func resolve_wall(target: CourseTarget) -> void:
 			# The border is immovable (infinite mass); every object bounces inward.
 			target.velocity.x *= -RESTITUTION
 
-# The elevated camera projects hull height along the course. Base-only collision
-# allowed tall meshes to overlap visibly even when their floor footprints separated.
-# Reserve a small gap for the HP caption above each hull as well.
-static func projected_height(target: CourseTarget) -> float:
-	var camera_offset: Vector3 = Rules.CAMERA_POSITION - Rules.CAMERA_FOCUS
-	return target.body.position.y * absf(camera_offset.z / camera_offset.y) + CAPTION_CLEARANCE * 0.5
-
-static func collision_center(target: CourseTarget) -> Vector2:
-	return Vector2(target.position.x, target.position.z - projected_height(target))
-
-static func projection_radius(target: CourseTarget, axis: Vector2) -> float:
-	return absf(axis.x) * target.half.x + absf(axis.y) * (target.half.y + projected_height(target)) - target.corner_cut * minf(absf(axis.x), absf(axis.y))
-
 static func penetration(a: CourseTarget, b: CourseTarget) -> Vector2:
-	var distance: Vector2 = collision_center(b) - collision_center(a)
-	if absf(distance.x) >= a.half.x + b.half.x or absf(distance.y) >= a.half.y + b.half.y + projected_height(a) + projected_height(b):
+	# All hulls have the same camera-compensated ellipse aspect ratio. In this
+	# metric they are circles, so pair separation is exact even on curved edges.
+	# A small presentation gap reserves space for HP and reward labels.
+	var projection: float = TargetArt.projection_scale()
+	var distance := Vector2(b.position.x - a.position.x, (b.position.z - a.position.z) * projection)
+	var depth: float = a.half.x + b.half.x + CAPTION_CLEARANCE * 2.0 - distance.length()
+	if depth <= 0.0:
 		return Vector2.ZERO
-	var depth: float = INF
-	var normal := Vector2.ZERO
-	# Separating-axis test of the complete projected hull, retaining clipped corners.
-	for axis: Vector2 in AXES:
-		var overlap: float = projection_radius(a, axis) + projection_radius(b, axis) - absf(distance.dot(axis))
-		if overlap <= 0.0:
-			return Vector2.ZERO
-		if overlap < depth:
-			depth = overlap
-			normal = axis if distance.dot(axis) >= 0.0 else -axis
-	return normal * depth
+	var normal: Vector2 = distance.normalized() if distance.length_squared() > 0.000001 else Vector2.RIGHT
+	return Vector2(normal.x, normal.y / projection) * depth
 
 static func resolve_pair(a: CourseTarget, b: CourseTarget, course_speed: float) -> void:
 	var separation: Vector2 = penetration(a, b)

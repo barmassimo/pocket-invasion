@@ -79,7 +79,7 @@ func run() -> void:
 	game.finish()
 	game._physics_process(2.0)
 	var restart := InputEventKey.new()
-	restart.keycode = KEY_R
+	restart.keycode = KEY_ENTER
 	restart.pressed = true
 	game._unhandled_key_input(restart)
 	check(game.running and game.defeat_hold_remaining == 0.0 and game.targets.is_empty() and game.bullets.is_empty() and game.score == 0 and game.elapsed == 0.0, "Immediate restart cancels the hold and clears the previous run")
@@ -166,6 +166,21 @@ func run() -> void:
 	var small: CourseTarget = game.spawn_target(-3, -4, 0, Rules.target_health(0, 20, 1.0, 0), Rules.target_reward(0, 0), 0)
 	var large: CourseTarget = game.spawn_target(3, -4, 0, Rules.target_health(0, 20, 1.0, 2), Rules.target_reward(0, 2), 2)
 	check(large.half.x > small.half.x and large.hp > small.hp, "Target size changes both visible mesh/collision footprint and HP")
+	var pilot_dimensions: Vector2 = Vector2.ZERO
+	var crew_valid: bool = true
+	var fleet_proportions_valid: bool = true
+	for tier: int in range(5):
+		var alien: CourseTarget = game.spawn_target(0, -16, 1, 100, 50, tier)
+		var cache: CourseTarget = game.spawn_target(3, -16, 0, 100, 2, tier)
+		crew_valid = crew_valid and alien.pilots.size() == [1, 1, 2, 2, 3][tier] and alien.emblem == null
+		for pilot: MeshInstance3D in alien.pilots:
+			var dimensions: Vector2 = (pilot.mesh as PlaneMesh).size
+			if pilot_dimensions == Vector2.ZERO:
+				pilot_dimensions = dimensions
+			crew_valid = crew_valid and dimensions.is_equal_approx(pilot_dimensions)
+		fleet_proportions_valid = fleet_proportions_valid and cache.pilots.is_empty() and (cache.emblem.mesh as PlaneMesh).size.is_equal_approx((cache.body.mesh as PlaneMesh).size)
+	check(crew_valid, "Score size tiers add up to three pilots while preserving every pilot's absolute dimensions")
+	check(fleet_proportions_valid, "Fleet hull and treasure emblem scale in the same proportions at every size tier")
 	game.destroy_target(large)
 	check(game.squad.size() == Rules.START_SOLDIERS + 4, "Destroying large reinforcement target grants its four-soldier reward")
 	game.reset_run(true, 123)
@@ -280,12 +295,14 @@ func run() -> void:
 	game.spawn_clock = 999.0
 	var moving_threat: CourseTarget = game.spawn_target(game.squad[0].position.x, game.player_z - 1.0, 1, 999, 50)
 	moving_threat.half = Vector2(0.05, 0.05)
-	moving_threat.corner_cut = 0.0
 	send_key(KEY_W, true)
 	game._physics_process(0.2)
 	send_key(KEY_W, false)
 	check(game.squad.size() == 3, "Moving forward through a threat removes the crossed ship, without a safe player line")
-	check(Rules.shot_fraction(Vector3(0.55, 0, 0.55), Vector3(0.55, 0, 0.55), Vector3.ZERO, Vector2(0.5, 0.5), 0.3) == INF, "Clipped target corners do not register a false hit")
+	check(Rules.shot_fraction(Vector3(0.45, 0, 0.45), Vector3(0.45, 0, 0.45), Vector3.ZERO, Vector2(0.5, 0.5)) == INF, "Empty corners of rounded hulls do not register a false hit")
+	check(is_equal_approx(Rules.shot_fraction(Vector3(0, 0, 2), Vector3(0, 0, -2), Vector3.ZERO, Vector2(1, 0.5), 0.0), 0.375), "Fast shots enter an ellipse at its visible boundary")
+	check(Rules.shot_fraction(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector2.ONE) == 0.0, "Stationary contact inside a rounded hull is detected")
+	check(Rules.shot_fraction(Vector3(1.2, 0, 2), Vector3(1.2, 0, -2), Vector3.ZERO, Vector2.ONE) == INF, "A fast near-miss beside the round hull stays a miss")
 	game.reset_run()
 	game.player_x = 100.0
 	game.arrange()
@@ -368,20 +385,19 @@ func run() -> void:
 	game.reset_run(true, 123)
 	var rear: CourseTarget = game.spawn_target(0, -8, 1, 100, 50)
 	var front: CourseTarget = game.spawn_target(0, -10, 1, 100, 50)
-	# Bases are already apart here; the tall meshes used to overlap on screen.
 	Main.Motion.advance(game.targets, 0.0, 1.0 / 60.0)
-	var rear_top: float = game.camera.unproject_position(rear.position + Vector3(0, rear.body.position.y * 2.0, -rear.half.y)).y
-	var front_bottom: float = game.camera.unproject_position(front.position + Vector3(0, 0, front.half.y)).y
-	check(rear_top >= front_bottom - 0.01, "Full rendered hulls separate in camera view even when floor footprints never touched")
+	var rear_top: float = game.camera.unproject_position(rear.position + Vector3(0, rear.body.position.y, -rear.half.y)).y
+	var front_bottom: float = game.camera.unproject_position(front.position + Vector3(0, front.body.position.y, front.half.y)).y
+	check(rear_top >= front_bottom - 0.01, "Round hulls separate in camera view with caption clearance")
 	game.reset_run(true, 123)
 	rear = game.spawn_target(0, -8, 1, 5, 50, 0)
 	front = game.spawn_target(0, -10.5, 1, 1000, 50, 4)
 	var front_start: float = front.position.z
 	var rear_start: float = rear.position.z
 	Main.Motion.advance(game.targets, 0.0, 1.0 / 60.0)
-	rear_top = game.camera.unproject_position(rear.position + Vector3(0, rear.body.position.y * 2.0, -rear.half.y)).y
-	front_bottom = game.camera.unproject_position(front.position + Vector3(0, 0, front.half.y)).y
-	check(rear_top >= front_bottom - 0.01 and absf(rear.position.z - rear_start) > absf(front.position.z - front_start) * 100, "Mixed-height hulls separate visibly and the low-HP hull yields more")
+	rear_top = game.camera.unproject_position(rear.position + Vector3(0, rear.body.position.y, -rear.half.y)).y
+	front_bottom = game.camera.unproject_position(front.position + Vector3(0, front.body.position.y, front.half.y)).y
+	check(rear_top >= front_bottom - 0.01 and absf(rear.position.z - rear_start) > absf(front.position.z - front_start) * 100, "Mixed-size round hulls separate visibly and the low-HP hull yields more")
 	game.reset_run(true, 123)
 	var light: CourseTarget = game.spawn_target(-0.85, -8, 1, 10, 50)
 	var heavy: CourseTarget = game.spawn_target(0.85, -8, 1, 100, 50)

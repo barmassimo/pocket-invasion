@@ -69,42 +69,24 @@ static func formation_spacing(count: int) -> Vector2:
 static func movement_limit(count: int) -> float:
 	return ROAD_HALF - float(mini(count, formation_columns(count)) - 1) * formation_spacing(count).x / 2.0 - 0.3
 
-static func touched(soldier: Vector3, center: Vector3, half: Vector2) -> bool:
-	return absf(soldier.x - center.x) <= half.x + 0.20 and absf(soldier.z - center.z) <= half.y + 0.20
-
-# Swept segment against an expanded target box; prevents projectile tunneling.
+# Sweep a relative segment against the visible elliptical hull. Expanded radii
+# include the projectile or ship contact margin; empty bounding-box corners miss.
 static func shot_hits(from: Vector3, to: Vector3, center: Vector3, half: Vector2) -> bool:
 	return shot_fraction(from, to, center, half) != INF
 
-static func shot_fraction(from: Vector3, to: Vector3, center: Vector3, half: Vector2, bevel: float = 0.0) -> float:
-	var entry: float = 0.0
-	var exit: float = 1.0
-	var origin := Vector2(from.x - center.x, from.z - center.z)
-	var motion := Vector2(to.x - from.x, to.z - from.z)
-	var expanded: Vector2 = half + Vector2.ONE * 0.07
-	for axis: int in range(2):
-		if absf(motion[axis]) < 0.000001:
-			if absf(origin[axis]) > expanded[axis]:
-				return INF
-		else:
-			var a: float = (-expanded[axis] - origin[axis]) / motion[axis]
-			var b: float = (expanded[axis] - origin[axis]) / motion[axis]
-			entry = maxf(entry, minf(a, b))
-			exit = minf(exit, maxf(a, b))
-			if entry > exit:
-				return INF
-	if bevel > 0.0:
-		var boundary: float = expanded.x + expanded.y - bevel
-		for normal: Vector2 in [Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
-			var p: float = normal.dot(motion)
-			var q: float = boundary - normal.dot(origin)
-			if absf(p) < 0.000001:
-				if q < 0.0:
-					return INF
-			elif p > 0.0:
-				exit = minf(exit, q / p)
-			else:
-				entry = maxf(entry, q / p)
-			if entry > exit:
-				return INF
-	return entry
+static func shot_fraction(from: Vector3, to: Vector3, center: Vector3, half: Vector2, padding: float = 0.07) -> float:
+	var radii: Vector2 = half + Vector2.ONE * padding
+	var origin := Vector2(from.x - center.x, from.z - center.z) / radii
+	var motion := Vector2(to.x - from.x, to.z - from.z) / radii
+	var c: float = origin.length_squared() - 1.0
+	if c <= 0.0:
+		return 0.0
+	var a: float = motion.length_squared()
+	if a < 0.00000001:
+		return INF
+	var b: float = origin.dot(motion)
+	var discriminant: float = b * b - a * c
+	if discriminant < 0.0:
+		return INF
+	var entry: float = (-b - sqrt(discriminant)) / a
+	return clampf(entry, 0.0, 1.0) if entry >= -0.000001 and entry <= 1.000001 else INF

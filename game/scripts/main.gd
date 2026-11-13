@@ -240,7 +240,7 @@ func vertical_limits() -> Vector2:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is not InputEventKey or not event.pressed or event.echo:
 		return
-	if event.keycode == KEY_R or (event.keycode == KEY_ENTER and not started):
+	if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 		reset_run()
 	elif event.keycode == KEY_M:
 		sound.toggle_mute()
@@ -286,7 +286,7 @@ func _physics_process(delta: float) -> void:
 				var bullet := MeshInstance3D.new()
 				bullet.mesh = bullet_mesh
 				bullet.visible = false
-				bullet.position = soldier.position + Vector3(0.05, 0.53, -0.4)
+				bullet.position = soldier.position + Vector3(0.05, Target.Art.PLANE_HEIGHT, -0.4)
 				add_child(bullet)
 				bullet.set_meta("damage", Rules.shot_damage(squad.size()))
 				bullets.append(bullet)
@@ -342,7 +342,7 @@ func advance_bullets(delta: float) -> void:
 		for target: CourseTarget in targets:
 			var relative_from := before - Vector3(target.previous_x, 0, target.previous_z)
 			var relative_to := bullet.position - target.position
-			var fraction: float = Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half, target.corner_cut)
+			var fraction: float = Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half)
 			if fraction < first_fraction:
 				first_fraction = fraction
 				nearest = target
@@ -387,7 +387,7 @@ func resolve_contacts() -> void:
 			var before: Vector3 = ship_previous.get(soldier, soldier.position)
 			var relative_from := Vector3(before.x - target.previous_x, 0, before.z - target.previous_z)
 			var relative_to := Vector3(soldier.position.x - target.position.x, 0, soldier.position.z - target.position.z)
-			if Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half + Vector2.ONE * 0.13, target.corner_cut) != INF:
+			if Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half, 0.20) != INF:
 				casualties.append(soldier)
 				break
 	for soldier: Node3D in casualties:
@@ -407,7 +407,7 @@ func finish() -> void:
 	lcd.demo.defeated = true
 	message.visible = true
 	sound.play_effect("defeat")
-	message.text = "FLEET LOST\n\nPRESS R TO PLAY"
+	message.text = "FLEET LOST\n\nPRESS ENTER TO PLAY"
 
 func update_hud() -> void:
 	lcd.update_status(squad.size(), score, elapsed)
