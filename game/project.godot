@@ -1,0 +1,14 @@
+config_version=5
+
+[application]
+config/name="Conveyor Squad"
+run/main_scene="res://scenes/main.tscn"
+
+[display]
+window/size/viewport_width=775
+window/size/viewport_height=800
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.741, 0.780, 0.624, 1)

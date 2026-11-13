@@ -1,0 +1,416 @@
+extends Node3D
+
+const Rules = preload("res://scripts/rules.gd")
+const Target = preload("res://scripts/target.gd")
+const Sound = preload("res://scripts/sound.gd")
+const Encounters = preload("res://scripts/encounters.gd")
+const Motion = preload("res://scripts/target_motion.gd")
+const Display = preload("res://scripts/lcd_display.gd")
+const PLAYER_Z: float = 5.0
+const DEFEAT_HOLD_SECONDS: float = 10.0
+var defeat_hold_remaining: float = 0.0
+var squad: Array[Node3D] = []
+var targets: Array[CourseTarget] = []
+var bullets: Array[MeshInstance3D] = []
+var particles: Array[MeshInstance3D] = []
+var player_x: float = 0.0
+var player_z: float = PLAYER_Z
+var camera: Camera3D
+var ship_previous: Dictionary[Node3D, Vector3] = {}
+var elapsed: float = 0.0
+var fire_clock: float = 0.0
+var spawn_clock: float = 0.0
+var wave: int = 0
+var score: int = 0
+var running: bool = false
+var started: bool = false
+var audio_status: Label
+var message: Label
+var toast: Label
+var toast_clock: float = 0.0
+var blue: StandardMaterial3D
+var yellow: StandardMaterial3D
+var spark: StandardMaterial3D
+var sound: ArcadeSound
+var encounters: CourseEncounters = Encounters.new() as CourseEncounters
+var debug_seed: int = -1
+var lcd: LcdDisplay
+var bullet_batch: MultiMeshInstance3D
+var soldier_batches: Array[MultiMeshInstance3D] = []
+var bullet_mesh: BoxMesh
+var toast_icon: TextureRect
+
+func _ready() -> void:
+	for argument: String in OS.get_cmdline_user_args():
+		if argument.begins_with("--seed=") and argument.trim_prefix("--seed=").is_valid_int():
+			debug_seed = argument.trim_prefix("--seed=").to_int()
+	sound = Sound.new() as ArcadeSound
+	add_child(sound)
+	build_world()
+	build_ui()
+	reset_run(false)
+	print("USER_DATA_DIR=", OS.get_user_data_dir())
+
+func mat(color: Color, glow: bool = false) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = color
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return m
+
+func box(size: Vector3, at: Vector3, material: StandardMaterial3D) -> MeshInstance3D:
+	var node := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	node.mesh = mesh
+	node.material_override = material
+	node.position = at
+	add_child(node)
+	return node
+
+func build_world() -> void:
+	blue = mat(Color("253820"))
+	yellow = mat(Color("20341c"), true)
+	spark = mat(Color("435b31"), true)
+	var environment := WorldEnvironment.new()
+	var settings := Environment.new()
+	settings.background_mode = Environment.BG_COLOR
+	settings.background_color = Color("bdc79f")
+	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	settings.ambient_light_color = Color("b9d5f7")
+	settings.ambient_light_energy = 0.7
+	environment.environment = settings
+	add_child(environment)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-55, -25, 0)
+	sun.light_energy = 1.2
+	add_child(sun)
+	camera = Camera3D.new()
+	camera.position = Rules.CAMERA_POSITION
+	add_child(camera)
+	camera.look_at(Rules.CAMERA_FOCUS)
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = 26.0
+	# Preserve the course's pixel scale and center in the screen beside the HUD.
+	camera.h_offset = -(Display.PLAYFIELD_CENTER_X - Display.WINDOW_WIDTH * 0.5) * camera.size / 800.0
+	camera.current = true
+	box(Vector3(11, 0.3, 40), Vector3(0, -0.3, -8), mat(Color("c4cca5")))
+	bullet_batch = create_batch(Vector3(0.09, 0.09, 0.45), yellow, Rules.MAX_BULLETS)
+	bullet_mesh = bullet_batch.multimesh.mesh as BoxMesh
+	var ships: MultiMeshInstance3D = create_batch(Vector3.ONE, blue, Rules.MAX_SOLDIERS)
+	var hull := PlaneMesh.new()
+	hull.size = Vector2(0.44, 0.60)
+	ships.multimesh.mesh = hull
+	var hull_material: StandardMaterial3D = blue.duplicate() as StandardMaterial3D
+	hull_material.albedo_texture = LcdIcons.SHIP
+	hull_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	hull_material.alpha_scissor_threshold = 0.5
+	hull_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	ships.material_override = hull_material
+	soldier_batches.append(ships)
+
+func create_batch(size: Vector3, material: StandardMaterial3D, capacity: int) -> MultiMeshInstance3D:
+	var batch := MultiMeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	var instances := MultiMesh.new()
+	instances.transform_format = MultiMesh.TRANSFORM_3D
+	instances.mesh = mesh
+	instances.instance_count = capacity
+	instances.visible_instance_count = 0
+	batch.multimesh = instances
+	batch.material_override = material
+	batch.custom_aabb = AABB(Vector3(-8, -1, -36), Vector3(16, 5, 50))
+	add_child(batch)
+	return batch
+
+func sync_bullets() -> void:
+	bullet_batch.multimesh.visible_instance_count = bullets.size()
+	for i: int in range(bullets.size()):
+		bullets[i].visible = false
+		bullet_batch.multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY, bullets[i].position))
+
+func label_at(at: Vector2, size: int, color: Color) -> Label:
+	var l := Label.new()
+	l.position = at
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", Color("253820"))
+	var lcd_font := SystemFont.new()
+	lcd_font.font_names = PackedStringArray(["Consolas", "Courier New"])
+	lcd_font.font_weight = 700
+	l.add_theme_font_override("font", lcd_font)
+	return l
+
+func build_ui() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	lcd = Display.new() as LcdDisplay
+	layer.add_child(lcd)
+	audio_status = label_at(Vector2(46, 650), 15, Color("ffc477"))
+	layer.add_child(audio_status)
+	message = label_at(Vector2(380, 310), 22, Color.WHITE)
+	message.size = Vector2(340, 220)
+	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layer.add_child(message)
+	toast = label_at(Vector2(80, 716), 18, Color("90ffe0"))
+	toast.size.x = 245
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layer.add_child(toast)
+	toast_icon = TextureRect.new()
+	toast_icon.position = Vector2(46, 716)
+	toast_icon.size = Vector2(28, 28)
+	toast_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	toast_icon.modulate = Color("253820")
+	toast_icon.visible = false
+	layer.add_child(toast_icon)
+
+func notice(text: String, duration: float, kind: int = -1) -> void:
+	toast.text = text
+	toast_clock = duration
+	toast_icon.visible = kind >= 0
+	if kind >= 0:
+		toast_icon.texture = LcdIcons.reward(kind)
+
+func reset_run(play: bool = true, seed_override: int = -1) -> void:
+	encounters.reset(seed_override if seed_override >= 0 else debug_seed)
+	if play:
+		print("RUN_SEED=", encounters.run_seed)
+	sound.stop_all()
+	for collection: Array in [squad, targets, bullets, particles]:
+		for item: Node in collection:
+			item.free()
+		collection.clear()
+	sync_bullets()
+	player_x = 0.0
+	player_z = PLAYER_Z
+	ship_previous.clear()
+	elapsed = 0.0
+	fire_clock = 0.0
+	spawn_clock = 1.0
+	wave = 0
+	score = 0
+	toast_clock = 0.0
+	toast.text = ""
+	toast_icon.visible = false
+	for i: int in range(Rules.START_SOLDIERS):
+		add_soldier()
+	arrange()
+	running = play
+	started = play
+	defeat_hold_remaining = 0.0
+	lcd.set_playing(play)
+	lcd.demo.defeated = false
+	message.visible = play
+	message.text = "" if play else "STAR FLEET\n\nREADY"
+	update_hud()
+
+func add_soldier() -> void:
+	if squad.size() >= Rules.MAX_SOLDIERS:
+		return
+	var soldier := Node3D.new()
+	add_child(soldier)
+	squad.append(soldier)
+
+func arrange() -> void:
+	player_x = clampf(player_x, -Rules.movement_limit(squad.size()), Rules.movement_limit(squad.size()))
+	var positions: Array[Vector3] = Rules.offsets(squad.size())
+	var limits: Vector2 = vertical_limits()
+	player_z = clampf(player_z, limits.x, limits.y)
+	for i: int in range(squad.size()):
+		squad[i].position = positions[i] + Vector3(player_x, 0, player_z)
+	var offsets: Array[Vector3] = [Vector3(0, 0.35, 0)]
+	var icon_scale: Vector3 = Vector3(0.70, 1.0, 0.43) if squad.size() > 24 else Vector3.ONE
+	for part: int in range(soldier_batches.size()):
+		soldier_batches[part].multimesh.visible_instance_count = squad.size()
+		for i: int in range(squad.size()):
+			soldier_batches[part].multimesh.set_instance_transform(i, Transform3D(Basis.from_scale(icon_scale), squad[i].position + offsets[part] * icon_scale))
+
+func screen_z(y: float) -> float:
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var point := Vector2(viewport_size.x / 2.0, y * viewport_size.y / 800.0)
+	var origin: Vector3 = camera.project_ray_origin(point)
+	var direction: Vector3 = camera.project_ray_normal(point)
+	return (origin + direction * ((0.35 - origin.y) / direction.y)).z
+
+func vertical_limits() -> Vector2:
+	var count: int = squad.size()
+	var rows: int = maxi(0, (count - 1) / Rules.formation_columns(count))
+	var depth: float = rows * Rules.formation_spacing(count).y
+	return Vector2(screen_z(25.0) + 0.32, screen_z(775.0) - depth - 0.32)
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is not InputEventKey or not event.pressed or event.echo:
+		return
+	if event.keycode == KEY_R or (event.keycode == KEY_ENTER and not started):
+		reset_run()
+	elif event.keycode == KEY_M:
+		sound.toggle_mute()
+		update_hud()
+	elif event.keycode == KEY_P and started and not squad.is_empty():
+		running = not running
+		lcd.set_playing(true)
+		sound.stop_all()
+		message.text = "PAUSED" if not running else ""
+
+func _physics_process(delta: float) -> void:
+	if not running:
+		if defeat_hold_remaining > 0.0:
+			defeat_hold_remaining = maxf(0.0, defeat_hold_remaining - delta)
+			if defeat_hold_remaining == 0.0:
+				lcd.set_playing(false)
+				message.visible = false
+				update_hud()
+		return
+	elapsed += delta
+	sound.tick(delta)
+	ship_previous.clear()
+	for ship: Node3D in squad:
+		ship_previous[ship] = ship.position
+	var movement := Vector2(float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)), float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
+	movement = movement.limit_length()
+	player_x += movement.x * 7.0 * delta
+	# Compensate the camera foreshortening so vertical and horizontal screen speeds agree.
+	player_z += movement.y * 9.7 * delta
+	arrange()
+	var difficulty: float = Rules.difficulty_time(elapsed)
+	var speed: float = Rules.course_speed(difficulty)
+	spawn_clock -= delta
+	if spawn_clock <= 0.0:
+		spawn_wave()
+		spawn_clock += encounters.next_interval(difficulty)
+	fire_clock = maxf(0.0, fire_clock - delta)
+	if fire_clock <= 0.0:
+		fire_clock = Rules.shot_interval(squad.size())
+		sound.play_effect("shot")
+		for soldier: Node3D in squad:
+			if bullets.size() < Rules.MAX_BULLETS:
+				var bullet := MeshInstance3D.new()
+				bullet.mesh = bullet_mesh
+				bullet.visible = false
+				bullet.position = soldier.position + Vector3(0.05, 0.53, -0.4)
+				add_child(bullet)
+				bullet.set_meta("damage", Rules.shot_damage(squad.size()))
+				bullets.append(bullet)
+	Motion.advance(targets, speed, delta)
+	for target: CourseTarget in targets:
+		target.animate(delta)
+	advance_bullets(delta)
+	sync_bullets()
+	resolve_contacts()
+	for i: int in range(targets.size() - 1, -1, -1):
+		if targets[i].position.z > 11:
+			targets[i].free()
+			targets.remove_at(i)
+	for i: int in range(particles.size() - 1, -1, -1):
+		var p: MeshInstance3D = particles[i]
+		p.scale *= 0.87
+		p.position.y += delta * 2.0
+		if p.scale.x < 0.03:
+			p.free()
+			particles.remove_at(i)
+	toast_clock = maxf(0, toast_clock - delta)
+	if toast_clock == 0:
+		toast.text = ""
+		toast_icon.visible = false
+	if squad.is_empty():
+		finish()
+	update_hud()
+
+func spawn_target(x: float, z: float, kind: int, hp: int, reward: int, tier: int = 1) -> CourseTarget:
+	if targets.size() >= 30:
+		return null
+	var target := Target.new() as CourseTarget
+	add_child(target)
+	target.position = Vector3(x, 0, z)
+	target.setup(kind, hp, reward, tier)
+	targets.append(target)
+	return target
+
+func spawn_wave() -> void:
+	for encounter: Dictionary in encounters.plan(Rules.difficulty_time(elapsed), wave):
+		var target: CourseTarget = spawn_target(encounter.x, encounter.z, encounter.kind, encounter.hp, encounter.reward, encounter.tier)
+		if target != null:
+			target.velocity.x = encounter.drift
+	wave += 1
+
+func advance_bullets(delta: float) -> void:
+	for i: int in range(bullets.size() - 1, -1, -1):
+		var bullet: MeshInstance3D = bullets[i]
+		var before: Vector3 = bullet.position
+		bullet.position.z -= Rules.BULLET_SPEED * delta
+		var nearest: CourseTarget = null
+		var first_fraction: float = INF
+		for target: CourseTarget in targets:
+			var relative_from := before - Vector3(target.previous_x, 0, target.previous_z)
+			var relative_to := bullet.position - target.position
+			var fraction: float = Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half, target.corner_cut)
+			if fraction < first_fraction:
+				first_fraction = fraction
+				nearest = target
+		if nearest != null:
+			sound.play_effect("hit")
+			if nearest.hit(int(bullet.get_meta("damage", 1))):
+				destroy_target(nearest)
+		# Recycle only after leaving the whole course, never at an in-course range limit.
+		if nearest != null or bullet.position.z < -34.0:
+			bullet.free()
+			bullets.remove_at(i)
+
+func burst(at: Vector3) -> void:
+	for i: int in range(8):
+		if particles.size() >= 160:
+			break
+		var angle: float = float(i) * TAU / 8.0
+		particles.append(box(Vector3.ONE * 0.22, at + Vector3(cos(angle) * 0.65, 0.6, sin(angle) * 0.65), spark))
+
+func destroy_target(target: CourseTarget) -> void:
+	burst(target.position)
+	if target.kind == 0:
+		sound.play_effect("reinforce")
+		var before: int = squad.size()
+		for i: int in range(target.reward):
+			add_soldier()
+		notice("+%d" % (squad.size() - before), 1.2, 0)
+		arrange()
+		score += 25
+	else:
+		sound.play_effect("break")
+		score += target.reward
+		notice("+%d" % target.reward, 1.2, 1)
+	targets.erase(target)
+	target.free()
+
+func resolve_contacts() -> void:
+	# Collect all touched soldiers before compacting the formation.
+	var casualties: Array[Node3D] = []
+	for soldier: Node3D in squad:
+		for target: CourseTarget in targets:
+			var before: Vector3 = ship_previous.get(soldier, soldier.position)
+			var relative_from := Vector3(before.x - target.previous_x, 0, before.z - target.previous_z)
+			var relative_to := Vector3(soldier.position.x - target.position.x, 0, soldier.position.z - target.position.z)
+			if Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half + Vector2.ONE * 0.13, target.corner_cut) != INF:
+				casualties.append(soldier)
+				break
+	for soldier: Node3D in casualties:
+		burst(soldier.position)
+		squad.erase(soldier)
+		ship_previous.erase(soldier)
+		soldier.free()
+	if not casualties.is_empty():
+		sound.play_effect("loss")
+		notice("-%d" % casualties.size(), 0.8, 0)
+		arrange()
+
+func finish() -> void:
+	running = false
+	defeat_hold_remaining = DEFEAT_HOLD_SECONDS
+	lcd.set_playing(true)
+	lcd.demo.defeated = true
+	message.visible = true
+	sound.play_effect("defeat")
+	message.text = "FLEET LOST\n\nPRESS R TO PLAY"
+
+func update_hud() -> void:
+	lcd.update_status(squad.size(), score, elapsed)
+	audio_status.text = "MODE  ENDLESS\nSOUND %s" % ("OFF" if sound.muted else "ON")
+
+

@@ -1,0 +1,43 @@
+func fire_power() -> void:
+	if not running or power_clock > 0.0 or power_shots.size() >= 3:
+		return
+	if power_ammo <= 0:
+		notice("EMPTY", 0.8, 3)
+		return
+	power_ammo -= 1
+	power_clock = Rules.POWER_COOLDOWN
+	var shot: MeshInstance3D = box(Vector3(0.26, 0.20, 0.9), Vector3(player_x, 0.53, PLAYER_Z - 0.7), yellow)
+	shot.set_meta("damage", Rules.POWER_DAMAGE * Rules.shot_damage(squad.size()))
+	power_shots.append(shot)
+
+func advance_power(delta: float) -> void:
+	for i: int in range(power_shots.size() - 1, -1, -1):
+		var shot: MeshInstance3D = power_shots[i]
+		var before: Vector3 = shot.position
+		shot.position.z -= Rules.POWER_SPEED * delta
+		var first: float = INF
+		var impact: CourseTarget = null
+		for target: CourseTarget in targets:
+			var fraction: float = Rules.shot_fraction(before, shot.position, target.position, target.half + Vector2.ONE * 0.1)
+			if fraction < first:
+				first = fraction
+				impact = target
+		if impact != null:
+			explode_power(before.lerp(shot.position, first), int(shot.get_meta("damage")))
+		if impact != null or shot.position.z < -34.0:
+			shot.free()
+			power_shots.remove_at(i)
+
+func explode_power(at: Vector3, damage: int) -> void:
+	for i: int in range(20):
+		if particles.size() >= 160:
+			break
+		var angle: float = float(i) * TAU / 20.0
+		particles.append(box(Vector3.ONE * 0.18, at + Vector3(cos(angle) * Rules.POWER_RADIUS, 0.15, sin(angle) * Rules.POWER_RADIUS), spark))
+	for target: CourseTarget in targets.duplicate():
+		var dx: float = maxf(0, absf(target.position.x - at.x) - target.half.x)
+		var dz: float = maxf(0, absf(target.position.z - at.z) - target.half.y)
+		if Vector2(dx, dz).length() <= Rules.POWER_RADIUS and target.hit(damage):
+			destroy_target(target)
+	sound.play_effect("break")
+

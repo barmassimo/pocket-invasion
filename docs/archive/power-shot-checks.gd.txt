@@ -1,0 +1,81 @@
+	var alt := InputEventKey.new()
+	alt.keycode = KEY_ALT
+	alt.pressed = true
+	alt.location = KEY_LOCATION_RIGHT
+	game._unhandled_key_input(alt)
+	game._physics_process(0.016)
+	check(game.power_ammo == 2 and game.power_shots.is_empty(), "Right Alt does not trigger the power weapon")
+	alt.location = KEY_LOCATION_LEFT
+	game._unhandled_key_input(alt)
+	game._physics_process(0.016)
+	check(game.power_ammo == 1 and game.power_shots.size() == 1, "Left Alt spends one charge and launches one power shot")
+	game.fire_power()
+	alt.echo = true
+	game._unhandled_key_input(alt)
+	game._physics_process(0.016)
+	check(game.power_ammo == 1 and game.power_shots.size() == 1, "Power cooldown and key repeat prevent accidental repeated use")
+	game.reset_run(true, 123)
+	game.power_ammo = 1
+	var battery: CourseTarget = game.spawn_target(0, -5, 3, 1, 2)
+	game.destroy_target(battery)
+	check(game.power_ammo == 3 and game.squad.size() == 4 and game.score == 0, "Charge targets replenish ammunition without granting ships or score")
+	game.power_ammo = 5
+	game.destroy_target(game.spawn_target(0, -5, 3, 1, 3))
+	check(game.power_ammo == Rules.POWER_MAX, "Charge rewards respect the ammunition cap")
+	game.reset_run(true, 123)
+	var direct: CourseTarget = game.spawn_target(0, -3, 1, 150, 50)
+	game.spawn_target(2, -4, 1, 100, 50)
+	var distant_power: CourseTarget = game.spawn_target(4.8, -3, 1, 400, 50)
+	game.fire_power()
+	game.advance_power(1.0)
+	check(direct.hp == 30 and distant_power.hp == 400 and game.score == 50 and game.targets.size() == 2 and game.squad.size() == 4, "Swept power impact deals area damage, respects blast radius and leaves the fleet unharmed")
+	game.reset_run(true, 123)
+	var far_impact: CourseTarget = game.spawn_target(0, -20, 1, 150, 50)
+	game.fire_power()
+	game.advance_power(2.0)
+	check(far_impact.hp == 30 and game.power_shots.is_empty() and not game.particles.is_empty(), "Power shot reaches distant targets and explodes on impact")
+	game.reset_run(true, 123)
+	var near_miss: CourseTarget = game.spawn_target(2, -5.7, 1, 150, 50)
+	var edge_miss: CourseTarget = game.spawn_target(2, -34, 1, 150, 50)
+	game.fire_power()
+	game.advance_power(2.0)
+	check(near_miss.hp == 150 and edge_miss.hp == 150 and game.power_shots.is_empty() and game.particles.is_empty() and game.power_ammo == 1, "Missed power shot exits without explosion, area damage or refunded charge")
+	game.reset_run(true, 123)
+	var normal_far: CourseTarget = game.spawn_target(0, -20, 1, 500, 50)
+	game.bullets.append(game.box(Vector3.ONE * 0.1, Vector3(0, 0.5, 0), game.yellow))
+	game.advance_bullets(1.0)
+	check(normal_far.hp == 499, "Normal projectiles retain full-course reach")
+	game.reset_run(true, 123)
+	game.spawn_clock = 999.0
+	for shot: int in range(Rules.POWER_START):
+		game.fire_power()
+		for step: int in range(50):
+			game._physics_process(1.0 / 60.0)
+	var active_power: int = game.power_shots.size()
+	game.fire_power()
+	check(game.power_ammo == 0 and game.power_shots.size() == active_power and game.toast.text == "EMPTY", "Empty power ammunition cannot launch more shots")
+	game.power_requested = true
+	game.reset_run(true, 123)
+	check(game.power_ammo == Rules.POWER_START and game.power_shots.is_empty() and game.power_clock == 0.0 and not game.power_requested, "Restart restores ammunition and clears all power-weapon state")
+	var pause_power := InputEventKey.new()
+	pause_power.keycode = KEY_P
+	pause_power.pressed = true
+	game._unhandled_key_input(pause_power)
+	alt.echo = false
+	game._unhandled_key_input(alt)
+	game._physics_process(0.016)
+	check(game.power_ammo == Rules.POWER_START and game.bullets.is_empty() and game.power_shots.is_empty(), "Pause suppresses both automatic fire and power-shot consumption")
+	game.reset_run(true, 123)
+	var ammo_gaps_valid: bool = true
+	for seed_value: int in [42, 123, 456, 789, 2026]:
+		var generator := Encounters.new()
+		generator.reset(seed_value)
+		var gap: int = 0
+		for index: int in range(30):
+			var found: bool = false
+			for item: Dictionary in generator.plan(120.0 + index * 10.0, index):
+				found = found or item.kind == 3
+			gap = 0 if found else gap + 1
+			ammo_gaps_valid = ammo_gaps_valid and gap <= 2
+	check(ammo_gaps_valid, "Seeded runs provide charge targets at least every three waves")
+	game.reset_run()
