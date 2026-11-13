@@ -9,7 +9,7 @@ const CAMERA_FOCUS := Vector3(0, 0, -8.2)
 const SPACING: float = 0.58
 const SHOT_INTERVAL: float = 0.45
 const MAX_BULLETS: int = 768
-const START_DIFFICULTY_SECONDS: float = 120.0
+const START_DIFFICULTY_SECONDS: float = 0.0
 const RECOVERY_HEALTH: int = 5
 const BULLET_SPEED: float = 28.0
 const SIZE_SCALES: Array[float] = [0.8, 1.0, 1.25, 1.5, 1.8]
@@ -32,7 +32,11 @@ static func difficulty_time(survival_time: float) -> float:
 
 static func course_speed(elapsed: float) -> float:
 	var active: float = maxf(0.0, elapsed - START_DIFFICULTY_SECONDS)
-	return 3.8 + 0.95 * log(1.0 + maxf(0.0, elapsed) / 30.0) + active * 0.008 + active * active * 0.000008
+	# A gentler opening, with continuously increasing acceleration as the run lasts.
+	return 3.8 + active * 0.014 + active * active * 0.000012
+
+static func threat_level(survival_time: float) -> int:
+	return 1 + floori(difficulty_time(survival_time) / 60.0)
 
 static func shot_damage(_count: int) -> int:
 	return 1

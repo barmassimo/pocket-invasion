@@ -59,7 +59,7 @@ func _draw() -> void:
 	segment_text("%02d:%02d" % [seconds / 60, seconds % 60], Vector2(47, 254), 34)
 	draw_line(Vector2(46, 403), Vector2(329, 403), INK)
 	caption(Vector2(46, 427), "THREAT LEVEL")
-	segment_text("%02d" % (3 + seconds / 60), Vector2(47, 443), 34)
+	segment_text("%02d" % Rules.threat_level(float(seconds)), Vector2(47, 443), 34)
 	draw_line(Vector2(46, 626), Vector2(329, 626), INK)
 
 func segment_text(text: String, at: Vector2, height: float) -> void:

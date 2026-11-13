@@ -106,7 +106,18 @@ func run() -> void:
 	check(generation_valid, "Random encounters stay inside road and preserve reinforcement opportunities")
 	game.reset_run(true, 123)
 	game.spawn_wave()
-	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 120.0 and game.targets.size() >= 2, "Run starts at two-minute difficulty with a fresh survival timer and immediate threats")
+	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 0.0 and game.targets.size() >= 2, "Run starts at first-minute difficulty with a fresh survival timer and immediate threats")
+	check(Rules.threat_level(0.0) == 1 and Rules.threat_level(59.99) == 1 and Rules.threat_level(60.0) == 2 and Rules.threat_level(120.0) == 3, "Threat level starts at one and advances at minute boundaries")
+	var previous_speed: float = Rules.course_speed(Rules.difficulty_time(0.0))
+	var previous_gain: float = 0.0
+	var speed_accelerates: bool = previous_speed < 4.0
+	for step: int in range(1, 36001):
+		var speed: float = Rules.course_speed(Rules.difficulty_time(float(step) / 60.0))
+		var gain: float = speed - previous_speed
+		speed_accelerates = speed_accelerates and gain > previous_gain
+		previous_speed = speed
+		previous_gain = gain
+	check(speed_accelerates, "Gentle opening speed grows every physics tick with increasing gains for ten minutes")
 	var recoveries_present: bool = true
 	for seed_value: int in [42, 123, 456, 789, 2026]:
 		for survival: float in [0.0, 300.0, 1800.0]:
