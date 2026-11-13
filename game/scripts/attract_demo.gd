@@ -6,7 +6,7 @@ const INK := Color("253820")
 const PAPER := Color("c4cca5")
 const Art = preload("res://scripts/target_art.gd")
 const LESSON_SECONDS: float = 9.0
-const LOOP_SECONDS: float = LESSON_SECONDS * 3.0
+const LOOP_SECONDS: float = LESSON_SECONDS * 2.0
 var clock: float = 0.0
 var font := SystemFont.new()
 
@@ -51,31 +51,25 @@ func explosion(at: Vector2, progress: float) -> void:
 func _draw() -> void:
 	var lesson: int = floori(clock / LESSON_SECONDS)
 	var time: float = fposmod(clock, LESSON_SECONDS)
-	# Hold the result completely still for the last three seconds of each lesson.
+	# Hold each result completely still for the last three seconds.
 	var action: float = minf(time, 6.0)
 	text_at(0, "HOW TO PLAY", 20)
 	draw_line(Vector2(0, 48), Vector2(348, 48), INK)
-	text_at(80, ["02 / BUILD YOUR FLEET", "03 / EARN POINTS", "04 / WATCH YOUR HULL"][lesson], 16)
+	text_at(80, ["02 / BUILD YOUR FLEET", "03 / EARN POINTS"][lesson], 16)
 	draw_rect(Rect2(10, 104, 328, 350), INK, false)
 	draw_set_transform(Vector2(34, 0))
-	if lesson < 2:
-		draw_shooting(action, lesson)
-	else:
-		draw_contact(action)
+	draw_shooting(action, lesson)
 	draw_set_transform(Vector2.ZERO)
 	draw_line(Vector2(0, 480), Vector2(348, 480), INK)
 	if time >= 5.5:
 		var lines: Array = [
 			["BREAK THE CAPTURE SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
-			["BREAK ALIEN SHIPS", "TO EARN POINTS.", "HP = HITS REMAINING"],
-			["AVOID INTACT TARGETS.", "ONLY SHIPS THEY TOUCH", "ARE LOST. KEEP MOVING!"]][lesson]
+			["BREAK ALIENS FOR POINTS.", "CONTACT ONLY DESTROYS", "THE SHIPS IT TOUCHES."]][lesson]
 		for i: int in range(lines.size()):
 			text_at(512 + i * 25, lines[i], 16)
 	else:
 		text_at(519, "WATCH AND LEARN", 16)
-		text_at(546, "FIRE IS AUTOMATIC" if lesson < 2 else "MOVE [W][A][S][D] / [ARROWS]", 14)
-	for i: int in range(4):
-		draw_circle(Vector2(147 + i * 18, 602), 4, INK if i == lesson + 1 else Color("98a580"))
+		text_at(546, "FIRE IS AUTOMATIC", 14)
 	text_at(648, "[ENTER / SPACE] START", 18)
 	text_at(677, "[P] PAUSE    [M] MUTE", 12)
 	text_at(699, "[F / F11] FULLSCREEN", 12)
@@ -117,20 +111,3 @@ func draw_shooting(time: float, kind: int) -> void:
 		if time >= 4.9:
 			action_text(312, "+50 POINTS", 21)
 	action_text(125, "SHIPS  %d" % (2 if kind == 0 and time >= 5.5 else 1), 14)
-
-func draw_contact(time: float) -> void:
-	# Keep the reward label above the panel border, including the final hold.
-	var y: float = lerpf(210, 370, smoothstep(0.7, 4.2, time))
-	# Both ships share the player's formation movement; only the left hull is hit.
-	var dodge: float = smoothstep(0.7, 2.8, time) * 45
-	if time < 5.3:
-		target(Vector2(104, y), 5, 1)
-	if time < 3.0:
-		ship(Vector2(104 + dodge, 382))
-	elif time < 3.8:
-		explosion(Vector2(104 + dodge, 382), (time - 3.0) / 0.8)
-	ship(Vector2(140 + dodge, 382))
-	if time >= 4.4:
-		action_text(240, "1 SHIP LOST", 20)
-		action_text(271, "1 SHIP SURVIVES", 16)
-

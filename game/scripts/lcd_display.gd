@@ -9,6 +9,7 @@ const Demo = preload("res://scripts/attract_demo.gd")
 const Intro = preload("res://scripts/story_intro.gd")
 const WINDOW_WIDTH: int = 775
 const PLAYFIELD_CENTER_X: float = 550.0
+const PAGE_COUNT: int = 3
 const INK := Color("253820")
 const GHOST := Color(0.16, 0.22, 0.12, 0.09)
 const DIGITS: Array[int] = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
@@ -21,6 +22,7 @@ var score: int = 0
 var seconds: int = 0
 var muted: bool = false
 var volume_slider: HSlider
+var page_navigation: Control
 var lcd_font := SystemFont.new()
 
 func _ready() -> void:
@@ -35,6 +37,14 @@ func _ready() -> void:
 	intro.position = Vector2(349, 18)
 	intro.visible = false
 	add_child(intro)
+	page_navigation = Control.new()
+	page_navigation.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(page_navigation)
+	page_navigation.draw.connect(draw_page_navigation)
+	add_page_button(Vector2(459, 651), Vector2(32, 32), "<", "Previous page (Left arrow)", func() -> void: step_page(-1))
+	for page: int in range(PAGE_COUNT):
+		add_page_button(Vector2(498 + page * 18, 651), Vector2(18, 32), "", "Page %d" % (page + 1), select_page.bind(page))
+	add_page_button(Vector2(559, 651), Vector2(32, 32), ">", "Next page (Right arrow)", func() -> void: step_page(1))
 	volume_slider = HSlider.new()
 	volume_slider.position = Vector2(87, 742)
 	volume_slider.size = Vector2(190, 28)
@@ -72,12 +82,58 @@ func _ready() -> void:
 
 func set_playing(playing: bool) -> void:
 	attract_active = not playing
+	page_navigation.visible = not playing
 	attract_clock = 0.0
 	demo.set_playing(true)
 	intro.animation_time = 0.0
 	intro.visible = not playing
+	page_navigation.queue_redraw()
 	set_process(not playing)
 	queue_redraw()
+
+func add_page_button(at: Vector2, bounds: Vector2, text: String, hint: String, action: Callable) -> void:
+	var button := Button.new()
+	button.position = at
+	button.size = bounds
+	button.text = text
+	button.tooltip_text = hint
+	button.flat = true
+	button.focus_mode = Control.FOCUS_NONE
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.add_theme_font_override("font", lcd_font)
+	button.add_theme_font_size_override("font_size", 24)
+	for color_name: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+		button.add_theme_color_override(color_name, INK)
+	for style_name: String in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
+	button.pressed.connect(action)
+	page_navigation.add_child(button)
+
+func current_page() -> int:
+	return 0 if attract_clock < Intro.LOOP_SECONDS else 1 + floori((attract_clock - Intro.LOOP_SECONDS) / Demo.LESSON_SECONDS)
+
+func step_page(direction: int) -> void:
+	select_page(posmod(current_page() + direction, PAGE_COUNT))
+
+func select_page(page: int) -> void:
+	if not attract_active:
+		return
+	var selected: int = posmod(page, PAGE_COUNT)
+	attract_clock = 0.0 if selected == 0 else Intro.LOOP_SECONDS + (selected - 1) * Demo.LESSON_SECONDS
+	intro.animation_time = 0.0
+	_process(0.0)
+
+func page_remaining_fraction() -> float:
+	if current_page() == 0:
+		return 1.0 - attract_clock / Intro.LOOP_SECONDS
+	return 1.0 - fposmod(attract_clock - Intro.LOOP_SECONDS, Demo.LESSON_SECONDS) / Demo.LESSON_SECONDS
+
+func draw_page_navigation() -> void:
+	for page: int in range(PAGE_COUNT):
+		page_navigation.draw_circle(Vector2(507 + page * 18, 667), 4, INK if page == current_page() else Color("98a580"))
+	# A quiet, unlabelled countdown drains toward the fixed left edge.
+	page_navigation.draw_rect(Rect2(607, 666, 48, 2), Color("b0bb94"))
+	page_navigation.draw_rect(Rect2(607, 666, 48 * page_remaining_fraction(), 2), Color("65734a"))
 
 func _process(delta: float) -> void:
 	if not attract_active:
@@ -88,6 +144,7 @@ func _process(delta: float) -> void:
 	if demo.visible:
 		demo.clock = attract_clock - Intro.LOOP_SECONDS
 		demo.queue_redraw()
+	page_navigation.queue_redraw()
 	queue_redraw()
 
 func update_status(count: int, points: int, time: float) -> void:

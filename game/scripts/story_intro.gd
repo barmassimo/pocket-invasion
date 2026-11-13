@@ -4,7 +4,7 @@ extends Control
 const INK := Color("253820")
 const PAPER := Color("c4cca5")
 const Art = preload("res://scripts/target_art.gd")
-const LOOP_SECONDS: float = 11.0
+const LOOP_SECONDS: float = 13.0
 const START_DELAY: float = 1.6
 const MID := Color("65734a")
 var font := SystemFont.new()
@@ -17,9 +17,9 @@ func _ready() -> void:
 	paragraph(60, "FROM COMMAND CENTER", 20)
 	paragraph(347, "Command Center to last fighter.\nEarth has fallen. The aliens hold it.", 18)
 	paragraph(415, "You are the last fighter in flight.", 18)
-	paragraph(459, "One fighter cannot win this war,\nbut our captured pilots are alive.", 18)
-	paragraph(523, "Free them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.", 18)
-	paragraph(620, "WE ARE COUNTING ON YOU.", 19)
+	paragraph(459, "Our captured pilots are alive.", 18)
+	paragraph(503, "Free them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.", 18)
+	paragraph(600, "WE ARE COUNTING ON YOU.", 19)
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():
@@ -56,8 +56,6 @@ func _draw() -> void:
 		Vector2(181, 260), Vector2(168, 267)]), INK)
 	draw_capture_sequence()
 	draw_line(Vector2(30, 315), Vector2(378, 315), INK)
-	for i: int in range(4):
-		draw_circle(Vector2(177 + i * 18, 649), 4, INK if i == 0 else Color("98a580"))
 	draw_string(font, Vector2(30, 695), "[ENTER / SPACE] START", HORIZONTAL_ALIGNMENT_CENTER, 348, 18, INK)
 	draw_string(font, Vector2(30, 724), "[P] PAUSE    [M] MUTE", HORIZONTAL_ALIGNMENT_CENTER, 348, 12, INK)
 	draw_string(font, Vector2(30, 746), "[F / F11] FULLSCREEN", HORIZONTAL_ALIGNMENT_CENTER, 348, 12, INK)

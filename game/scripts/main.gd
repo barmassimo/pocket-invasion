@@ -251,6 +251,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
 		if not started or squad.is_empty():
 			reset_run()
+	elif event.keycode in [KEY_LEFT, KEY_RIGHT] and lcd.attract_active:
+		lcd.step_page(-1 if event.keycode == KEY_LEFT else 1)
+		get_viewport().set_input_as_handled()
 	elif event.keycode == KEY_ESCAPE:
 		var mode: DisplayServer.WindowMode = DisplayServer.window_get_mode()
 		if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
