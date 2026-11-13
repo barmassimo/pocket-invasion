@@ -25,7 +25,7 @@ func setup(type: int, health: int, gain: int, tier: int = 1) -> void:
 	previous_z = position.z
 	hp = health
 	reward = gain
-	var radius: float = 0.90 * SquadRules.SIZE_SCALES[tier]
+	var radius: float = 0.90 * InvasionRules.SIZE_SCALES[tier]
 	# Compensate the elevated camera so the flat hull reads as a circle on screen.
 	half = Vector2(radius, radius / Art.projection_scale())
 	body = Art.layer(Art.HULL, Vector2.ONE * radius * 2.0, Vector3(0, Art.PLANE_HEIGHT, 0))

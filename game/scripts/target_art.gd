@@ -10,7 +10,7 @@ const PILOT_SIZE := Vector2(0.76, 0.95)
 const PILOT_SPACING: float = 0.70
 
 static func projection_scale() -> float:
-	var direction: Vector3 = SquadRules.CAMERA_POSITION - SquadRules.CAMERA_FOCUS
+	var direction: Vector3 = InvasionRules.CAMERA_POSITION - InvasionRules.CAMERA_FOCUS
 	return absf(direction.y) / direction.length()
 
 static func crew_count(tier: int) -> int:

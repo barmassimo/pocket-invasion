@@ -1,6 +1,6 @@
 extends Node3D
 
-const Rules = preload("res://scripts/rules.gd")
+const Rules = preload("res://scripts/invasion_rules.gd")
 const Target = preload("res://scripts/target.gd")
 const Sound = preload("res://scripts/sound.gd")
 const Encounters = preload("res://scripts/encounters.gd")
@@ -200,7 +200,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	lcd.set_playing(play)
 	lcd.demo.defeated = false
 	message.visible = play
-	message.text = "" if play else "STAR FLEET\n\nREADY"
+	message.text = "" if play else "POCKET INVASION\n\nREADY"
 	update_hud()
 
 func add_soldier() -> void:

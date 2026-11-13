@@ -19,8 +19,8 @@ func show_targets() -> void:
 	game.add_child(legend)
 	for tier: int in range(5):
 		var z: float = -23.0 + tier * 6.0
-		game.spawn_target(-2.8, z, 1, 20 * (tier + 1), SquadRules.target_reward(1, tier), tier)
-		game.spawn_target(2.8, z, 0, 5 * (tier + 1), SquadRules.target_reward(0, tier), tier)
+		game.spawn_target(-2.8, z, 1, 20 * (tier + 1), InvasionRules.target_reward(1, tier), tier)
+		game.spawn_target(2.8, z, 0, 5 * (tier + 1), InvasionRules.target_reward(0, tier), tier)
 	await process_frame
 	await process_frame
 	await RenderingServer.frame_post_draw

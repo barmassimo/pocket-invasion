@@ -1,7 +1,7 @@
 class_name LcdDisplay
 extends Control
 
-const Rules = preload("res://scripts/rules.gd")
+const Rules = preload("res://scripts/invasion_rules.gd")
 const Demo = preload("res://scripts/attract_demo.gd")
 const WINDOW_WIDTH: int = 775
 const PLAYFIELD_CENTER_X: float = 550.0
@@ -49,7 +49,7 @@ func _draw() -> void:
 	draw_rect(Rect2(27, 27, 321, 746), INK, false, 1.0)
 	for at: Vector2 in [Vector2(9, 9), Vector2(WINDOW_WIDTH - 9, 9), Vector2(9, 791), Vector2(WINDOW_WIDTH - 9, 791)]:
 		draw_circle(at, 3, Color("161d13"))
-	caption(Vector2(46, 47), "STAR FLEET / LCD", 19)
+	caption(Vector2(46, 47), "POCKET INVASION", 19)
 	caption(Vector2(46, 70), "HANDHELD COMBAT SYSTEM", 12)
 	caption(Vector2(46, 98), "SHIPS / CAPACITY")
 	segment_text("%02d/%02d" % [soldiers, Rules.MAX_SOLDIERS], Vector2(47, 109), 34)

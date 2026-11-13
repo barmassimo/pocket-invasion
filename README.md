@@ -1,4 +1,4 @@
-# Conveyor Squad
+# Pocket Invasion
 
 A local Windows arcade prototype made with standard Godot 4.7.2 and typed GDScript, styled as an olive monochrome 1980s LCD handheld. Fly a spacecraft formation freely across the playfield, shoot automatically and break targets for more ships or score.
 
@@ -94,13 +94,13 @@ To inspect all five enemy sizes side by side at the actual gameplay pixel scale:
 
 This focused visual preview saves `artifacts/enemy-tiers.png`. Add `-- --capture` to close it after saving. It does not change course tuning or add a gameplay mode.
 
-`tools/godot/editor_data/` contains the editor settings and cache, verified after launch. The actual default project data path reported by this Windows build is `%APPDATA%\Godot\app_userdata\Conveyor Squad\`, even with the editor in self-contained mode. It contains shader caches and, without an explicit log override, game logs under `logs/`. No custom user-data setting is enabled. The game does not write saves. Project imports stay in `game/.godot/`.
+`tools/godot/editor_data/` contains the editor settings and cache, verified after launch. The actual default project data path reported by this Windows build is `%APPDATA%\Godot\app_userdata\Pocket Invasion\`, even with the editor in self-contained mode. It contains shader caches and, without an explicit log override, game logs under `logs/`. No custom user-data setting is enabled. The game does not write saves. Project imports stay in `game/.godot/`.
 
 The first sandboxed verification could not create the default user-data directory; running with normal desktop access resolved this. Detailed verification notes are in `artifacts/verification.md`.
 
 ## Prototype limits
 
-One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects without music. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, exports, third-party assets, network features, or services. Rules and tuning are in `game/scripts/rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
+One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects without music. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, exports, third-party assets, network features, or services. Rules and tuning are in `game/scripts/invasion_rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
 
 
 

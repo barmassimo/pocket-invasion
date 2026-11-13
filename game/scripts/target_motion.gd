@@ -1,7 +1,7 @@
 class_name TargetMotion
 extends RefCounted
 
-const Rules = preload("res://scripts/rules.gd")
+const Rules = preload("res://scripts/invasion_rules.gd")
 const RESTITUTION: float = 0.65
 const DRIFT_MIN: float = 0.25
 const DRIFT_MAX: float = 0.55

@@ -2,12 +2,12 @@
 
 ## Project intent
 
-Build a small, local Windows arcade game inspired by the conveyor/crowd-shooter gameplay shown in misleading video advertisements. Implement the advertised gameplay as a playable game. The initial goal is a satisfying, simple prototype, not a large production.
+Build Pocket Invasion, a small, local Windows arcade game inspired by the formation-shooter gameplay shown in misleading video advertisements. Implement the advertised gameplay as a playable game. The initial goal is a satisfying, simple prototype, not a large production.
 
 The intended gameplay is:
 
 - A player-controlled formation of soldiers stays near the bottom of the screen and moves left and right.
-- Enemies, obstacles and numbered portals/targets approach along a scrolling conveyor-like course.
+- Enemies, obstacles and numbered portals/targets approach across a scrolling playfield.
 - Soldiers fire forward automatically. The player aims primarily by moving the formation.
 - Targets have visible hit points. Hits reduce them, and destroying a target grants its indicated reward, such as additional soldiers or score.
 - Surviving threats that reach the formation remove the soldiers they actually touch. A missed target must not arbitrarily wipe out the entire formation.

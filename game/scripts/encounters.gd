@@ -1,7 +1,7 @@
 class_name CourseEncounters
 extends RefCounted
 
-const Rules = preload("res://scripts/rules.gd")
+const Rules = preload("res://scripts/invasion_rules.gd")
 var rng := RandomNumberGenerator.new()
 var run_seed: int = 0
 var waves_since_recovery: int = 1

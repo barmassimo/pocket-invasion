@@ -1,4 +1,4 @@
-class_name SquadRules
+class_name InvasionRules
 extends RefCounted
 
 const START_SOLDIERS: int = 4
