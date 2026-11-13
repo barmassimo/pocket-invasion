@@ -1,11 +1,15 @@
 class_name InvasionRules
 extends RefCounted
 
-const START_SOLDIERS: int = 4
+const START_SOLDIERS: int = 1
+const SHOT_RATE_REFERENCE_COUNT: int = 4
 const ROAD_HALF: float = 5.5
 const CAMERA_POSITION := Vector3(0, 21, 11.8)
 const CAMERA_FOCUS := Vector3(0, 0, -8.2)
 const SPACING: float = 0.58
+const WIDE_FORMATION_THRESHOLD: int = 32
+const SHIPS_PER_EXTRA_COLUMN: int = 8
+const MAX_FORMATION_COLUMNS: int = 20
 const SHOT_INTERVAL: float = 0.45
 const MAX_BULLETS: int = 768
 const START_DIFFICULTY_SECONDS: float = 60.0
@@ -43,7 +47,7 @@ static func shot_damage(_count: int) -> int:
 	return 1
 
 static func shot_interval(count: int) -> float:
-	return maxf(0.20, SHOT_INTERVAL / sqrt(maxf(1.0, float(count) / START_SOLDIERS)))
+	return maxf(0.20, SHOT_INTERVAL / sqrt(maxf(1.0, float(count) / SHOT_RATE_REFERENCE_COUNT)))
 
 static func encounter_pressure(elapsed: float) -> float:
 	var minutes: float = maxf(0.0, elapsed) / 60.0
@@ -66,7 +70,11 @@ static func offsets(count: int) -> Array[Vector3]:
 	return result
 
 static func formation_columns(count: int) -> int:
-	return 6 if count <= 24 else 8
+	if count <= 24:
+		return 6
+	# Large fleets trade lateral escape room for more firing columns.
+	var extra: int = ceili(float(maxi(0, count - WIDE_FORMATION_THRESHOLD)) / SHIPS_PER_EXTRA_COLUMN)
+	return mini(8 + extra, MAX_FORMATION_COLUMNS)
 
 static func formation_spacing(count: int) -> Vector2:
 	if count <= 24:

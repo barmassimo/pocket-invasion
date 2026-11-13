@@ -209,13 +209,33 @@ func run() -> void:
 	for time: float in [0.0, 89.99, 90.0, 180.0, 270.0, 1800.0]:
 		game.reset_run(true, 123)
 		game.elapsed = time
-		for i: int in range(120):
+		for i: int in range(124 - Rules.START_SOLDIERS):
 			game.add_soldier()
 		game.arrange()
 		limits_valid = limits_valid and game.squad.size() == 124 and game.soldier_batches[0].multimesh.visible_instance_count == 124
 	check(limits_valid, "Fleet grows beyond 48 with every ship rendered at all survival times")
+	check(Rules.formation_columns(32) == 8 and Rules.formation_columns(33) == 9 and Rules.formation_columns(40) == 9 and Rules.formation_columns(41) == 10, "Formation starts widening above 32 ships, adding a column per eight reinforcements")
+	var widening_valid: bool = true
+	var previous_limit: float = Rules.movement_limit(32)
+	for count: int in range(33, 257):
+		var limit: float = Rules.movement_limit(count)
+		widening_valid = widening_valid and limit > 0.0 and limit <= previous_limit
+		for offset: Vector3 in Rules.offsets(count):
+			widening_valid = widening_valid and absf(offset.x) + limit + 0.3 <= Rules.ROAD_HALF + 0.00001
+		previous_limit = limit
+	check(widening_valid and Rules.movement_limit(64) < Rules.movement_limit(32), "Growing fleets lose lateral escape room while every ship stays inside the course")
 	game.reset_run(true, 123)
-	check(game.squad.size() == Rules.START_SOLDIERS and game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and Rules.threat_level(game.elapsed) == 1, "Restart restores four ships, internal level two and displayed level one")
+	for i: int in range(41 - Rules.START_SOLDIERS):
+		game.add_soldier()
+	game.player_x = Rules.movement_limit(32)
+	game.arrange()
+	check(is_equal_approx(game.player_x, Rules.movement_limit(41)), "Widening after reinforcements clamps the fleet back inside the border")
+	while game.squad.size() > 32:
+		game.squad.pop_back().free()
+	game.arrange()
+	check(Rules.formation_columns(game.squad.size()) == 8 and Rules.movement_limit(32) > Rules.movement_limit(41), "Losses below the threshold restore compact width and lateral escape room")
+	game.reset_run(true, 123)
+	check(game.squad.size() == 1 and game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and Rules.threat_level(game.elapsed) == 1, "Restart restores one lone ship, internal level two and displayed level one")
 	game.reset_run(true, 123)
 	var small: CourseTarget = game.spawn_target(-3, -4, 0, Rules.target_health(0, 20, 1.0, 0), Rules.target_reward(0, 0), 0)
 	var large: CourseTarget = game.spawn_target(3, -4, 0, Rules.target_health(0, 20, 1.0, 2), Rules.target_reward(0, 2), 2)
@@ -239,7 +259,7 @@ func run() -> void:
 	check(game.squad.size() == Rules.START_SOLDIERS + 4, "Destroying large reinforcement target grants its four-soldier reward")
 	game.reset_run(true, 123)
 	game.elapsed = 270.0
-	for i: int in range(44):
+	for i: int in range(48 - Rules.START_SOLDIERS):
 		game.add_soldier()
 	game.arrange()
 	var command: CourseTarget = game.spawn_target(0, -15, 0, 1, Rules.target_reward(0, 4), 4)
@@ -266,7 +286,7 @@ func run() -> void:
 	check(parallel, "Projectiles stay parallel even when a target is offset from the formation")
 	game.reset_run(true, 123)
 	game.spawn_clock = 999.0
-	for i: int in range(20):
+	for i: int in range(24 - Rules.START_SOLDIERS):
 		game.add_soldier()
 	game.arrange()
 	game.spawn_target(0, -24, 2, Rules.target_health(2, Rules.difficulty_time(0), 1.15, 2), 160, 2)
@@ -352,7 +372,7 @@ func run() -> void:
 	send_key(KEY_W, true)
 	game._physics_process(0.2)
 	send_key(KEY_W, false)
-	check(game.squad.size() == 3, "Moving forward through a threat removes the crossed ship, without a safe player line")
+	check(game.squad.is_empty() and not game.running, "Flying the lone starting ship through a threat ends the run")
 	check(Rules.shot_fraction(Vector3(0.45, 0, 0.45), Vector3(0.45, 0, 0.45), Vector3.ZERO, Vector2(0.5, 0.5)) == INF, "Empty corners of rounded hulls do not register a false hit")
 	check(is_equal_approx(Rules.shot_fraction(Vector3(0, 0, 2), Vector3(0, 0, -2), Vector3.ZERO, Vector2(1, 0.5), 0.0), 0.375), "Fast shots enter an ellipse at its visible boundary")
 	check(Rules.shot_fraction(Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector2.ONE) == 0.0, "Stationary contact inside a rounded hull is detected")
@@ -379,16 +399,22 @@ func run() -> void:
 	game.advance_bullets(1.0)
 	check(distant.hp == 9 and game.bullets.is_empty(), "Shots reach distant targets beyond the removed range limit")
 	game.reset_run()
+	for i: int in range(4 - Rules.START_SOLDIERS):
+		game.add_soldier()
+	game.arrange()
 	var threat: CourseTarget = game.spawn_target(4.7, 5, 1, 100, 20)
 	game.resolve_contacts()
-	check(game.squad.size() == Rules.START_SOLDIERS, "Missed target outside formation causes no losses")
+	check(game.squad.size() == 4, "Missed target outside formation causes no losses")
 	threat.position.x = game.squad[0].position.x
 	threat.previous_x = threat.position.x
 	threat.half = Vector2(0.05, 0.05)
 	game.resolve_contacts()
-	check(game.squad.size() == Rules.START_SOLDIERS - 1, "Contact removes only touched soldier")
+	check(game.squad.size() == 3, "Contact removes only touched soldier")
 	check(game.squad[0].position.x > -1.45, "Formation compacts after casualty")
 	game.reset_run(true, 123)
+	for i: int in range(4 - Rules.START_SOLDIERS):
+		game.add_soldier()
+	game.arrange()
 	var fast: CourseTarget = game.spawn_target(game.squad[0].position.x, 10, 1, 100, 20)
 	fast.previous_z = 0.0
 	fast.half = Vector2(0.05, 0.05)
@@ -399,7 +425,7 @@ func run() -> void:
 	game._physics_process(0.016)
 	check(game.squad.is_empty() and not game.running and game.message.text.begins_with("FLEET LOST"), "Zero ships ends run")
 	game.reset_run()
-	check(game.squad.size() == Rules.START_SOLDIERS and game.targets.is_empty() and game.bullets.is_empty() and game.particles.is_empty() and game.score == 0 and game.elapsed == 0 and game.wave == 0 and game.running and game.player_z == Main.PLAYER_Z and game.ship_previous.is_empty() and game.bullet_batch.multimesh.visible_instance_count == 0 and game.soldier_batches[0].multimesh.visible_instance_count == 4, "Restart clears run state, flight position, movement history and rendered instances")
+	check(game.squad.size() == Rules.START_SOLDIERS and game.targets.is_empty() and game.bullets.is_empty() and game.particles.is_empty() and game.score == 0 and game.elapsed == 0 and game.wave == 0 and game.running and game.player_z == Main.PLAYER_Z and game.ship_previous.is_empty() and game.bullet_batch.multimesh.visible_instance_count == 0 and game.soldier_batches[0].multimesh.visible_instance_count == 1, "Restart clears run state, flight position, movement history and rendered instances")
 	game.elapsed = 59.99
 	game._physics_process(0.016)
 	check(game.running and game.elapsed > 60.0 and game.message.text.is_empty(), "Passing one minute never ends the run")
@@ -419,7 +445,7 @@ func run() -> void:
 	check(not game.running and game.message.text.begins_with("PAUSED"), "Pause works beyond the former time limit")
 	game.reset_run()
 	game.elapsed = 270.0
-	for i: int in range(120):
+	for i: int in range(124 - Rules.START_SOLDIERS):
 		game.add_soldier()
 	game.arrange()
 	check(game.squad.size() == 124, "All reinforcements are retained beyond the former capacity")
