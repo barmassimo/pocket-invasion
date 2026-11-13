@@ -2,7 +2,6 @@ class_name InvasionRules
 extends RefCounted
 
 const START_SOLDIERS: int = 4
-const MAX_SOLDIERS: int = 48
 const ROAD_HALF: float = 5.5
 const CAMERA_POSITION := Vector3(0, 21, 11.8)
 const CAMERA_FOCUS := Vector3(0, 0, -8.2)
@@ -70,7 +69,11 @@ static func formation_columns(count: int) -> int:
 	return 6 if count <= 24 else 8
 
 static func formation_spacing(count: int) -> Vector2:
-	return Vector2(SPACING, SPACING) if count <= 24 else Vector2(0.46, 0.30)
+	if count <= 24:
+		return Vector2(SPACING, SPACING)
+	# Keep additional ranks inside the existing formation depth.
+	var rear_row: int = maxi(1, (count - 1) / formation_columns(count))
+	return Vector2(0.46, minf(0.30, 1.5 / rear_row))
 
 static func movement_limit(count: int) -> float:
 	return ROAD_HALF - float(mini(count, formation_columns(count)) - 1) * formation_spacing(count).x / 2.0 - 0.3

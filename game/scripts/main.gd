@@ -96,7 +96,7 @@ func build_world() -> void:
 	box(Vector3(11, 0.3, 40), Vector3(0, -0.3, -8), mat(Color("c4cca5")))
 	bullet_batch = create_batch(Vector3(0.09, 0.09, 0.45), yellow, Rules.MAX_BULLETS)
 	bullet_mesh = bullet_batch.multimesh.mesh as BoxMesh
-	var ships: MultiMeshInstance3D = create_batch(Vector3.ONE, blue, Rules.MAX_SOLDIERS)
+	var ships: MultiMeshInstance3D = create_batch(Vector3.ONE, blue, Rules.START_SOLDIERS)
 	var hull := PlaneMesh.new()
 	hull.size = Vector2(0.44, 0.60)
 	ships.multimesh.mesh = hull
@@ -204,8 +204,6 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	update_hud()
 
 func add_soldier() -> void:
-	if squad.size() >= Rules.MAX_SOLDIERS:
-		return
 	var soldier := Node3D.new()
 	add_child(soldier)
 	squad.append(soldier)
@@ -220,7 +218,10 @@ func arrange() -> void:
 	var offsets: Array[Vector3] = [Vector3(0, 0.35, 0)]
 	var icon_scale: Vector3 = Vector3(0.70, 1.0, 0.43) if squad.size() > 24 else Vector3.ONE
 	for part: int in range(soldier_batches.size()):
-		soldier_batches[part].multimesh.visible_instance_count = squad.size()
+		var instances: MultiMesh = soldier_batches[part].multimesh
+		if instances.instance_count < squad.size():
+			instances.instance_count = maxi(squad.size(), instances.instance_count * 2)
+		instances.visible_instance_count = squad.size()
 		for i: int in range(squad.size()):
 			soldier_batches[part].multimesh.set_instance_transform(i, Transform3D(Basis.from_scale(icon_scale), squad[i].position + offsets[part] * icon_scale))
 
