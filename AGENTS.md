@@ -77,6 +77,7 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
 - For gameplay changes, check movement limits, shooting, target health/rewards, contact losses, formation updates, game over and restart. Verify that restarting clears all previous run state.
 - Inspect the real window for readable labels, correct camera framing and usable controls. Listen when introducing or changing audio.
 - Measure performance in the intended busiest encounter before making frame-rate or capacity claims. Record the conditions and limitations of any measurement.
+- Warn the user before implementing requested changes that are expected to substantially affect performance. Distinguish estimates from measured results.
 - Add focused automated checks for meaningful rules when warranted; avoid tests that only mirror implementation details.
 - Store detailed logs and captures under `artifacts/`. Report only checks actually performed and clearly identify checks that could not be performed.
 - Update setup instructions, controls and documented limitations as part of the same change that affects them. Do not change an application version or create a release unless requested.

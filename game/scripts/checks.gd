@@ -47,6 +47,53 @@ func parallel_damage(game: Node3D, count: int) -> int:
 	send_key(KEY_CTRL, false)
 	return 1000 - target.hp
 
+func check_pickup_recapture(game: Node3D) -> void:
+	game.reset_run(true, 123)
+	game.spawn_pickup(Vector3(3, 0, -20), 4)
+	var pickup: RescuePickup = game.pickups[0]
+	pickup.advance(4.99)
+	check(pickup.spin.visible and pickup.caption.visible and not pickup.help_sign.visible and not pickup.can_be_recaptured(), "Freed fighters remain steady and protected before five seconds without a HELP sign")
+	pickup.advance(0.20)
+	check(not pickup.spin.visible and not pickup.caption.visible and not pickup.help_sign.visible and not pickup.can_be_recaptured(), "Fighter, reward and HELP sign share the hidden warning phase")
+	pickup.advance(0.18)
+	check(pickup.spin.visible and pickup.caption.visible and pickup.help_sign.visible, "Blinking shows the fighter, reward and HELP sign together")
+	var alien: CourseTarget = game.spawn_target(pickup.position.x, pickup.position.z, 1, 100, 50)
+	pickup.age = 9.99
+	game.recapture_pickups()
+	check(game.pickups.size() == 1 and game.recapture.flashes.is_empty(), "Alien contact cannot recapture during the five-second warning")
+	pickup.advance(0.01)
+	game.recapture_pickups()
+	check(game.pickups.is_empty() and game.recapture.flashes.size() == 1 and game.squad.size() == 1 and game.score == 0 and alien.hp == 100, "At ten seconds alien contact removes only the freed fighter without granting rewards or damaging the alien")
+	game.recapture_pickups()
+	check(game.recapture.flashes.size() == 1, "A captured fighter cannot be captured twice")
+	game.recapture.advance(0.3)
+	check(not game.recapture.flashes.is_empty(), "Pickup capture uses the slower beam")
+	game.recapture.advance(0.16)
+	check(game.recapture.flashes.is_empty(), "Slower capture beam expires cleanly")
+	for kind: int in [0, 1, 2]:
+		game.reset_run(true, 123)
+		game.spawn_pickup(Vector3(3, 0, -8), 1)
+		game.pickups[0].age = 30.0
+		game.spawn_target(3, -8, kind, 100, 50)
+		game.recapture_pickups()
+		check((game.pickups.size() == 1 and game.recapture.flashes.is_empty()) if kind == 0 else (game.pickups.is_empty() and game.recapture.flashes.size() == 1), "Only alien-piloted ships recapture eligible fighters (kind %d)" % kind)
+	game.reset_run(true, 123)
+	game.spawn_pickup(Vector3(3, 0, -8), 1)
+	game.pickups[0].age = 30.0
+	game.recapture_pickups()
+	check(game.pickups.size() == 1, "Eligible fighters stay available until an alien actually touches them")
+	var fast: CourseTarget = game.spawn_target(3, -3, 1, 100, 50)
+	fast.previous_z = -13.0
+	fast.half = Vector2(0.05, 0.05)
+	game.recapture_pickups()
+	check(game.pickups.is_empty(), "Fast alien crossings use swept pickup recapture")
+	game.reset_run(true, 123)
+	game.spawn_pickup(game.squad[0].position, 2)
+	game.pickups[0].age = 5.19
+	game.pickups[0].advance(0.0)
+	game.collect_pickups()
+	check(game.pickups.is_empty() and game.squad.size() == 3, "Blinking fighters remain collectible even on an invisible blink frame")
+
 func run() -> void:
 	var game := Main.new()
 	root.add_child(game)
@@ -187,8 +234,15 @@ func run() -> void:
 		for step: int in range(180):
 			game._physics_process(1.0 / 60.0)
 		send_key(KEY_CTRL, false)
-		recovered_alone = recovered_alone and game.squad.size() == 2 and game.targets.is_empty() and game.running
-	check(recovered_alone, "One soldier can earn a recovery reinforcement at start, five and thirty minutes")
+		recovered_alone = recovered_alone and game.squad.size() == 1 and game.targets.is_empty() and game.pickups.size() == 1 and game.running
+		if not game.pickups.is_empty():
+			game.player_x = game.pickups[0].position.x
+			game.player_z = game.pickups[0].position.z
+			game.arrange()
+			game.ship_previous.clear()
+			game.collect_pickups()
+		recovered_alone = recovered_alone and game.squad.size() == 2 and game.pickups.is_empty()
+	check(recovered_alone, "One fighter can free then collect a recovery reinforcement at start, five and thirty minutes")
 	var rewards_grow: bool = true
 	for kind: int in range(3):
 		for tier: int in range(4):
@@ -256,7 +310,11 @@ func run() -> void:
 	check(crew_valid, "Score size tiers add up to three pilots while preserving every pilot's absolute dimensions")
 	check(fleet_proportions_valid, "Fleet hull and treasure emblem scale in the same proportions at every size tier")
 	game.destroy_target(large)
-	check(game.squad.size() == Rules.START_SOLDIERS + 4, "Destroying large reinforcement target grants its four-soldier reward")
+	check(game.pickups.size() == 1 and game.pickups[0].reward == 4 and game.squad.size() == Rules.START_SOLDIERS, "Large egg releases a four-ship pickup")
+	game.pickups[0].position = game.squad[0].position
+	game.pickups[0].previous_position = game.pickups[0].position
+	game.collect_pickups()
+	check(game.squad.size() == Rules.START_SOLDIERS + 4, "Collecting a large reinforcement grants all four ships")
 	game.reset_run(true, 123)
 	game.elapsed = 270.0
 	for i: int in range(48 - Rules.START_SOLDIERS):
@@ -264,7 +322,10 @@ func run() -> void:
 	game.arrange()
 	var command: CourseTarget = game.spawn_target(0, -15, 0, 1, Rules.target_reward(0, 4), 4)
 	game.destroy_target(command)
-	check(game.squad.size() == 64 and Rules.shot_damage(game.squad.size()) == 1, "Command supply grants sixteen soldiers while shot damage stays at one")
+	game.pickups[0].position = game.squad[0].position
+	game.pickups[0].previous_position = game.pickups[0].position
+	game.collect_pickups()
+	check(game.squad.size() == 64 and Rules.shot_damage(game.squad.size()) == 1, "Collecting a command supply grants sixteen ships while shot damage stays at one")
 	var damage4: int = parallel_damage(game, 4)
 	var damage12: int = parallel_damage(game, 12)
 	var damage24: int = parallel_damage(game, 24)
@@ -386,8 +447,63 @@ func run() -> void:
 	var reward: CourseTarget = game.spawn_target(0, -4, 0, 1, 4)
 	game.bullets.append(game.box(Vector3.ONE * 0.1, Vector3(0, 0.5, 0), game.yellow))
 	game.advance_bullets(0.3)
-	check(game.targets.is_empty() and game.squad.size() == Rules.START_SOLDIERS + 4 and game.score == 25, "Swept shot destroys target and grants reward exactly once")
+	check(game.targets.is_empty() and game.squad.size() == Rules.START_SOLDIERS and game.pickups.size() == 1 and game.pickups[0].reward == 4 and game.score == 25, "Egg destruction releases its full reward without adding ships before contact")
 	check(not is_instance_valid(reward), "Destroyed target removed")
+	game.collect_pickups()
+	check(game.squad.size() == Rules.START_SOLDIERS and game.pickups.size() == 1, "Distant freed fighters do not join automatically")
+	var freed: RescuePickup = game.pickups[0]
+	var pickup_hull: MeshInstance3D = freed.spin.get_child(0) as MeshInstance3D
+	var pickup_mesh := pickup_hull.mesh as PlaneMesh
+	var pickup_corner: Vector2 = game.camera.unproject_position(pickup_hull.to_global(Vector3(pickup_mesh.size.x * 0.5, 0, pickup_mesh.size.y * 0.5)))
+	var fleet_corner: Vector2 = game.camera.unproject_position(freed.position + Vector3(Rules.FIGHTER_SIZE.x * 0.5, 0.35, Rules.FIGHTER_SIZE.y * 0.5))
+	check(pickup_corner.distance_to(fleet_corner) < 0.001, "Freed fighters match the initial fleet's exact projected size")
+	var rigid_rotation: bool = true
+	var mesh_half: Vector2 = pickup_mesh.size * 0.5
+	var expected_size: Vector2 = Rules.FIGHTER_SIZE * Vector2(1.0, Main.Target.Art.projection_scale()) * (800.0 / game.camera.size)
+	for angle_step: int in range(25):
+		freed.spin.rotation.y = TAU * float(angle_step) / 24.0
+		var a: Vector2 = game.camera.unproject_position(pickup_hull.to_global(Vector3(-mesh_half.x, 0, -mesh_half.y)))
+		var b: Vector2 = game.camera.unproject_position(pickup_hull.to_global(Vector3(mesh_half.x, 0, -mesh_half.y)))
+		var c: Vector2 = game.camera.unproject_position(pickup_hull.to_global(Vector3(-mesh_half.x, 0, mesh_half.y)))
+		var edge_x: Vector2 = b - a
+		var edge_y: Vector2 = c - a
+		rigid_rotation = rigid_rotation and absf(edge_x.length() - expected_size.x) < 0.001 and absf(edge_y.length() - expected_size.y) < 0.001 and absf(edge_x.normalized().dot(edge_y.normalized())) < 0.001
+	check(rigid_rotation, "A full pickup rotation preserves projected edge lengths and right angles without stretching or shear")
+	freed.spin.rotation.y = 0.0
+	var old_angle: float = freed.spin.rotation.y
+	freed.advance(0.1)
+	check(freed.spin.rotation.y > old_angle and freed.position.z > freed.previous_position.z, "Freed fighters drift and rotate slowly")
+	var parked_position: Vector3 = freed.position
+	var parked_angle: float = freed.spin.rotation.y
+	control_key.keycode = KEY_P
+	game._unhandled_key_input(control_key)
+	game._physics_process(0.25)
+	check(freed.position == parked_position and freed.spin.rotation.y == parked_angle, "Pause freezes freed-fighter drift and rotation")
+	game._unhandled_key_input(control_key)
+	var behind: CourseTarget = game.spawn_target(freed.position.x, freed.position.z - 3.0, 1, 2, 50)
+	game.bullets.append(game.box(Vector3.ONE * 0.1, freed.position + Vector3(0, 0.5, 1), game.yellow))
+	game.advance_bullets(0.3)
+	check(game.pickups.size() == 1 and freed.reward == 4 and behind.hp == 1, "Bullets pass through invulnerable freed fighters and still hit enemies behind them")
+	game.ship_previous[game.squad[0]] = freed.position + Vector3(0, 0, 2)
+	game.squad[0].position = freed.position - Vector3(0, 0, 2)
+	game.collect_pickups()
+	check(game.pickups.is_empty() and game.squad.size() == Rules.START_SOLDIERS + 4 and game.score == 25, "Swept pickup contact grants the entire reinforcement reward once without losses")
+	game.collect_pickups()
+	check(game.squad.size() == Rules.START_SOLDIERS + 4, "Collected fighters cannot grant duplicate rewards")
+	game.reset_run(true, 123)
+	for i: int in range(Rules.MAX_PICKUPS + 1):
+		game.spawn_pickup(Vector3(0, 0, -5), 1)
+	var pending_reward: int = 0
+	for pickup: RescuePickup in game.pickups:
+		pending_reward += pickup.reward
+	check(game.pickups.size() == Rules.MAX_PICKUPS and pending_reward == Rules.MAX_PICKUPS + 1, "Pickup capacity stays bounded while retaining all released rewards")
+	game.pickups[0].position.z = 12.0
+	game.spawn_clock = 999.0
+	game._physics_process(1.0 / 60.0)
+	check(game.pickups.size() == Rules.MAX_PICKUPS - 1, "Missed pickups are removed after leaving the course")
+	game.reset_run()
+	check(game.pickups.is_empty(), "Restart clears all uncollected fighters")
+	check_pickup_recapture(game)
 	game.reset_run()
 	var tough: CourseTarget = game.spawn_target(0, -4, 1, 2, 50)
 	game.bullets.append(game.box(Vector3.ONE * 0.1, Vector3(0, 0.5, 0), game.yellow))
@@ -410,10 +526,8 @@ func run() -> void:
 	threat.half = Vector2(0.05, 0.05)
 	game.resolve_contacts()
 	check(game.squad.size() == 3, "Contact removes only touched soldier")
-	check(game.recapture.flashes.size() == 1 and game.particles.is_empty() and threat.hp == 100 and game.score == 0, "Alien contact shows recapture without explosion, damage or rewards")
+	check(game.recapture.flashes.is_empty() and game.particles.size() == 8 and threat.hp == 100 and game.score == 0, "Alien contact uses the same micro-explosion as egg contact, without recapture")
 	check(game.squad[0].position.x > -1.45, "Formation compacts after casualty")
-	game.recapture.advance(0.3)
-	check(game.recapture.flashes.is_empty(), "Recapture beam expires after its brief visual lifetime")
 	game.reset_run(true, 123)
 	for i: int in range(4 - Rules.START_SOLDIERS):
 		game.add_soldier()
@@ -435,9 +549,15 @@ func run() -> void:
 	game.spawn_target(0, 5, 1, 100, 20).half.x = 6
 	game._physics_process(0.016)
 	check(game.squad.is_empty() and not game.running and game.message.text.begins_with("FLEET LOST"), "Zero ships ends run")
-	check(not game.recapture.flashes.is_empty(), "Last ship loss still starts the recapture beam")
+	game.spawn_pickup(Vector3(0, 0, 5), 1)
+	game.collect_pickups()
+	check(game.squad.is_empty() and game.pickups.size() == 1 and not game.running, "Uncollected fighters cannot revive a defeated fleet")
+	check(game.recapture.flashes.is_empty(), "Last ship collision never starts a recapture beam")
+	game.recapture.play(Vector3.ZERO, game.targets[0], Vector2.ONE)
 	game._physics_process(0.3)
-	check(game.recapture.flashes.is_empty(), "Last ship recapture finishes during the defeat hold")
+	check(not game.recapture.flashes.is_empty(), "Slower pickup recapture remains visible beyond 0.3 seconds")
+	game._physics_process(0.2)
+	check(game.recapture.flashes.is_empty(), "Pending pickup recapture finishes during the defeat hold")
 	game.recapture.play(Vector3.ZERO, game.targets[0], Vector2.ONE)
 	game.reset_run()
 	check(game.recapture.flashes.is_empty(), "Restart clears pending recapture visuals")

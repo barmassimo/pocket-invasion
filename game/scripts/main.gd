@@ -7,6 +7,7 @@ const Encounters = preload("res://scripts/encounters.gd")
 const Motion = preload("res://scripts/target_motion.gd")
 const Display = preload("res://scripts/lcd_display.gd")
 const Recapture = preload("res://scripts/recapture_flash.gd")
+const Pickup = preload("res://scripts/rescue_pickup.gd")
 const PLAYER_Z: float = 5.0
 const DEFEAT_HOLD_SECONDS: float = 10.0
 var defeat_hold_remaining: float = 0.0
@@ -14,6 +15,7 @@ var squad: Array[Node3D] = []
 var targets: Array[CourseTarget] = []
 var bullets: Array[MeshInstance3D] = []
 var particles: Array[MeshInstance3D] = []
+var pickups: Array[RescuePickup] = []
 var player_x: float = 0.0
 var player_z: float = PLAYER_Z
 var camera: Camera3D
@@ -100,7 +102,7 @@ func build_world() -> void:
 	bullet_mesh = bullet_batch.multimesh.mesh as BoxMesh
 	var ships: MultiMeshInstance3D = create_batch(Vector3.ONE, blue, Rules.START_SOLDIERS)
 	var hull := PlaneMesh.new()
-	hull.size = Vector2(0.44, 0.60)
+	hull.size = Rules.FIGHTER_SIZE
 	ships.multimesh.mesh = hull
 	var hull_material: StandardMaterial3D = blue.duplicate() as StandardMaterial3D
 	hull_material.albedo_texture = LcdIcons.SHIP
@@ -181,7 +183,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 		print("RUN_SEED=", encounters.run_seed)
 	sound.stop_all()
 	recapture.clear()
-	for collection: Array in [squad, targets, bullets, particles]:
+	for collection: Array in [squad, targets, bullets, particles, pickups]:
 		for item: Node in collection:
 			item.free()
 		collection.clear()
@@ -270,7 +272,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		message.text = "PAUSED" if not running else ""
 
 func _physics_process(delta: float) -> void:
-	# Finish the brief cosmetic beam even when the last ship was just lost.
+	# Finish any pending cosmetic beam even when the last ship was just lost.
 	# Pause still freezes it; restart clears it with the rest of the presentation.
 	if running or defeat_hold_remaining > 0.0:
 		recapture.advance(delta)
@@ -313,11 +315,19 @@ func _physics_process(delta: float) -> void:
 				bullet.set_meta("damage", Rules.shot_damage(squad.size()))
 				bullets.append(bullet)
 	Motion.advance(targets, speed, delta)
+	for pickup: RescuePickup in pickups:
+		pickup.advance(delta)
 	for target: CourseTarget in targets:
 		target.animate(delta)
 	advance_bullets(delta)
 	sync_bullets()
 	resolve_contacts()
+	collect_pickups()
+	recapture_pickups()
+	for i: int in range(pickups.size() - 1, -1, -1):
+		if pickups[i].position.z > 11.0:
+			pickups[i].free()
+			pickups.remove_at(i)
 	for i: int in range(targets.size() - 1, -1, -1):
 		if targets[i].position.z > 11:
 			targets[i].free()
@@ -387,12 +397,9 @@ func burst(at: Vector3) -> void:
 func destroy_target(target: CourseTarget) -> void:
 	burst(target.position)
 	if target.kind == 0:
-		sound.play_effect("reinforce")
-		var before: int = squad.size()
-		for i: int in range(target.reward):
-			add_soldier()
-		notice("+%d" % (squad.size() - before), 1.2, 0)
-		arrange()
+		sound.play_effect("break")
+		spawn_pickup(target.position, target.reward, target.velocity.x)
+		notice("PILOT FREE / COLLECT", 1.2)
 		score += 25
 	else:
 		sound.play_effect("break")
@@ -401,10 +408,45 @@ func destroy_target(target: CourseTarget) -> void:
 	targets.erase(target)
 	target.free()
 
+func spawn_pickup(at: Vector3, reward: int, drift: float = 0.0) -> void:
+	# Preserve every earned ship even if the active pickup count reaches its bound.
+	if pickups.size() >= Rules.MAX_PICKUPS:
+		var nearest: RescuePickup = pickups[0]
+		for candidate: RescuePickup in pickups:
+			if candidate.position.distance_squared_to(at) < nearest.position.distance_squared_to(at):
+				nearest = candidate
+		nearest.reward += reward
+		nearest.refresh()
+		return
+	var pickup := Pickup.new() as RescuePickup
+	add_child(pickup)
+	pickup.position = at
+	pickup.setup(reward, drift)
+	pickups.append(pickup)
+
+func collect_pickups() -> void:
+	# Only living formation members can collect; new recruits cannot chain pickups.
+	var gained: int = 0
+	var half := Vector2(Rules.PICKUP_RADIUS, Rules.PICKUP_RADIUS / Target.Art.projection_scale())
+	for i: int in range(pickups.size() - 1, -1, -1):
+		var pickup: RescuePickup = pickups[i]
+		for soldier: Node3D in squad:
+			var before: Vector3 = ship_previous.get(soldier, soldier.position)
+			if Rules.shot_fraction(before - pickup.previous_position, soldier.position - pickup.position, Vector3.ZERO, half, 0.20) != INF:
+				gained += pickup.reward
+				pickup.free()
+				pickups.remove_at(i)
+				break
+	if gained > 0:
+		for i: int in range(gained):
+			add_soldier()
+		sound.play_effect("reinforce")
+		notice("+%d" % gained, 1.2, 0)
+		arrange()
+
 func resolve_contacts() -> void:
 	# Collect all touched soldiers before compacting the formation.
 	var casualties: Array[Node3D] = []
-	var captors: Dictionary[Node3D, CourseTarget] = {}
 	for soldier: Node3D in squad:
 		for target: CourseTarget in targets:
 			var before: Vector3 = ship_previous.get(soldier, soldier.position)
@@ -412,14 +454,9 @@ func resolve_contacts() -> void:
 			var relative_to := Vector3(soldier.position.x - target.position.x, 0, soldier.position.z - target.position.z)
 			if Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half, 0.20) != INF:
 				casualties.append(soldier)
-				captors[soldier] = target
 				break
-	var icon_scale := Vector2(0.70, 0.43) if squad.size() > 24 else Vector2.ONE
 	for soldier: Node3D in casualties:
-		if captors[soldier].kind == 0:
-			burst(soldier.position)
-		else:
-			recapture.play(soldier.position, captors[soldier], icon_scale)
+		burst(soldier.position)
 		squad.erase(soldier)
 		ship_previous.erase(soldier)
 		soldier.free()
@@ -427,6 +464,22 @@ func resolve_contacts() -> void:
 		sound.play_effect("loss")
 		notice("-%d" % casualties.size(), 0.8, 0)
 		arrange()
+
+func recapture_pickups() -> void:
+	for i: int in range(pickups.size() - 1, -1, -1):
+		var pickup: RescuePickup = pickups[i]
+		if not pickup.can_be_recaptured():
+			continue
+		for target: CourseTarget in targets:
+			if target.kind == 0:
+				continue
+			var before := pickup.previous_position - Vector3(target.previous_x, 0, target.previous_z)
+			var after := pickup.position - target.position
+			if Rules.shot_fraction(before, after, Vector3.ZERO, target.half, Rules.PICKUP_RADIUS) != INF:
+				recapture.play(pickup.position, target, Vector2.ONE, -pickup.spin.rotation.y)
+				pickup.free()
+				pickups.remove_at(i)
+				break
 
 func finish() -> void:
 	running = false

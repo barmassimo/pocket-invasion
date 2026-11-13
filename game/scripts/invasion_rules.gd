@@ -2,6 +2,7 @@ class_name InvasionRules
 extends RefCounted
 
 const START_SOLDIERS: int = 1
+const FIGHTER_SIZE := Vector2(0.44, 0.60)
 const SHOT_RATE_REFERENCE_COUNT: int = 4
 const ROAD_HALF: float = 5.5
 const CAMERA_POSITION := Vector3(0, 21, 11.8)
@@ -12,6 +13,13 @@ const SHIPS_PER_EXTRA_COLUMN: int = 8
 const MAX_FORMATION_COLUMNS: int = 20
 const SHOT_INTERVAL: float = 0.45
 const MAX_BULLETS: int = 768
+const MAX_PICKUPS: int = 64
+const PICKUP_DRIFT_SPEED: float = 0.75
+const PICKUP_SPIN_SPEED: float = 0.55
+const PICKUP_RADIUS: float = 0.32
+const PICKUP_BLINK_SECONDS: float = 5.0
+const PICKUP_RECAPTURE_SECONDS: float = 10.0
+const PICKUP_BLINK_INTERVAL: float = 0.18
 const START_DIFFICULTY_SECONDS: float = 60.0
 const DISPLAY_START_THREAT: int = 1
 const COURSE_SPEED_MULTIPLIER: float = 1.3

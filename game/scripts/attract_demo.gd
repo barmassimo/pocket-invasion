@@ -5,7 +5,6 @@ extends Control
 const INK := Color("253820")
 const PAPER := Color("c4cca5")
 const Art = preload("res://scripts/target_art.gd")
-const Recapture = preload("res://scripts/recapture_flash.gd")
 const LESSON_SECONDS: float = 9.0
 const LOOP_SECONDS: float = LESSON_SECONDS * 3.0
 var clock: float = 0.0
@@ -65,7 +64,7 @@ func _draw() -> void:
 	draw_line(Vector2(0, 480), Vector2(280, 480), INK)
 	if time >= 5.5:
 		var lines: Array = [
-			["SHOOT THESE TARGETS", "TO GET MORE SHIPS.", "1 SHIP + 1 = 2 SHIPS"],
+			["BREAK THE EGG SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
 			["BREAK ALIEN SHIPS", "TO EARN POINTS.", "HP = HITS REMAINING"],
 			["AVOID INTACT TARGETS.", "ONLY SHIPS THEY TOUCH", "ARE LOST. KEEP MOVING!"]][lesson]
 		for i: int in range(lines.size()):
@@ -93,12 +92,24 @@ func draw_shooting(time: float, kind: int) -> void:
 			explosion(impact, 0.4)
 	elif time < 4.9:
 		explosion(impact, clampf((time - 4.25) / 0.65, 0, 1))
-	var spread: float = smoothstep(4.5, 5.5, time) if kind == 0 else 0.0
-	ship(Vector2(140 - spread * 18, 407))
-	if spread > 0:
-		ship(Vector2(140 + 18, lerpf(310, 407, spread)))
-	if time >= 4.9:
-		text_at(312, "+1 SHIP" if kind == 0 else "+50 POINTS", 21)
+	if kind == 0:
+		var approach: float = smoothstep(4.6, 5.5, time)
+		var y: float = lerpf(407, 233, approach)
+		if time >= 4.25 and time < 5.5:
+			var angle: float = (time - 4.25) * InvasionRules.PICKUP_SPIN_SPEED
+			draw_set_transform(Vector2(140, 213), angle)
+			ship(Vector2.ZERO)
+			draw_set_transform(Vector2.ZERO)
+			text_at(285, "MOVE TO COLLECT", 16)
+		var spread: float = smoothstep(5.5, 6.0, time)
+		ship(Vector2(140 - spread * 18, y))
+		if time >= 5.5:
+			ship(Vector2(140 + 18, y))
+			text_at(312, "+1 SHIP", 21)
+	else:
+		ship(Vector2(140, 407))
+		if time >= 4.9:
+			text_at(312, "+50 POINTS", 21)
 	text_at(125, "SHIPS  %d" % (2 if kind == 0 and time >= 5.5 else 1), 14)
 
 func draw_contact(time: float) -> void:
@@ -109,8 +120,8 @@ func draw_contact(time: float) -> void:
 		target(Vector2(104, y), 5, 1)
 	if time < 3.0:
 		ship(Vector2(104 + dodge, 407))
-	elif time < 3.0 + Recapture.DURATION:
-		Recapture.paint(self, Vector2(104, y), Vector2(104 + dodge, 407), Vector2(34, 46), (time - 3.0) / Recapture.DURATION)
+	elif time < 3.8:
+		explosion(Vector2(104 + dodge, 407), (time - 3.0) / 0.8)
 	ship(Vector2(140 + dodge, 407))
 	if time >= 4.4:
 		text_at(265, "1 SHIP LOST", 20)
