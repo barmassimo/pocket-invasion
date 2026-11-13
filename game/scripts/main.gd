@@ -245,7 +245,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if not started or squad.is_empty():
 			reset_run()
 	elif event.keycode == KEY_ESCAPE:
-		reset_run(false)
+		var mode: DisplayServer.WindowMode = DisplayServer.window_get_mode()
+		if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	elif event.keycode == KEY_D and not started:
 		lcd.set_playing(false)
 	elif event.keycode == KEY_M:
@@ -418,7 +420,7 @@ func finish() -> void:
 	lcd.set_playing(true)
 	message.visible = true
 	sound.play_effect("defeat")
-	message.text = "FLEET LOST\n\n[ENTER / SPACE] START\n[ESC] DEMO"
+	message.text = "FLEET LOST\n\n[ENTER / SPACE] START"
 
 func update_hud() -> void:
 	lcd.update_status(squad.size(), score, elapsed)

@@ -68,7 +68,13 @@ func run() -> void:
 	check(not game.running and game.score == 123 and game.message.text == "PAUSED", "Enter never restarts a paused run")
 	control_key.keycode = KEY_ESCAPE
 	game._unhandled_key_input(control_key)
-	check(game.lcd.demo.visible and not game.lcd.intro.visible and not game.started and game.score == 0 and game.targets.is_empty() and game.bullets.is_empty() and game.defeat_hold_remaining == 0.0, "Escape ends the run and immediately shows a clean demo")
+	check(game.started and not game.running and game.score == 123 and game.squad.size() == Rules.START_SOLDIERS and game.message.text == "PAUSED" and not game.lcd.demo.visible, "Escape preserves a paused run")
+	control_key.keycode = KEY_P
+	game._unhandled_key_input(control_key)
+	control_key.keycode = KEY_ESCAPE
+	game._unhandled_key_input(control_key)
+	check(game.running and game.started and game.score == 123 and not game.lcd.demo.visible, "Escape preserves an active run")
+	game.reset_run(false)
 	check(not game.sound.music.playing, "Ready demonstration stays silent")
 	game.set_physics_process(false)
 	game.reset_run(true, 123)
