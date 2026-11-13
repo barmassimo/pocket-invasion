@@ -41,8 +41,8 @@ The bootstrap also verifies both extracted executables. An existing mismatched o
 - P: pause or resume.
 - F11 or F: toggle fullscreen, preserving the game's aspect ratio.
 - Enter: immediately start a fresh run, including after defeat.
-- M: mute or unmute sound effects (M=MUTE). The speaker icon shows a cross when muted. Mute is kept when restarting the run.
-- Drag the horizontal slider beside the speaker to adjust effects volume (0–100%, initially 50%). Raising it unmutes audio; volume and mute survive a run restart. The default effects level is about 3.5 dB louder than the original mix.
+- M: mute or unmute music and sound effects (M=MUTE). The speaker icon shows a cross when muted. Mute is kept when restarting the run.
+- Drag the horizontal slider beside the speaker to adjust master audio volume (0–100%, initially 50%). Raising it unmutes audio; volume and mute survive a run restart. The default effects level is about 3.5 dB louder than the original mix.
 
 Start with four ships and a fixed capacity of 48 for the entire run. Reinforcement rewards fill the fleet up to this cap. The LCD displays the current ship count and capacity. Restarting restores four ships.
 
@@ -76,7 +76,7 @@ When an explicit seed is supplied, restarting repeats that course. Without it, e
 
 The fixed 3D camera keeps the spacecraft formation near the lower edge. Larger formations use compact ranks, with all 48 ships inside the frame. Fighter silhouettes have swept wings and a cockpit cutout, replacing humanoid meshes. Unshaded olive materials, a passive-matrix grid, ghost segments, seven-segment counters and a handheld-style bezel create the LCD presentation. Original SVG icons are stored in `game/assets/icons/` and enemy artwork in `game/assets/enemies/`; no third-party assets or new dependencies were added. Typography uses Windows system monospace fonts with Godot fallback. Ships and normal projectiles use MultiMesh rendering; individual gameplay positions and collisions remain separate.
 
-Original synthesized arcade sounds provide feedback for shots, hits, destroyed targets, reinforcements, casualties and defeat. They are generated locally in `game/scripts/sound.gd`; no downloaded audio or additional runtime is needed. Shot audio plays once per volley and hit sounds are throttled to avoid crowding the mix.
+Original synthesized arcade sounds provide feedback for shots, hits, destroyed targets, reinforcements, casualties and defeat. They are generated locally in `game/scripts/sound.gd`; no downloaded audio or additional runtime is needed. Shot audio plays once per volley and hit sounds are throttled to avoid crowding the mix. An original 24-bar, 132 BPM chiptune loop (about 44 seconds) adds a pulse melody with three developing phrases, an alternating octave triangle bass, and light chip kick/snare/hat percussion during play. It is synthesized locally in `game/scripts/music.gd`, with no downloaded assets. Music stays below effects, pauses with P, resumes at the same position, stops on defeat and restarts from the beginning on a new run. M and the volume slider control both music and effects; the ready screen and demonstration remain silent.
 
 Every surviving target is a contact threat, including missed supplies. Only ships intersecting it are removed; targets passing beside the fleet cause no damage. The formation compacts after losses, so steer away from ongoing contacts. There are no multiplication gates.
 
@@ -102,7 +102,7 @@ The first sandboxed verification could not create the default user-data director
 
 ## Prototype limits
 
-One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects without music. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, exports, third-party assets, network features, or services. Rules and tuning are in `game/scripts/invasion_rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
+One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects and an original minimal chiptune loop. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, exports, third-party assets, network features, or services. Rules and tuning are in `game/scripts/invasion_rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
 
 
 

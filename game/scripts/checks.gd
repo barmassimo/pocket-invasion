@@ -50,6 +50,19 @@ func parallel_damage(game: Node3D, count: int) -> int:
 func run() -> void:
 	var game := Main.new()
 	root.add_child(game)
+	check(not game.sound.music.playing, "Ready demonstration stays silent")
+	game.set_physics_process(false)
+	game.reset_run(true, 123)
+	check(game.sound.music.playing and not game.sound.music.stream_paused, "Starting a run starts the soundtrack")
+	game.sound.toggle_mute()
+	check(game.sound.music.stream_paused, "Mute silences the soundtrack")
+	game.sound.toggle_mute()
+	check(not game.sound.music.stream_paused, "Unmute restores the soundtrack")
+	game.set_sound_volume(0.0)
+	check(game.sound.music.stream_paused, "Zero volume silences the soundtrack")
+	game.set_sound_volume(50.0)
+	check(not game.sound.music.stream_paused, "Raising volume restores the soundtrack")
+	game.reset_run(false)
 	# Accelerated simulation must not queue thousands of real-time audio voices.
 	game.sound.muted = true
 	game.set_physics_process(false)
@@ -64,9 +77,11 @@ func run() -> void:
 	demo_pause.pressed = true
 	game._unhandled_key_input(demo_pause)
 	check(not game.running and not game.lcd.demo.visible, "Pause never shows the demonstration")
+	check(not game.sound.music_active and game.sound.music.stream_paused, "Pause suspends the soundtrack")
 	game._unhandled_key_input(demo_pause)
 	check(game.running and not game.lcd.demo.visible, "Resuming keeps the demonstration hidden")
 	game.finish()
+	check(not game.sound.music_active and game.sound.music.stream_paused, "Defeat suspends music before the defeat effect and silent demo")
 	check(not game.lcd.demo.visible and game.message.visible and not game.running, "Defeat holds the final course with a restart prompt")
 	var frozen_target: CourseTarget = game.spawn_target(2, -10, 1, 20, 50)
 	var frozen_position: Vector3 = frozen_target.position

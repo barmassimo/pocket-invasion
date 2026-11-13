@@ -4,6 +4,10 @@ extends Node
 const SAMPLE_RATE: int = 22050
 # At half travel, effects are about 3.5 dB above the original mix.
 const VOLUME_GAIN_DB: float = 9.5
+const MUSIC_VOLUME_DB: float = -19.0
+const Music = preload("res://scripts/music.gd")
+var music: AudioStreamPlayer
+var music_active: bool = false
 var players: Dictionary[String, AudioStreamPlayer] = {}
 var muted: bool = false
 var volume_percent: float = 50.0
@@ -17,6 +21,21 @@ func _ready() -> void:
 	create_effect("reinforce", [523.25, 659.25, 783.99], 0.24, 0.0, -16.0)
 	create_effect("loss", [260.0, 130.0], 0.18, 0.22, -18.0)
 	create_effect("defeat", [220.0, 164.81, 110.0], 0.55, 0.0, -15.0)
+	music = AudioStreamPlayer.new()
+	music.stream = Music.build()
+	add_child(music)
+	update_music()
+
+func set_music_playing(active: bool) -> void:
+	music_active = active
+	update_music()
+
+func update_music() -> void:
+	music.volume_db = MUSIC_VOLUME_DB + VOLUME_GAIN_DB + linear_to_db(maxf(volume_percent / 100.0, 0.0001))
+	# Keep the musical position through pause, mute and zero volume.
+	if music_active and not music.playing:
+		music.play()
+	music.stream_paused = not music_active or muted or volume_percent <= 0.0
 
 func create_effect(id: String, notes: Array[float], duration: float, noise_mix: float, volume: float) -> void:
 	var data := PackedByteArray()
@@ -62,6 +81,11 @@ func play_effect(id: String) -> void:
 	players[id].play()
 
 func stop_all() -> void:
+	stop_effects()
+	music_active = false
+	music.stop()
+
+func stop_effects() -> void:
 	for player: AudioStreamPlayer in players.values():
 		player.stop()
 	hit_clock = 0.0
@@ -69,11 +93,13 @@ func stop_all() -> void:
 func toggle_mute() -> void:
 	muted = not muted
 	if muted:
-		stop_all()
+		stop_effects()
+	update_music()
 
 func set_volume(percent: float) -> void:
 	volume_percent = clampf(percent, 0.0, 100.0)
 	for player: AudioStreamPlayer in players.values():
 		player.volume_db = float(player.get_meta("base_volume_db")) + VOLUME_GAIN_DB + linear_to_db(maxf(volume_percent / 100.0, 0.0001))
 	if volume_percent <= 0.0:
-		stop_all()
+		stop_effects()
+	update_music()

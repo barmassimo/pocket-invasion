@@ -194,6 +194,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 		add_soldier()
 	arrange()
 	running = play
+	sound.set_music_playing(play)
 	started = play
 	defeat_hold_remaining = 0.0
 	lcd.set_playing(play)
@@ -249,7 +250,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif event.keycode == KEY_P and started and not squad.is_empty():
 		running = not running
 		lcd.set_playing(true)
-		sound.stop_all()
+		sound.stop_effects()
+		sound.set_music_playing(running)
 		message.text = "PAUSED" if not running else ""
 
 func _physics_process(delta: float) -> void:
@@ -403,6 +405,7 @@ func resolve_contacts() -> void:
 
 func finish() -> void:
 	running = false
+	sound.set_music_playing(false)
 	defeat_hold_remaining = DEFEAT_HOLD_SECONDS
 	lcd.set_playing(true)
 	message.visible = true
@@ -414,9 +417,9 @@ func update_hud() -> void:
 	lcd.muted = sound.muted or sound.volume_percent <= 0.0
 
 func set_sound_volume(percent: float) -> void:
-	sound.set_volume(percent)
 	if percent > 0.0:
 		sound.muted = false
+	sound.set_volume(percent)
 	update_hud()
 
 func toggle_sound_mute() -> void:
