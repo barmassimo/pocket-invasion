@@ -83,6 +83,36 @@ func check_opening_score_targets(game: Node3D) -> void:
 			game._physics_process(1.0 / 60.0)
 		check(not is_instance_valid(target) and game.targets.is_empty() and game.score == 50 and game.squad.size() == 1 and game.pickups.is_empty(), "Lone fighter destroys opening alien kind %d with normal fire before contact, awarding only points" % kind)
 
+func check_health_curves() -> void:
+	var supplies_unchanged: bool = true
+	for survival: float in [0.0, 30.0, 60.0, 300.0, 1800.0]:
+		var t: float = Rules.difficulty_time(survival)
+		for tier: int in range(5):
+			for variation: float in [0.85, 1.0, 1.15]:
+				var expected: int = 5 if tier == 0 else maxi(1, roundi((18.0 + t * 0.30 + 12.0 * pow(t / 60.0, 2.2)) * variation * Rules.SIZE_HEALTH[tier]))
+				supplies_unchanged = supplies_unchanged and Rules.target_health(0, t, variation, tier) == expected
+	check(supplies_unchanged, "All egg sizes retain their previous HP curve and fixed small recovery health")
+	var smooth: bool = true
+	var grows: bool = true
+	var gentler: bool = true
+	for kind: int in [1, 2]:
+		for tier: int in range(5):
+			var boundary: int = Rules.target_health(kind, Rules.difficulty_time(30.0), 1.0, tier)
+			smooth = smooth and boundary == Rules.target_health(kind, Rules.difficulty_time(30.01), 1.0, tier)
+			if tier == 0:
+				smooth = smooth and boundary == Rules.OPENING_SCORE_HEALTH[kind]
+			var previous: int = boundary
+			for second: int in range(31, 601):
+				var hp: int = Rules.target_health(kind, Rules.difficulty_time(float(second)), 1.0, tier)
+				grows = grows and hp >= previous
+				previous = hp
+			for survival: float in [30.0, 60.0, 180.0, 300.0, 1800.0]:
+				var t: float = Rules.difficulty_time(survival)
+				var old_hp: float = ([24.0, 32.0][kind - 1] + t * [0.4, 0.5][kind - 1] + [18.0, 24.0][kind - 1] * pow(t / 60.0, 2.2)) * Rules.SIZE_HEALTH[tier]
+				gentler = gentler and Rules.target_health(kind, t, 1.0, tier) < roundi(old_hp)
+	check(smooth, "Alien HP starts from 5-6 for small ships at 30 seconds without a health cliff")
+	check(grows and gentler, "Alien HP grows monotonically for ten minutes and stays below the former curve at sampled times and every size")
+
 func check_pickup_recapture(game: Node3D) -> void:
 	game.reset_run(true, 123)
 	game.spawn_pickup(Vector3(3, 0, -20), 4)
@@ -215,6 +245,7 @@ func run() -> void:
 	check(course_plan(123) == course_plan(123), "Same seed reproduces complete encounter sequence")
 	check(course_plan(123) != course_plan(456), "Different seeds produce different encounter sequences")
 	check_opening_score_targets(game)
+	check_health_curves()
 	var generation_valid: bool = true
 	for seed_value: int in [42, 123, 456, 789, 2026]:
 		var generator := Encounters.new()
@@ -232,7 +263,7 @@ func run() -> void:
 	game.spawn_wave()
 	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and game.targets.size() >= 2, "Run starts at internal level two with a fresh survival timer and immediate threats")
 	check(Rules.threat_level(0.0) == 1 and Rules.threat_level(59.99) == 1 and Rules.threat_level(60.0) == 2 and Rules.threat_level(120.0) == 3, "Displayed threat starts at one and advances at survival-minute boundaries")
-	check(Rules.target_health(1, Rules.difficulty_time(0.0), 1.0) == 66 and Rules.encounter_pressure(Rules.difficulty_time(0.0)) > 1.28, "Opening offset increases normal health and wave pressure, including nonlinear growth")
+	check(Rules.target_health(1, Rules.difficulty_time(30.0), 1.0, 0) == 5 and Rules.encounter_pressure(Rules.difficulty_time(0.0)) > 1.28, "Alien HP starts gently while opening wave pressure keeps the existing difficulty offset")
 	var previous_speed: float = Rules.course_speed(Rules.difficulty_time(0.0))
 	var previous_gain: float = 0.0
 	var speed_accelerates: bool = is_equal_approx(previous_speed, 6.08816)

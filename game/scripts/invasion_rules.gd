@@ -26,12 +26,21 @@ const COURSE_SPEED_MULTIPLIER: float = 1.3
 const RECOVERY_HEALTH: int = 5
 const OPENING_SCORE_SECONDS: float = 30.0
 const OPENING_SCORE_HEALTH: Array[int] = [0, 5, 6]
+const ALIEN_HEALTH_LINEAR: Array[float] = [0.0, 18.0, 24.0]
+const ALIEN_HEALTH_POWER: Array[float] = [0.0, 8.0, 10.0]
+const ALIEN_HEALTH_EXPONENT: float = 1.6
 const BULLET_SPEED: float = 28.0
 const SIZE_SCALES: Array[float] = [0.8, 1.0, 1.25, 1.5, 1.8]
 const SIZE_HEALTH: Array[float] = [0.7, 1.0, 1.5, 4.0, 7.0]
 const SQUAD_REWARDS: Array[int] = [1, 2, 4, 8, 16]
 
 static func target_health(kind: int, elapsed: float, variation: float, tier: int = 1) -> int:
+	if kind != 0:
+		# Alien growth starts after the easy opening, without the difficulty offset.
+		var minutes: float = maxf(0.0, elapsed - START_DIFFICULTY_SECONDS - OPENING_SCORE_SECONDS) / 60.0
+		var base: float = float(OPENING_SCORE_HEALTH[kind]) / SIZE_HEALTH[0]
+		var health: float = base + ALIEN_HEALTH_LINEAR[kind] * minutes + ALIEN_HEALTH_POWER[kind] * pow(minutes, ALIEN_HEALTH_EXPONENT)
+		return maxi(1, roundi(health * variation * SIZE_HEALTH[tier]))
 	# Small reinforcement crates remain recoverable with a single soldier.
 	if kind == 0 and tier == 0:
 		return RECOVERY_HEALTH
