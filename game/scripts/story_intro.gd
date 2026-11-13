@@ -10,13 +10,12 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	font.font_names = PackedStringArray(["Consolas", "Courier New"])
 	font.font_weight = 700
-	paragraph(47, "LAST TRANSMISSION", 15)
-	paragraph(79, "THE LAST FIGHTER", 26)
-	paragraph(347, "Earth has fallen.\nThe aliens have taken over.", 18)
-	paragraph(415, "You command the last\nfighter still flying.", 18)
-	paragraph(483, "Alone, you cannot defeat\nthe enemy fleet.", 18)
-	paragraph(551, "Free your captured wingmates.\nThey will join your formation\nand fight by your side.", 18)
-	paragraph(666, "TAKE BACK THE SKIES.", 19)
+	paragraph(60, "FROM COMMAND CENTER", 20)
+	paragraph(347, "Command Center to last fighter.\nEarth has fallen. The aliens hold it.", 18)
+	paragraph(415, "You are the last fighter in flight.", 18)
+	paragraph(459, "One fighter cannot win this war,\nbut our captured pilots are alive.", 18)
+	paragraph(523, "Free them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.", 18)
+	paragraph(666, "WE ARE COUNTING ON YOU.", 19)
 	paragraph(715, "[ENTER / SPACE] START", 18)
 	paragraph(746, "[D] HOW TO PLAY", 13)
 
