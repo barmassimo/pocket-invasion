@@ -124,6 +124,10 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
   suffix, on that release commit. Resolve which working-tree changes belong to
   the release before committing; do not include unrelated work. Never overwrite
   existing tags or rewrite existing commits to create a release.
+- Do not generate local Web or Windows exports/packages as part of a release
+  request unless explicitly requested. Version/changelog updates, appropriate
+  tests, the release commit and tag are sufficient. The GitHub workflow retains
+  its package-generation behavior when triggered separately.
 - A release request alone does not authorize pushing, creating a GitHub Release,
   uploading binaries, deploying Web content, installing tools or signing packages.
   Exporting a local build alone does not create a release or increment the version.
