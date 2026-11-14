@@ -36,8 +36,12 @@ No source archive is generated and no source directory is added to binary output
 Publish the packages on a GitHub Release alongside GitHub's automatic source ZIP
 and tarball downloads for the corresponding tag. Make clear in the release notes
 where recipients can obtain the corresponding source, including project assets
-and build scripts. Do not embed a repository URL in the application or notices
-without the user's approval.
+and build scripts. The approved project URL is
+`https://github.com/barmassimo/pocket-invasion`. Identity capture includes it only
+when `origin` matches this repository (HTTPS or SSH); the HUD version opens the
+repository root. Each export regenerates the snapshot, so missing Git identity or
+an absent/unapproved remote cannot reuse a stale link. A different repository URL
+requires the user's approval.
 
 License files do not replace the obligation to provide corresponding source.
 Exporting does not publish or create a release, commit, tag or application version.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Clickable HUD version linking to the approved project repository, captured
+  with build identity for future Windows and Web exports.
+
 ## 1.1.0 - 2026-11-14
 
 ### Added

@@ -48,6 +48,11 @@ to the project. Build identity and export snapshots are separate from the
 application version and player data. See [development](DEVELOPMENT.md) and
 [README](../README.md) for setup, exports and verification.
 
+Identity capture reads `origin` and includes the approved project root URL when
+it matches Pocket Invasion's repository. The HUD version opens that captured URL.
+Exports read only their bundled snapshot; absent or unapproved remotes leave the
+version unlinked, and future remotes require separate approval.
+
 The command scripts select a native Windows or Linux editor through
 `Get-GodotPath.ps1`; export targets remain Web and Windows x64 on either host.
 GitHub Actions builds a clean tagged snapshot on Linux with read-only repository

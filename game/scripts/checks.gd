@@ -244,6 +244,12 @@ func run() -> void:
 	dirty_identity["modified"] = true
 	check(Info.label(dirty_identity) == "v%s-aaaaaaa-modified" % Info.version(), "Development identity marks local modifications")
 	check(Info.label({}) == "v%s" % Info.version(), "Missing provenance shows the application version alone")
+	check(Info.repository_url("https://github.com/barmassimo/pocket-invasion.git") == Info.PROJECT_URL, "Approved HTTPS remote links to the project root")
+	check(Info.repository_url("git@github.com:barmassimo/pocket-invasion.git") == Info.PROJECT_URL, "Approved SSH remote links to the HTTPS project root")
+	check(Info.repository_url("https://github.com/other/private.git").is_empty(), "Unapproved remotes are not exposed")
+	var linked_identity: Dictionary = clean_identity.duplicate()
+	linked_identity["repository_url"] = Info.PROJECT_URL
+	check(Info.validated(JSON.parse_string(JSON.stringify(linked_identity))).get("repository_url") == Info.PROJECT_URL, "Bundled identity preserves the approved project URL without Git")
 	check(Info.source_identity(ProjectSettings.globalize_path("res://assets")).is_empty(), "A source directory without its own repository cannot inherit an enclosing Git identity")
 	var invalid_identity: Dictionary = clean_identity.duplicate()
 	invalid_identity["version"] = "stale-version"

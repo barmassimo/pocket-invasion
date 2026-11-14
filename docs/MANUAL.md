@@ -25,7 +25,9 @@ during a run or pause. Restart clears all previous run entities and counters.
 
 The left column displays the Top 10, followed by How to Play and the keys.
 The Enter/Space start prompt appears only in this column, not on the three right pages.
-The version stays at the bottom. The silent demo hides the volume controls.
+The version stays at the bottom. Click it to open the project repository in your
+browser when its URL was captured from the approved remote. The game remains
+usable offline; opening the link is optional. The silent demo hides the volume controls.
 Left/Right changes briefing/demo pages; the dots and arrows are also clickable.
 The three pages continue cycling automatically. During play and pause the left
 column displays the existing game statistics instead of the leaderboard.

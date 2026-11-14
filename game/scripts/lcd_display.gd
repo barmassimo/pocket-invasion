@@ -27,7 +27,7 @@ var muted: bool = false
 var volume_slider: HSlider
 var speaker_button: Button
 var page_navigation: Control
-var version_label: Label
+var version_label: LinkButton
 var lcd_font := SystemFont.new()
 var high_scores: LocalHighScores
 var entering_name: bool = false
@@ -91,17 +91,26 @@ func _ready() -> void:
 	speaker_button.pressed.connect(func() -> void: mute_requested.emit())
 	add_child(speaker_button)
 	var identity: Dictionary = Info.current()
-	version_label = Label.new()
+	version_label = LinkButton.new()
+	version_label.focus_mode = Control.FOCUS_NONE
+	version_label.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
 	version_label.position = Vector2(46, 747)
 	version_label.size = Vector2(283, 22)
 	version_label.text = Info.label(identity)
 	version_label.add_theme_font_override("font", lcd_font)
 	version_label.add_theme_font_size_override("font_size", 12)
-	version_label.add_theme_color_override("font_color", INK)
+	for color_name: String in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
+		version_label.add_theme_color_override(color_name, INK)
 	version_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	version_label.tooltip_text = "Source commit: %s" % identity.get("commit", "unavailable")
 	if identity.get("modified", false):
 		version_label.tooltip_text += "\nLocal changes beyond this commit are included."
+	var project_url: String = identity.get("repository_url", "")
+	version_label.disabled = project_url.is_empty()
+	if not project_url.is_empty():
+		version_label.tooltip_text += "\nOpen project: %s" % project_url
+		version_label.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		version_label.pressed.connect(func() -> void: OS.shell_open(project_url))
 	add_child(version_label)
 	print("BUILD_IDENTITY=", version_label.text)
 

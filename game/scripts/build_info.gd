@@ -2,6 +2,14 @@ class_name BuildInfo
 extends RefCounted
 
 const SNAPSHOT_PATH: String = "res://build_info.json"
+const PROJECT_URL: String = "https://github.com/barmassimo/pocket-invasion"
+
+static func repository_url(remote: String) -> String:
+	# Approval applies to this project, not to arbitrary future remotes.
+	var url := remote.strip_edges().trim_suffix("/").trim_suffix(".git")
+	if url == PROJECT_URL or url == "git@github.com:barmassimo/pocket-invasion" or url == "ssh://git@github.com/barmassimo/pocket-invasion":
+		return PROJECT_URL
+	return ""
 
 static func version() -> String:
 	return str(ProjectSettings.get_setting("application/config/version", ""))
@@ -22,7 +30,8 @@ static func source_identity(root: String) -> Dictionary:
 	var state: Array = git_output(root, PackedStringArray(["status", "--porcelain", "--untracked-files=normal"]))
 	if head.is_empty() or state.is_empty():
 		return {}
-	return validated({"version": version(), "commit": str(head[0]).strip_edges(), "modified": not str(state[0]).strip_edges().is_empty()})
+	var remote: Array = git_output(root, PackedStringArray(["remote", "get-url", "origin"]))
+	return validated({"version": version(), "commit": str(head[0]).strip_edges(), "modified": not str(state[0]).strip_edges().is_empty(), "repository_url": repository_url(str(remote[0])) if not remote.is_empty() else ""})
 
 static func validated(value: Variant) -> Dictionary:
 	if not value is Dictionary:
@@ -34,7 +43,7 @@ static func validated(value: Variant) -> Dictionary:
 	hash_pattern.compile("^([0-9a-f]{40}|[0-9a-f]{64})$")
 	if hash_pattern.search(info["commit"]) == null:
 		return {}
-	return {"version": version(), "commit": info["commit"], "modified": info["modified"]}
+	return {"version": version(), "commit": info["commit"], "modified": info["modified"], "repository_url": repository_url(str(info.get("repository_url", "")))}
 
 static func current() -> Dictionary:
 	if OS.has_feature("editor"):
