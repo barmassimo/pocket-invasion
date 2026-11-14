@@ -66,7 +66,7 @@ func _draw() -> void:
 	if time >= 5.5:
 		var lines: Array = [
 			["BREAK THE CAPTURE SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
-			["BREAK ALIENS FOR POINTS.", "CONTACT ONLY DESTROYS", "THE SHIPS IT TOUCHES."]][lesson]
+			["BREAK ALIENS FOR POINTS.", "MOVE WITH [W] [A] [S] [D]", "OR THE ARROW KEYS."]][lesson]
 		for i: int in range(lines.size()):
 			text_at(512 + i * 25, lines[i], 16)
 	else:
