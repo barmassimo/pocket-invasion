@@ -2,6 +2,7 @@ config_version=5
 
 [application]
 config/name="Pocket Invasion"
+config/version="1.0.0"
 config/icon="res://assets/icons/app-icon.svg"
 run/main_scene="res://scenes/main.tscn"
 

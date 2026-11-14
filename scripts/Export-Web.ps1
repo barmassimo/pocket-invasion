@@ -46,6 +46,7 @@ if (Test-Path -LiteralPath $manifest) {
 $outputDir = Join-Path $root 'artifacts/web'
 New-Item -ItemType Directory -Force $outputDir | Out-Null
 $engine = Join-Path $root 'tools/godot/Godot_v4.7.2-stable_win64_console.exe'
+& "$PSScriptRoot/Write-BuildInfo.ps1"
 & $engine --headless --path (Join-Path $root 'game') --log-file (Join-Path $root 'artifacts/web-export.log') --export-release Web (Join-Path $outputDir 'index.html')
 if ($LASTEXITCODE -ne 0) { throw "Web export failed with exit code $LASTEXITCODE. See artifacts/web-export.log." }
 if (Select-String -LiteralPath (Join-Path $root 'artifacts/web-export.log') -Pattern 'SCRIPT ERROR:|ERROR:' -Quiet) { throw 'Godot reported export errors. See artifacts/web-export.log.' }

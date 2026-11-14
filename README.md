@@ -74,6 +74,29 @@ The first Web build was verified on 2026-11-13 in the in-app Chromium browser: i
 
 Volume changes only update the music pause state when it actually changes, avoiding redundant unpause calls that can restart Web Sample playback in Godot 4.7.2. The Web build was regenerated after this correction; native checks passed and changing the slider in the browser produced no console warnings/errors. The user confirmed that deployment on IIS works with the included MIME mappings and reported that the audio glitch appears resolved. This is user listening feedback, not an exhaustive load test; Web loop resume after an actual pause/mute remains unverified.
 
+## Versions and build identity
+
+The lower-left HUD shows the application version and seven-character source commit
+as `vMAJOR.MINOR.PATCH-hash`, without spaces or parentheses, with `-modified` appended
+when local changes are present.
+Hover over it to read the full hash. The volume slider and mute button sit above it.
+`modified` indicates tracked or non-ignored untracked changes beyond that commit;
+release builds are exported from the clean, tagged release commit and omit this marker.
+The hash is a local source reference; no GitHub link or network access is used.
+
+`game/project.godot` (`application/config/version`) is the single version source.
+Development launches, including runs from the Godot editor, detect the current
+checkout identity when Git is available. Without Git/repository metadata the game
+still runs, showing `vMAJOR.MINOR.PATCH-hash-unavailable` instead of claiming a clean source identity.
+Both export scripts regenerate the ignored `game/build_info.json` snapshot before
+exporting and bundle it in the game package. Exports only read that snapshot, so
+they retain their identity outside the checkout and require no Git at runtime.
+Missing or invalid snapshots also show `vMAJOR.MINOR.PATCH-hash-unavailable`.
+
+Exporting alone does not increment the version or create a release. A requested
+release updates the version and [changelog](docs/CHANGELOG.md), commits its changes
+and creates the matching version tag. Publication and deployment are separate actions.
+
 ## Controls and rules
 
 - Enter / Space: start from the introduction, demo or defeat screen. These keys do nothing during play or pause.

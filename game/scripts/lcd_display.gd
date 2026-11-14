@@ -7,6 +7,7 @@ signal mute_requested
 const Rules = preload("res://scripts/invasion_rules.gd")
 const Demo = preload("res://scripts/attract_demo.gd")
 const Intro = preload("res://scripts/story_intro.gd")
+const Info = preload("res://scripts/build_info.gd")
 const WINDOW_WIDTH: int = 725
 const PLAYFIELD_CENTER_X: float = 528.0
 const PLAYFIELD_RECT := Rect2(359, 27, 338, 746)
@@ -24,6 +25,7 @@ var seconds: int = 0
 var muted: bool = false
 var volume_slider: HSlider
 var page_navigation: Control
+var version_label: Label
 var lcd_font := SystemFont.new()
 
 func _ready() -> void:
@@ -47,7 +49,7 @@ func _ready() -> void:
 		add_page_button(Vector2(473 + page * 18, 651), Vector2(18, 32), "", "Page %d" % (page + 1), select_page.bind(page))
 	add_page_button(Vector2(534, 651), Vector2(32, 32), ">", "Next page (Right arrow)", func() -> void: step_page(1))
 	volume_slider = HSlider.new()
-	volume_slider.position = Vector2(87, 742)
+	volume_slider.position = Vector2(87, 709)
 	volume_slider.size = Vector2(190, 28)
 	volume_slider.min_value = 0
 	volume_slider.max_value = 100
@@ -71,7 +73,7 @@ func _ready() -> void:
 	volume_slider.value_changed.connect(func(value: float) -> void: volume_changed.emit(value))
 	add_child(volume_slider)
 	var speaker_button := Button.new()
-	speaker_button.position = Vector2(40, 740)
+	speaker_button.position = Vector2(29, 707)
 	speaker_button.size = Vector2(40, 30)
 	speaker_button.flat = true
 	speaker_button.focus_mode = Control.FOCUS_NONE
@@ -80,6 +82,20 @@ func _ready() -> void:
 		speaker_button.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
 	speaker_button.pressed.connect(func() -> void: mute_requested.emit())
 	add_child(speaker_button)
+	var identity: Dictionary = Info.current()
+	version_label = Label.new()
+	version_label.position = Vector2(46, 747)
+	version_label.size = Vector2(283, 22)
+	version_label.text = Info.label(identity)
+	version_label.add_theme_font_override("font", lcd_font)
+	version_label.add_theme_font_size_override("font_size", 12)
+	version_label.add_theme_color_override("font_color", INK)
+	version_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	version_label.tooltip_text = "Source commit: %s" % identity.get("commit", "unavailable")
+	if identity.get("modified", false):
+		version_label.tooltip_text += "\nLocal changes beyond this commit are included."
+	add_child(version_label)
+	print("BUILD_IDENTITY=", version_label.text)
 
 func set_playing(playing: bool) -> void:
 	attract_active = not playing
@@ -190,7 +206,7 @@ func _draw() -> void:
 	caption(Vector2(46, 427), "LEVEL")
 	segment_text("%02d" % Rules.threat_level(float(seconds)), Vector2(47, 443), 34)
 	draw_line(Vector2(46, 626), Vector2(329, 626), INK)
-	draw_set_transform(Vector2(57, 747.6), 0.0, Vector2(0.60, 0.60))
+	draw_set_transform(Vector2(46, 714.6), 0.0, Vector2(0.60, 0.60))
 	draw_speaker(Vector2.ZERO)
 	draw_set_transform(Vector2.ZERO)
 

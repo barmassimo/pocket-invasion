@@ -69,6 +69,93 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
 - Define keyboard left/right controls first. Mouse movement may be added if useful; document the implemented controls.
 - Avoid mandatory third-party plugins and assets. If dependencies are introduced, pin them and record their source and license.
 
+## Versioning and releases
+
+- These rules define future versioning work. Adding them to this guide does not
+  authorize implementing version/build metadata, changing application versions,
+  creating tags, rebuilding distributions or publishing anything. Wait for the
+  user's request to implement the versioning mechanism or create a release.
+- Use `MAJOR.MINOR.PATCH` for the application version, adding a suffix only when
+  explicitly requested. Never change the version automatically during development,
+  commits or exports. Keep pending user-visible release notes under `Unreleased`
+  in `docs/CHANGELOG.md` once release tracking is implemented.
+- An unqualified request such as "make a release" targets the main branch and
+  uses the latest reachable stable `vMAJOR.MINOR.PATCH` tag as the comparison
+  baseline, ignoring suffixed tags. If the user requests a suffix such as `-rc`,
+  use the latest reachable tag that is either stable or has that exact suffix;
+  ignore other suffixes. Do not invent suffixes or suffix counters.
+- Before choosing the release version, inspect existing tags, the version in HEAD
+  and the working tree, and all commits and the cumulative diff since the applicable
+  baseline. Choose the increment from those combined changes, not from the current
+  version string or the latest commit alone. If no applicable baseline exists,
+  agree on the initial version with the user; do not invent release history.
+- Apply the compatibility criteria below before choosing MINOR or PATCH. Increment
+  MINOR for compatible new functionality and reset PATCH to 0. Increment PATCH for
+  compatible fixes without new functionality. Features together with fixes require
+  MINOR. An explicitly requested release containing only documentation, tests or
+  development tooling changes uses PATCH.
+- For this standalone game, assess MAJOR compatibility from the player's
+  perspective, rather than only from a programming API. Incompatible changes to
+  existing default behavior, controls or gameplay rules, loss of compatibility
+  with existing saved data/settings if introduced, removal of supported use, or
+  new mandatory platform, hardware, browser or external-tool requirements warrant
+  a MAJOR proposal. Requiring network access to install a new mandatory tool is
+  itself a new requirement, even if installation is automatic.
+- Before implementing a change that meets those MAJOR criteria, explain the
+  specific incompatibility and its effect on existing players, propose MAJOR,
+  and obtain the user's explicit agreement. Approval of a general feature or an
+  unqualified release request does not by itself approve an unexplained
+  incompatibility. When approved for release, reset MINOR and PATCH to 0.
+- Optional capabilities remain compatible only when existing use retains the same
+  defaults and requirements. A new setting preserves compatibility only if it is
+  optional and leaving it unset preserves existing default behavior. Internal
+  refactoring alone does not warrant MAJOR when player behavior and requirements
+  remain compatible. Correcting a defect to restore documented/intended behavior
+  can be PATCH; do not disguise deliberate changes to defaults as fixes.
+- A requested release includes updating the application version and CHANGELOG,
+  running appropriate checks, committing the intended release changes and metadata,
+  and creating the matching `vMAJOR.MINOR.PATCH` tag, with exactly the requested
+  suffix, on that release commit. Resolve which working-tree changes belong to
+  the release before committing; do not include unrelated work. Never overwrite
+  existing tags or rewrite existing commits to create a release.
+- A release request alone does not authorize pushing, creating a GitHub Release,
+  uploading binaries, deploying Web content, installing tools or signing packages.
+  Exporting a local build alone does not create a release or increment the version.
+- Use one authoritative application version, from which Godot's application
+  version, visible version labels and export metadata derive. Keep Windows numeric
+  metadata compatible with its required format. Godot engine and any future save
+  format versions are independent of the application version. Avoid duplicating
+  the current version in introductory/design documentation; preserve clearly
+  identified historical records.
+
+## Build identity in Web and Windows distributions
+
+- When this mechanism is requested, both Web and Windows builds must include the
+  application version, source Git commit and local modification state captured
+  at build time. Show the identity at the bottom left of the HUD. GitHub repository
+  URLs and clickable commit links are deferred until explicitly requested by the user.
+  Use the same identity in bundled build metadata and startup logs where available.
+- Display a compact identity such as `v1.2.3-abcdef0` or
+  `v1.2.3-abcdef0-modified`, without spaces or parentheses, and retain the full
+  commit hash in build metadata.
+  Mark `modified` when tracked files differ from HEAD, including staged changes,
+  or non-ignored untracked files exist. Ignored tools, caches and generated exports
+  must not make a build appear modified. Capture identity before generating build
+  metadata so the generated metadata does not itself cause a dirty state.
+- `modified` means local changes exist beyond the linked commit; the link does
+  not identify their exact contents. It is build provenance, not a version suffix,
+  and must not change the application version or numeric Windows version fields.
+  Build a release only after committing and tagging, with a clean working tree,
+  so the release distribution does not display `modified`.
+- Bundle the captured identity with each distribution. Running an exported build
+  must not require Git, a checkout, network access or a GitHub API request, and must
+  not inspect an unrelated repository on the player's machine. The GitHub link is
+  optional to open; the game remains local and works offline.
+- If Git or repository metadata is unavailable, keep the application usable and
+  show the application version with provenance explicitly unavailable; do not
+  invent a commit, repository URL or clean state. Verify both exports retain their
+  captured identity when run outside the checkout before claiming this is supported.
+
 ## Launch and validation
 
 - Provide project-relative PowerShell commands to prepare the environment, open the editor and run the game without global configuration.

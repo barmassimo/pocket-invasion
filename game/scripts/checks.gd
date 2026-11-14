@@ -3,6 +3,7 @@ extends SceneTree
 const Main = preload("res://scripts/main.gd")
 const Rules = preload("res://scripts/invasion_rules.gd")
 const Encounters = preload("res://scripts/encounters.gd")
+const Info = preload("res://scripts/build_info.gd")
 var failures: int = 0
 
 func check(condition: bool, description: String) -> void:
@@ -161,8 +162,25 @@ func check_pickup_recapture(game: Node3D) -> void:
 	check(game.pickups.is_empty() and game.squad.size() == 3, "Blinking fighters remain collectible even on an invisible blink frame")
 
 func run() -> void:
+	var clean_identity: Dictionary = {"version": Info.version(), "commit": "a".repeat(40), "modified": false}
+	check(Info.label(clean_identity) == "v%s-aaaaaaa" % Info.version(), "Clean build identity uses compact version-hash format")
+	var dirty_identity: Dictionary = clean_identity.duplicate()
+	dirty_identity["modified"] = true
+	check(Info.label(dirty_identity) == "v%s-aaaaaaa-modified" % Info.version(), "Development identity marks local modifications")
+	check(Info.label({}) == "v%s-hash-unavailable" % Info.version(), "Missing provenance never claims a clean hash")
+	var invalid_identity: Dictionary = clean_identity.duplicate()
+	invalid_identity["version"] = "stale-version"
+	check(Info.validated(invalid_identity).is_empty(), "Snapshots from another application version are rejected")
+	invalid_identity = clean_identity.duplicate()
+	invalid_identity["modified"] = "false"
+	check(Info.validated(invalid_identity).is_empty(), "Malformed modification state cannot masquerade as a clean build")
+	invalid_identity = clean_identity.duplicate()
+	invalid_identity["commit"] = "not-a-hash"
+	check(Info.validated(invalid_identity).is_empty(), "Invalid commit identity is rejected")
 	var game := Main.new()
 	root.add_child(game)
+	check(game.lcd.volume_slider.get_rect().end.y < game.lcd.version_label.position.y, "Raised volume control leaves clear space above version label")
+	check(game.lcd.version_label.position.x == 46 and game.lcd.version_label.get_rect().end.y < 773, "Version label stays inside the lower-left LCD panel")
 	check(game.lcd.intro.visible and not game.lcd.demo.visible and not game.running, "Startup shows the story without running the course or demo")
 	var control_key := InputEventKey.new()
 	control_key.pressed = true
