@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- Reject empty or spaces-only names in Top 10 entry, flashing the name field
+  once without saving or leaving the screen.
+
 ## 1.2.3 - 2026-11-14
 
 ### Fixed

@@ -193,6 +193,22 @@ func check_high_scores(game: Node3D) -> void:
 	check(game.lcd.volume_slider.visible and game.lcd.speaker_button.visible and game.lcd.version_label.visible, "Musical name entry retains sound controls and version")
 	var key := InputEventKey.new()
 	key.pressed = true
+	var entries_before: Array = table.entries.duplicate(true)
+	for empty_name: String in ["", " ".repeat(Main.Scores.NAME_LENGTH)]:
+		game.lcd.name_buffer = empty_name
+		key.keycode = KEY_ENTER
+		game._unhandled_key_input(key)
+		check(game.lcd.entering_name and game.pending_high_score and table.entries == entries_before and game.sound.fanfare_active, "Empty name confirmation keeps the score pending and the entry screen active")
+		check(game.lcd.name_error_flash_remaining > 0.0, "Empty name flashes the input field")
+		game.lcd._process(0.1)
+		var remaining: float = game.lcd.name_error_flash_remaining
+		key.echo = true
+		game._unhandled_key_input(key)
+		check(game.lcd.name_error_flash_remaining == remaining, "Held Enter does not restart the error flash")
+		key.echo = false
+		game.lcd._process(1.0)
+		check(game.lcd.name_error_flash_remaining == 0.0 and game.lcd.entering_name, "Error flash ends once and keeps name editing available")
+	game.lcd.name_buffer = " ".repeat(Main.Scores.NAME_LENGTH)
 	key.keycode = KEY_M
 	key.unicode = 109
 	game._unhandled_key_input(key)
@@ -229,7 +245,11 @@ func check_high_scores(game: Node3D) -> void:
 	game._unhandled_key_input(key)
 	check(game.lcd.entering_name, "Held Enter cannot accidentally confirm a name")
 	key.echo = false
+	key.keycode = KEY_UP
 	game._unhandled_key_input(key)
+	key.keycode = KEY_KP_ENTER
+	game._unhandled_key_input(key)
+	key.keycode = KEY_ENTER
 	game._unhandled_key_input(key)
 	check(game.running and not game.lcd.entering_name and not game.lcd.attract_active and not game.sound.fanfare.playing, "Next Enter starts a clean run and hides the leaderboard")
 	game.high_scores = original_table

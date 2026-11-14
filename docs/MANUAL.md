@@ -50,8 +50,9 @@ and speaker controls are visible here. There is no automatic name-entry timeout.
   at the ends. The highlighted slot shows which character will change.
 - Backspace: erase the previous slot; Delete: clear the current slot.
 - Home/End: jump to the beginning or first unused slot.
-- Enter: save and return to the demo with the updated Top 10. An empty name
-  becomes PILOT. Held Enter does not accidentally confirm a name.
+- Enter: save and return to the demo with the updated Top 10. Empty names,
+  including spaces only, are rejected: the name field flashes once and stays
+  editable. Held Enter does not accidentally confirm a name or repeat the flash.
 
 Typing M, P or F during name entry writes a letter; the clickable speaker and
 volume slider still control sound. Outside the Top 10, defeat retains the

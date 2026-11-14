@@ -13,6 +13,7 @@ const WINDOW_WIDTH: int = 725
 const PLAYFIELD_CENTER_X: float = 528.0
 const PLAYFIELD_RECT := Rect2(359, 27, 338, 746)
 const PAGE_COUNT: int = 3
+const NAME_ERROR_FLASH_SECONDS: float = 0.22
 const INK := Color("253820")
 const GHOST := Color(0.16, 0.22, 0.12, 0.09)
 const DIGITS: Array[int] = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
@@ -34,6 +35,7 @@ var high_scores: LocalHighScores
 var entering_name: bool = false
 var name_buffer: String = ""
 var name_cursor: int = 0
+var name_error_flash_remaining: float = 0.0
 var entry_score: int = 0
 var entry_rank: int = 0
 
@@ -130,6 +132,7 @@ func _ready() -> void:
 
 func set_playing(playing: bool) -> void:
 	entering_name = false
+	name_error_flash_remaining = 0.0
 	volume_slider.visible = playing
 	speaker_button.visible = playing
 	version_label.visible = not playing
@@ -157,12 +160,18 @@ func begin_name_entry(points: int, rank: int) -> void:
 	entry_rank = rank
 	name_buffer = " ".repeat(LocalHighScores.NAME_LENGTH)
 	name_cursor = 0
+	set_process(true)
 	queue_redraw()
 
 func handle_name_key(event: InputEventKey) -> void:
 	if event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
 		if not event.echo:
-			name_confirmed.emit(name_buffer)
+			if LocalHighScores.clean_name(name_buffer).is_empty():
+				if name_error_flash_remaining <= 0.0:
+					name_error_flash_remaining = NAME_ERROR_FLASH_SECONDS
+					queue_redraw()
+			else:
+				name_confirmed.emit(name_buffer)
 		return
 	match event.keycode:
 		KEY_LEFT:
@@ -238,6 +247,11 @@ func draw_page_navigation() -> void:
 	page_navigation.draw_rect(Rect2(582, 666, 48 * page_remaining_fraction(), 2), Color("65734a"))
 
 func _process(delta: float) -> void:
+	if entering_name:
+		if name_error_flash_remaining > 0.0:
+			name_error_flash_remaining = maxf(0.0, name_error_flash_remaining - delta)
+			queue_redraw()
+		return
 	if not attract_active:
 		return
 	attract_clock = fposmod(attract_clock + delta, Intro.LOOP_SECONDS + Demo.LOOP_SECONDS)
@@ -327,11 +341,14 @@ func draw_name_entry() -> void:
 	draw_string(lcd_font, Vector2(374, 230), "RANK %02d   SCORE %d" % [entry_rank + 1, entry_score], HORIZONTAL_ALIGNMENT_CENTER, 308, 17, INK)
 	draw_line(Vector2(384, 261), Vector2(672, 261), INK)
 	draw_string(lcd_font, Vector2(374, 309), "ENTER YOUR NAME", HORIZONTAL_ALIGNMENT_CENTER, 308, 20, INK)
+	var flashing: bool = name_error_flash_remaining > 0.0
+	if flashing:
+		draw_rect(Rect2(381, 336, 292, 41), INK)
 	for i: int in range(LocalHighScores.NAME_LENGTH):
 		var x: float = 385 + i * 24
-		if i == name_cursor:
+		if i == name_cursor and not flashing:
 			draw_rect(Rect2(x - 2, 338, 22, 37), INK)
-		draw_string(lcd_font, Vector2(x, 365), name_buffer[i] if name_buffer[i] != " " else "_", HORIZONTAL_ALIGNMENT_LEFT, -1, 25, Color("c4cca5") if i == name_cursor else INK)
+		draw_string(lcd_font, Vector2(x, 365), name_buffer[i] if name_buffer[i] != " " else "_", HORIZONTAL_ALIGNMENT_LEFT, -1, 25, Color("c4cca5") if flashing or i == name_cursor else INK)
 	var lines: Array[String] = ["TYPE OR USE THE ARROWS", "[UP / DOWN] CHANGE LETTER", "[LEFT / RIGHT] MOVE CURSOR", "[BACKSPACE] ERASE", "[ENTER] SAVE & RETURN"]
 	for i: int in range(lines.size()):
 		draw_string(lcd_font, Vector2(374, 437 + i * 34), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 308, 16, INK)
