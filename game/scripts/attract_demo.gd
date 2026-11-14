@@ -57,7 +57,7 @@ func _draw() -> void:
 	var action: float = minf(time, 6.0)
 	text_at(0, "HOW TO PLAY", 20)
 	draw_line(Vector2(0, 48), Vector2(CONTENT_WIDTH, 48), INK)
-	text_at(80, ["02 / BUILD YOUR FLEET", "03 / EARN POINTS"][lesson], 16)
+	text_at(80, ["BUILD YOUR FLEET", "EARN POINTS"][lesson], 16)
 	draw_rect(Rect2(10, 104, CONTENT_WIDTH - 20, 350), INK, false)
 	draw_set_transform(ACTION_OFFSET)
 	draw_shooting(action, lesson)
@@ -70,7 +70,6 @@ func _draw() -> void:
 		for i: int in range(lines.size()):
 			text_at(512 + i * 25, lines[i], 16)
 	else:
-		text_at(519, "WATCH AND LEARN", 16)
 		text_at(546, "FIRE IS AUTOMATIC", 14)
 	text_at(648, "[ENTER / SPACE] START", 18)
 	text_at(677, "[P] PAUSE    [M] MUTE", 12)
