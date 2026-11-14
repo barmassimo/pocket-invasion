@@ -47,5 +47,5 @@ static func current() -> Dictionary:
 static func label(info: Dictionary) -> String:
 	var identity: Dictionary = validated(info)
 	if identity.is_empty():
-		return "v%s-hash-unavailable" % version()
+		return "v%s" % version()
 	return "v%s-%s%s" % [version(), str(identity["commit"]).left(7), "-modified" if identity["modified"] else ""]

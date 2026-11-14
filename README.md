@@ -87,11 +87,14 @@ The hash is a local source reference; no GitHub link or network access is used.
 `game/project.godot` (`application/config/version`) is the single version source.
 Development launches, including runs from the Godot editor, detect the current
 checkout identity when Git is available. Without Git/repository metadata the game
-still runs, showing `vMAJOR.MINOR.PATCH-hash-unavailable` instead of claiming a clean source identity.
+still runs, showing only `vMAJOR.MINOR.PATCH`, without a hash or extra suffix.
 Both export scripts regenerate the ignored `game/build_info.json` snapshot before
-exporting and bundle it in the game package. Exports only read that snapshot, so
+exporting and bundle it in the game package. If Git or the repository is unavailable
+at export time, this replaces any previous snapshot with unavailable identity;
+the exported game shows only the application version, never a previously saved hash.
+Exports only read that snapshot, so
 they retain their identity outside the checkout and require no Git at runtime.
-Missing or invalid snapshots also show `vMAJOR.MINOR.PATCH-hash-unavailable`.
+Missing or invalid snapshots also show only `vMAJOR.MINOR.PATCH`.
 
 Exporting alone does not increment the version or create a release. A requested
 release updates the version and [changelog](docs/CHANGELOG.md), commits its changes

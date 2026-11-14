@@ -152,9 +152,14 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
   not inspect an unrelated repository on the player's machine. The GitHub link is
   optional to open; the game remains local and works offline.
 - If Git or repository metadata is unavailable, keep the application usable and
-  show the application version with provenance explicitly unavailable; do not
+  show only the application version (for example, `v1.0.0`), without a hash or
+  extra suffix; do not
   invent a commit, repository URL or clean state. Verify both exports retain their
   captured identity when run outside the checkout before claiming this is supported.
+  Always regenerate the snapshot at export time. If no repository identity can be
+  verified then, replace any previous snapshot with unavailable identity; never
+  reuse a stale hash. A build made with verified identity retains its hash when
+  subsequently run outside the repository.
 
 ## Launch and validation
 

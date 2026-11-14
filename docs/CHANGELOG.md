@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Show only the application version when Git identity or a valid exported build
+  snapshot is unavailable, without an extra suffix.
+
 ## 1.0.0 - 2026-11-14
 
 ### Added

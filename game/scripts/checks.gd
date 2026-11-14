@@ -167,7 +167,8 @@ func run() -> void:
 	var dirty_identity: Dictionary = clean_identity.duplicate()
 	dirty_identity["modified"] = true
 	check(Info.label(dirty_identity) == "v%s-aaaaaaa-modified" % Info.version(), "Development identity marks local modifications")
-	check(Info.label({}) == "v%s-hash-unavailable" % Info.version(), "Missing provenance never claims a clean hash")
+	check(Info.label({}) == "v%s" % Info.version(), "Missing provenance shows the application version alone")
+	check(Info.source_identity(ProjectSettings.globalize_path("res://assets")).is_empty(), "A source directory without its own repository cannot inherit an enclosing Git identity")
 	var invalid_identity: Dictionary = clean_identity.duplicate()
 	invalid_identity["version"] = "stale-version"
 	check(Info.validated(invalid_identity).is_empty(), "Snapshots from another application version are rejected")
