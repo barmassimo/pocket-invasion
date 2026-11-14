@@ -2,6 +2,13 @@
 
 A local Windows arcade prototype made with standard Godot 4.7.2 and typed GDScript, styled as an olive monochrome 1980s LCD handheld. Fly a spacecraft formation freely across the playfield, shoot automatically, break targets for score and collect freed fighters to grow the fleet.
 
+## Screenshots
+
+<p>
+  <img src="docs/screenshots/briefing.png" alt="Mission briefing and Top 10 scores" width="360">
+  <img src="docs/screenshots/gameplay.png" alt="Gameplay with a four-ship fleet, alien targets and a freed fighter" width="360">
+</p>
+
 ## Prepare and play
 
 Run PowerShell commands from this project directory:
