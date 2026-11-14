@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.2.3 - 2026-11-14
+
+### Fixed
+
+- Complete the menu footer with an aligned, clickable copyright linking to
+  massimobarbieri.it. Keep only audio controls at the bottom during gameplay
+  and pause.
+
 ## 1.2.2 - 2026-11-14
 
 ### Fixed

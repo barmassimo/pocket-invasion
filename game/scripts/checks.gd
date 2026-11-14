@@ -263,7 +263,7 @@ func run() -> void:
 	var game := Main.new()
 	root.add_child(game)
 	check_high_scores(game)
-	check(game.lcd.volume_slider.get_rect().end.y < game.lcd.version_label.position.y, "Raised volume control leaves clear space above version label")
+	check(game.lcd.volume_slider.get_rect().end.y < 773, "Volume control stays inside the bottom of the LCD panel")
 	check(game.lcd.version_label.position.x == 46 and game.lcd.version_label.get_rect().end.y < 773, "Version label stays inside the lower-left LCD panel")
 	check(game.lcd.intro.visible and not game.lcd.demo.visible and not game.running, "Startup shows the story without running the course or demo")
 	var control_key := InputEventKey.new()
@@ -271,6 +271,7 @@ func run() -> void:
 	control_key.keycode = KEY_SPACE
 	game._unhandled_key_input(control_key)
 	check(game.running and not game.lcd.intro.visible, "Space starts from the story")
+	check(not game.lcd.version_label.visible and not game.lcd.copyright_label.visible and game.lcd.volume_slider.visible and game.lcd.speaker_button.visible, "Gameplay footer shows only audio controls")
 	game.score = 123
 	for code: Key in [KEY_ENTER, KEY_SPACE]:
 		control_key.keycode = code

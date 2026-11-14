@@ -28,6 +28,7 @@ var volume_slider: HSlider
 var speaker_button: Button
 var page_navigation: Control
 var version_label: LinkButton
+var copyright_label: LinkButton
 var lcd_font: Font = ThemeDB.fallback_font
 var high_scores: LocalHighScores
 var entering_name: bool = false
@@ -55,7 +56,7 @@ func _ready() -> void:
 		add_page_button(Vector2(473 + page * 18, 651), Vector2(18, 32), "", "Page %d" % (page + 1), select_page.bind(page))
 	add_page_button(Vector2(534, 651), Vector2(32, 32), ">", "Next page (Right arrow)", func() -> void: step_page(1))
 	volume_slider = HSlider.new()
-	volume_slider.position = Vector2(87, 709)
+	volume_slider.position = Vector2(87, 691)
 	volume_slider.size = Vector2(190, 28)
 	volume_slider.min_value = 0
 	volume_slider.max_value = 100
@@ -79,7 +80,7 @@ func _ready() -> void:
 	volume_slider.value_changed.connect(func(value: float) -> void: volume_changed.emit(value))
 	add_child(volume_slider)
 	speaker_button = Button.new()
-	speaker_button.position = Vector2(29, 707)
+	speaker_button.position = Vector2(29, 689)
 	speaker_button.size = Vector2(40, 30)
 	speaker_button.flat = true
 	speaker_button.focus_mode = Control.FOCUS_NONE
@@ -111,11 +112,30 @@ func _ready() -> void:
 		version_label.pressed.connect(func() -> void: OS.shell_open(project_url))
 	add_child(version_label)
 	print("BUILD_IDENTITY=", version_label.text)
+	copyright_label = LinkButton.new()
+	copyright_label.focus_mode = Control.FOCUS_NONE
+	copyright_label.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
+	# Compensate for the C's one-pixel left bearing to align the visible ink with v.
+	copyright_label.position = Vector2(45, 727)
+	copyright_label.size = Vector2(283, 22)
+	copyright_label.text = "Copyright © 2026 Massimo Barbieri"
+	copyright_label.add_theme_font_override("font", lcd_font)
+	copyright_label.add_theme_font_size_override("font_size", version_label.get_theme_font_size("font_size"))
+	for color_name: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+		copyright_label.add_theme_color_override(color_name, INK)
+	copyright_label.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	copyright_label.tooltip_text = "https://massimobarbieri.it"
+	copyright_label.pressed.connect(func() -> void: OS.shell_open("https://massimobarbieri.it"))
+	add_child(copyright_label)
 
 func set_playing(playing: bool) -> void:
 	entering_name = false
 	volume_slider.visible = playing
 	speaker_button.visible = playing
+	version_label.visible = not playing
+	copyright_label.visible = not playing
+	volume_slider.position.y = 737
+	speaker_button.position.y = 735
 	attract_active = not playing
 	page_navigation.visible = not playing
 	attract_clock = 0.0
@@ -129,6 +149,10 @@ func set_playing(playing: bool) -> void:
 func begin_name_entry(points: int, rank: int) -> void:
 	set_playing(true)
 	entering_name = true
+	version_label.visible = true
+	copyright_label.visible = true
+	volume_slider.position.y = 691
+	speaker_button.position.y = 689
 	entry_score = points
 	entry_rank = rank
 	name_buffer = " ".repeat(LocalHighScores.NAME_LENGTH)
@@ -264,7 +288,7 @@ func _draw() -> void:
 	if entering_name:
 		draw_name_entry()
 	if not attract_active:
-		draw_set_transform(Vector2(46, 714.6), 0.0, Vector2(0.60, 0.60))
+		draw_set_transform(speaker_button.position + Vector2(17, 7.6), 0.0, Vector2(0.60, 0.60))
 		draw_speaker(Vector2.ZERO)
 		draw_set_transform(Vector2.ZERO)
 

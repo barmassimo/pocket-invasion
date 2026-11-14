@@ -20,6 +20,8 @@ reward stay visible. You can still collect them.
 P pauses/resumes, M mutes/unmutes, F or F11 toggles fullscreen, and Esc leaves
 fullscreen. The volume slider controls music and effects. Start keys do nothing
 during a run or pause. Restart clears all previous run entities and counters.
+During gameplay and pause, the footer shows only volume and mute controls;
+the copyright and version are hidden.
 
 ## Demo and Top 10
 
@@ -28,6 +30,7 @@ The Enter/Space start prompt appears only in this column, not on the three right
 The version stays at the bottom. Click it to open the project repository in your
 browser when its URL was captured from the approved remote. The game remains
 usable offline; opening the link is optional. The silent demo hides the volume controls.
+The copyright above the version opens https://massimobarbieri.it in your browser.
 Left/Right changes briefing/demo pages; the dots and arrows are also clickable.
 The three pages continue cycling automatically. During play and pause the left
 column displays the existing game statistics instead of the leaderboard.
