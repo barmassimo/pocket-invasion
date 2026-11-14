@@ -42,6 +42,37 @@ const ROOTS: Array[int] = [
 static func frequency(note: int) -> float:
 	return 440.0 * pow(2.0, float(note - 69) / 12.0)
 
+static func build_fanfare() -> AudioStreamWAV:
+	# Original bright C-major victory march, eight bars with a looping cadence.
+	var melody: Array[int] = [
+		72, 0, 72, 76, 79, 0, 79, 0, 81, 79, 76, 0, 79, 0, 0, 0,
+		77, 0, 77, 81, 84, 0, 84, 0, 83, 81, 79, 0, 79, 0, 0, 0,
+		76, 79, 84, 0, 84, 83, 81, 79, 77, 81, 84, 0, 84, 0, 81, 0,
+		79, 83, 86, 0, 84, 0, 83, 79, 84, 0, 0, 0, 0, 0, 0, 0]
+	var roots: Array[int] = [48, 48, 53, 55, 48, 53, 55, 48]
+	var step_seconds: float = 0.1875
+	var count: int = roundi(melody.size() * step_seconds * SAMPLE_RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	for i: int in range(count):
+		var seconds: float = float(i) / SAMPLE_RATE
+		var step: int = mini(floori(seconds / step_seconds), melody.size() - 1)
+		var t: float = fposmod(seconds, step_seconds)
+		var envelope: float = minf(t / 0.006, 1.0) * clampf((step_seconds * 0.88 - t) / 0.025, 0.0, 1.0)
+		var phase: float = TAU * frequency(melody[step]) * t
+		var lead: float = (sin(phase) + sin(phase * 3.0) / 3.0) * 0.25 if melody[step] > 0 else 0.0
+		var root_note: int = roots[step / 8]
+		var harmony: float = sin(TAU * frequency(root_note + 16) * t) * 0.09
+		var bass: float = sin(TAU * frequency(root_note + (12 if step % 2 else 0)) * t) * 0.25
+		data.encode_s16(i * 2, roundi((lead + harmony + bass) * envelope * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = SAMPLE_RATE
+	stream.data = data
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_end = count
+	return stream
+
 static func build() -> AudioStreamWAV:
 	var step_seconds: float = 30.0 / BPM
 	var count: int = roundi(MELODY.size() * step_seconds * SAMPLE_RATE)

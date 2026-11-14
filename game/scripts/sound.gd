@@ -8,6 +8,8 @@ const MUSIC_VOLUME_DB: float = -19.0
 const Music = preload("res://scripts/music.gd")
 var music: AudioStreamPlayer
 var music_active: bool = false
+var fanfare: AudioStreamPlayer
+var fanfare_active: bool = false
 var players: Dictionary[String, AudioStreamPlayer] = {}
 var muted: bool = false
 var volume_percent: float = 50.0
@@ -24,6 +26,17 @@ func _ready() -> void:
 	music = AudioStreamPlayer.new()
 	music.stream = Music.build()
 	add_child(music)
+	fanfare = AudioStreamPlayer.new()
+	fanfare.stream = Music.build_fanfare()
+	add_child(fanfare)
+	update_music()
+
+func set_fanfare_playing(active: bool) -> void:
+	fanfare_active = active
+	if active:
+		set_music_playing(false)
+	else:
+		fanfare.stop()
 	update_music()
 
 func set_music_playing(active: bool) -> void:
@@ -40,6 +53,12 @@ func update_music() -> void:
 	# Volume-only changes must leave the playback state and position alone.
 	if music.stream_paused != should_pause:
 		music.stream_paused = should_pause
+	fanfare.volume_db = music.volume_db
+	if fanfare_active and not fanfare.playing:
+		fanfare.play()
+	var fanfare_pause: bool = not fanfare_active or muted or volume_percent <= 0.0
+	if fanfare.stream_paused != fanfare_pause:
+		fanfare.stream_paused = fanfare_pause
 
 func create_effect(id: String, notes: Array[float], duration: float, noise_mix: float, volume: float) -> void:
 	var data := PackedByteArray()
@@ -88,6 +107,8 @@ func stop_all() -> void:
 	stop_effects()
 	music_active = false
 	music.stop()
+	fanfare_active = false
+	fanfare.stop()
 
 func stop_effects() -> void:
 	for player: AudioStreamPlayer in players.values():

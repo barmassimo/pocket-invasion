@@ -3,6 +3,7 @@ extends Control
 
 signal volume_changed(percent: float)
 signal mute_requested
+signal name_confirmed(player_name: String)
 
 const Rules = preload("res://scripts/invasion_rules.gd")
 const Demo = preload("res://scripts/attract_demo.gd")
@@ -24,9 +25,16 @@ var score: int = 0
 var seconds: int = 0
 var muted: bool = false
 var volume_slider: HSlider
+var speaker_button: Button
 var page_navigation: Control
 var version_label: Label
 var lcd_font := SystemFont.new()
+var high_scores: LocalHighScores
+var entering_name: bool = false
+var name_buffer: String = ""
+var name_cursor: int = 0
+var entry_score: int = 0
+var entry_rank: int = 0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -72,7 +80,7 @@ func _ready() -> void:
 		volume_slider.add_theme_icon_override(icon_name, preload("res://assets/icons/volume_knob.svg"))
 	volume_slider.value_changed.connect(func(value: float) -> void: volume_changed.emit(value))
 	add_child(volume_slider)
-	var speaker_button := Button.new()
+	speaker_button = Button.new()
 	speaker_button.position = Vector2(29, 707)
 	speaker_button.size = Vector2(40, 30)
 	speaker_button.flat = true
@@ -98,6 +106,9 @@ func _ready() -> void:
 	print("BUILD_IDENTITY=", version_label.text)
 
 func set_playing(playing: bool) -> void:
+	entering_name = false
+	volume_slider.visible = playing
+	speaker_button.visible = playing
 	attract_active = not playing
 	page_navigation.visible = not playing
 	attract_clock = 0.0
@@ -107,6 +118,49 @@ func set_playing(playing: bool) -> void:
 	page_navigation.queue_redraw()
 	set_process(not playing)
 	queue_redraw()
+
+func begin_name_entry(points: int, rank: int) -> void:
+	set_playing(true)
+	entering_name = true
+	entry_score = points
+	entry_rank = rank
+	name_buffer = " ".repeat(LocalHighScores.NAME_LENGTH)
+	name_cursor = 0
+	queue_redraw()
+
+func handle_name_key(event: InputEventKey) -> void:
+	if event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+		if not event.echo:
+			name_confirmed.emit(name_buffer)
+		return
+	match event.keycode:
+		KEY_LEFT:
+			name_cursor = posmod(name_cursor - 1, LocalHighScores.NAME_LENGTH)
+		KEY_RIGHT:
+			name_cursor = posmod(name_cursor + 1, LocalHighScores.NAME_LENGTH)
+		KEY_UP, KEY_DOWN:
+			var index: int = LocalHighScores.ALPHABET.find(name_buffer[name_cursor])
+			index = posmod(index + (1 if event.keycode == KEY_UP else -1), LocalHighScores.ALPHABET.length())
+			replace_name_character(LocalHighScores.ALPHABET[index])
+		KEY_BACKSPACE:
+			name_cursor = maxi(0, name_cursor - 1)
+			replace_name_character(" ")
+		KEY_DELETE:
+			replace_name_character(" ")
+		KEY_HOME:
+			name_cursor = 0
+		KEY_END:
+			name_cursor = mini(name_buffer.strip_edges().length(), LocalHighScores.NAME_LENGTH - 1)
+		_:
+			if event.unicode >= 32 and not event.ctrl_pressed and not event.alt_pressed and not event.meta_pressed:
+				var character: String = String.chr(event.unicode).to_upper()
+				if character.length() == 1 and character in LocalHighScores.ALPHABET:
+					replace_name_character(character)
+					name_cursor = mini(name_cursor + 1, LocalHighScores.NAME_LENGTH - 1)
+	queue_redraw()
+
+func replace_name_character(character: String) -> void:
+	name_buffer = name_buffer.substr(0, name_cursor) + character + name_buffer.substr(name_cursor + 1)
 
 func add_page_button(at: Vector2, bounds: Vector2, text: String, hint: String, action: Callable) -> void:
 	var button := Button.new()
@@ -182,7 +236,7 @@ func _draw() -> void:
 	draw_rect(Rect2(PLAYFIELD_RECT.position.x, 0, PLAYFIELD_RECT.size.x, PLAYFIELD_RECT.position.y), margin_color)
 	draw_rect(Rect2(PLAYFIELD_RECT.position.x, PLAYFIELD_RECT.end.y, PLAYFIELD_RECT.size.x, 800 - PLAYFIELD_RECT.end.y), margin_color)
 	# The course and attract pages share the same surrounding margin.
-	if intro.visible or demo.visible:
+	if intro.visible or demo.visible or entering_name:
 		draw_rect(PLAYFIELD_RECT, Color("c4cca5"))
 	# Passive-matrix texture, not CRT scanlines. Drawn once per HUD update.
 	for x: int in range(18, WINDOW_WIDTH - 17, 5):
@@ -196,6 +250,18 @@ func _draw() -> void:
 		draw_circle(at, 3, Color("161d13"))
 	caption(Vector2(46, 47), "POCKET INVASION", 19)
 	caption(Vector2(46, 70), "HANDHELD COMBAT SYSTEM", 12)
+	if attract_active or entering_name:
+		draw_high_scores()
+	else:
+		draw_game_status()
+	if entering_name:
+		draw_name_entry()
+	if not attract_active:
+		draw_set_transform(Vector2(46, 714.6), 0.0, Vector2(0.60, 0.60))
+		draw_speaker(Vector2.ZERO)
+		draw_set_transform(Vector2.ZERO)
+
+func draw_game_status() -> void:
 	caption(Vector2(46, 98), "SHIPS")
 	segment_text("%02d" % soldiers, Vector2(47, 109), 34)
 	caption(Vector2(46, 171), "SCORE")
@@ -206,9 +272,38 @@ func _draw() -> void:
 	caption(Vector2(46, 427), "LEVEL")
 	segment_text("%02d" % Rules.threat_level(float(seconds)), Vector2(47, 443), 34)
 	draw_line(Vector2(46, 626), Vector2(329, 626), INK)
-	draw_set_transform(Vector2(46, 714.6), 0.0, Vector2(0.60, 0.60))
-	draw_speaker(Vector2.ZERO)
-	draw_set_transform(Vector2.ZERO)
+
+func draw_high_scores() -> void:
+	caption(Vector2(46, 108), "TOP 10", 20)
+	caption(Vector2(46, 132), "PILOT", 12)
+	caption(Vector2(276, 132), "SCORE", 12)
+	draw_line(Vector2(46, 143), Vector2(329, 143), INK)
+	if high_scores != null:
+		for i: int in range(high_scores.entries.size()):
+			var row: Dictionary = high_scores.entries[i]
+			var y: float = 169 + i * 28
+			caption(Vector2(46, y), "%02d" % (i + 1), 14)
+			caption(Vector2(78, y), row.name, 16)
+			draw_string(lcd_font, Vector2(216, y), str(row.score), HORIZONTAL_ALIGNMENT_RIGHT, 112, 16, INK)
+	draw_line(Vector2(46, 440), Vector2(329, 440), INK)
+	caption(Vector2(46, 471), "HOW TO PLAY", 20)
+	var lines: Array[String] = ["[ENTER / SPACE] START", "[WASD / ARROWS] MOVE", "FIRE IS AUTOMATIC", "[P] PAUSE   [M] MUTE", "[F / F11] FULLSCREEN", "[ESC] EXIT FULLSCREEN"]
+	for i: int in range(lines.size()):
+		caption(Vector2(46, 505 + i * 27), lines[i], 15)
+
+func draw_name_entry() -> void:
+	draw_string(lcd_font, Vector2(374, 186), "TOP 10 / WELL DONE!", HORIZONTAL_ALIGNMENT_CENTER, 308, 22, INK)
+	draw_string(lcd_font, Vector2(374, 230), "RANK %02d   SCORE %d" % [entry_rank + 1, entry_score], HORIZONTAL_ALIGNMENT_CENTER, 308, 17, INK)
+	draw_line(Vector2(384, 261), Vector2(672, 261), INK)
+	draw_string(lcd_font, Vector2(374, 309), "ENTER YOUR NAME", HORIZONTAL_ALIGNMENT_CENTER, 308, 20, INK)
+	for i: int in range(LocalHighScores.NAME_LENGTH):
+		var x: float = 385 + i * 24
+		if i == name_cursor:
+			draw_rect(Rect2(x - 2, 338, 22, 37), INK)
+		draw_string(lcd_font, Vector2(x, 365), name_buffer[i] if name_buffer[i] != " " else "_", HORIZONTAL_ALIGNMENT_LEFT, -1, 25, Color("c4cca5") if i == name_cursor else INK)
+	var lines: Array[String] = ["TYPE OR USE THE ARROWS", "[UP / DOWN] CHANGE LETTER", "[LEFT / RIGHT] MOVE CURSOR", "[BACKSPACE] ERASE", "[ENTER] SAVE & RETURN"]
+	for i: int in range(lines.size()):
+		draw_string(lcd_font, Vector2(374, 437 + i * 34), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 308, 16, INK)
 
 func draw_speaker(at: Vector2) -> void:
 	# A compact filled speaker with sound waves or a mute cross.

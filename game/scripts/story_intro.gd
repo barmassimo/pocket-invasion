@@ -15,11 +15,8 @@ func _ready() -> void:
 	font.font_names = PackedStringArray(["Consolas", "Courier New"])
 	font.font_weight = 700
 	paragraph(60, "FROM COMMAND CENTER", 20)
-	paragraph(340, "Earth has fallen.\nThe aliens hold it.", 17)
-	paragraph(412, "You are the last fighter\nstill in flight.", 17)
-	paragraph(474, "Our captured pilots are alive.", 17)
-	paragraph(518, "Free them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.", 16)
-	paragraph(600, "WE ARE COUNTING ON YOU.", 19)
+	# One label gives every line and blank paragraph separator the same metrics.
+	paragraph(360, "Earth has fallen.\nThe aliens hold it.\n\nYou are the last fighter\nstill in flight.\n\nOur captured pilots are alive.\n\nFree them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.\n\nWE ARE COUNTING ON YOU.", 17)
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():
@@ -36,6 +33,7 @@ func paragraph(y: float, text: String, size: int) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_override("font", font)
 	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_constant_override("line_spacing", 0)
 	label.add_theme_color_override("font_color", INK)
 	add_child(label)
 
@@ -57,9 +55,6 @@ func _draw() -> void:
 	draw_capture_sequence()
 	draw_set_transform(Vector2.ZERO)
 	draw_line(Vector2(25, 315), Vector2(333, 315), INK)
-	draw_string(font, Vector2(25, 689), "[ENTER / SPACE] START", HORIZONTAL_ALIGNMENT_CENTER, 308, 18, INK)
-	draw_string(font, Vector2(25, 712), "[W] [A] [S] [D] / [ARROWS]: MOVE", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
-	draw_string(font, Vector2(25, 736), "[P] PAUSE  [M] MUTE  [F / F11] FULLSCREEN", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
 
 func draw_capture_sequence() -> void:
 	var t: float = animation_time - START_DELAY

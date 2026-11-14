@@ -8,6 +8,11 @@ const Motion = preload("res://scripts/target_motion.gd")
 const Display = preload("res://scripts/lcd_display.gd")
 const Recapture = preload("res://scripts/recapture_flash.gd")
 const Pickup = preload("res://scripts/rescue_pickup.gd")
+const Scores = preload("res://scripts/high_scores.gd")
+const HIGH_SCORE_HOLD_SECONDS: float = 3.0
+var high_scores: LocalHighScores = Scores.new()
+var pending_high_score: bool = false
+var high_score_path: String = Scores.SAVE_PATH
 const PLAYER_Z: float = 5.0
 const DEFEAT_HOLD_SECONDS: float = 10.0
 var defeat_hold_remaining: float = 0.0
@@ -50,6 +55,7 @@ func _ready() -> void:
 	sound = Sound.new() as ArcadeSound
 	add_child(sound)
 	build_world()
+	high_scores.load_scores(high_score_path)
 	build_ui()
 	reset_run(false)
 	print("USER_DATA_DIR=", OS.get_user_data_dir())
@@ -150,6 +156,8 @@ func build_ui() -> void:
 	layer.add_child(lcd)
 	lcd.volume_changed.connect(set_sound_volume)
 	lcd.mute_requested.connect(toggle_sound_mute)
+	lcd.name_confirmed.connect(save_high_score)
+	lcd.high_scores = high_scores
 	recapture = Recapture.new() as RecaptureFlash
 	recapture.camera = camera
 	layer.add_child(recapture)
@@ -206,6 +214,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	running = play
 	sound.set_music_playing(play)
 	started = play
+	pending_high_score = false
 	defeat_hold_remaining = 0.0
 	lcd.set_playing(play)
 	message.visible = play
@@ -248,10 +257,16 @@ func vertical_limits() -> Vector2:
 	return Vector2(screen_z(Display.PLAYFIELD_RECT.position.y + 8.0) + 0.32, screen_z(Display.PLAYFIELD_RECT.end.y - 8.0) - depth - 0.32)
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if lcd.entering_name and event is InputEventKey and event.pressed and event.keycode not in [KEY_ESCAPE, KEY_F11]:
+		lcd.handle_name_key(event)
+		get_viewport().set_input_as_handled()
+		return
 	if event is not InputEventKey or not event.pressed or event.echo:
 		return
 	if event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
-		if not started or squad.is_empty():
+		if pending_high_score:
+			begin_high_score()
+		elif not started or squad.is_empty():
 			reset_run()
 	elif event.keycode in [KEY_LEFT, KEY_RIGHT] and lcd.attract_active:
 		lcd.step_page(-1 if event.keycode == KEY_LEFT else 1)
@@ -282,9 +297,10 @@ func _physics_process(delta: float) -> void:
 		if defeat_hold_remaining > 0.0:
 			defeat_hold_remaining = maxf(0.0, defeat_hold_remaining - delta)
 			if defeat_hold_remaining == 0.0:
-				lcd.set_playing(false)
-				message.visible = false
-				update_hud()
+				if pending_high_score:
+					begin_high_score()
+				else:
+					return_to_demo()
 		return
 	elapsed += delta
 	sound.tick(delta)
@@ -487,11 +503,39 @@ func finish() -> void:
 	running = false
 	started = false
 	sound.set_music_playing(false)
-	defeat_hold_remaining = DEFEAT_HOLD_SECONDS
+	pending_high_score = high_scores.rank_for(score) >= 0
+	defeat_hold_remaining = HIGH_SCORE_HOLD_SECONDS if pending_high_score else DEFEAT_HOLD_SECONDS
 	lcd.set_playing(true)
 	message.visible = true
 	sound.play_effect("defeat")
-	message.text = "FLEET LOST\n\n[ENTER / SPACE] START"
+	message.text = "FLEET LOST\n\nTOP 10 SCORE!\n\n[ENTER / SPACE]\nENTER YOUR NAME" if pending_high_score else "FLEET LOST\n\n[ENTER / SPACE] START"
+
+func begin_high_score() -> void:
+	defeat_hold_remaining = 0.0
+	toast.text = ""
+	toast_icon.visible = false
+	message.visible = false
+	lcd.begin_name_entry(score, high_scores.rank_for(score))
+	sound.set_fanfare_playing(true)
+
+func save_high_score(player_name: String) -> void:
+	if not pending_high_score:
+		return
+	high_scores.record(score, player_name)
+	var error: Error = high_scores.save_scores(high_score_path)
+	pending_high_score = false
+	sound.stop_all()
+	return_to_demo()
+	if error != OK:
+		notice("SAVE FAILED / SESSION ONLY", 0.0)
+		push_warning("Local high scores could not be saved: %s" % error_string(error))
+
+func return_to_demo() -> void:
+	toast.text = ""
+	toast_icon.visible = false
+	message.visible = false
+	lcd.set_playing(false)
+	update_hud()
 
 func update_hud() -> void:
 	lcd.update_status(squad.size(), score, elapsed)

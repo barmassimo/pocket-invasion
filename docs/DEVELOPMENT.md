@@ -44,6 +44,13 @@ Exporting does not publish or create a release, commit, tag or application versi
 
 ## Verification
 
+`scripts/Validate.ps1` includes local leaderboard ordering, qualification/ties,
+JSON round trips, replacement saves, invalid-data recovery, uppercase input,
+arcade arrows, defeat transitions, confirmation, restart and fanfare volume/mute
+checks. Score fixtures are written only under `artifacts/high-scores-test.json`;
+the checks do not overwrite the player's real leaderboard. See [architecture](ARCHITECTURE.md)
+for the state flow and [manual](MANUAL.md) for current controls and storage limits.
+
 Verify exported notice files are present and nonempty, the GPL copy matches the
 root license, and the exported metadata matches the game's captured identity.
 Check the Web license link and its local file links in a browser. Verify startup

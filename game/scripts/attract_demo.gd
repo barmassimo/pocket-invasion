@@ -71,9 +71,6 @@ func _draw() -> void:
 			text_at(512 + i * 25, lines[i], 16)
 	else:
 		text_at(546, "FIRE IS AUTOMATIC", 14)
-	text_at(642, "[ENTER / SPACE] START", 18)
-	text_at(665, "[W] [A] [S] [D] / [ARROWS]: MOVE", 12)
-	text_at(689, "[P] PAUSE  [M] MUTE  [F / F11] FULLSCREEN", 12)
 
 func action_text(y: float, text: String, size: int = 16) -> void:
 	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 280, size, INK)

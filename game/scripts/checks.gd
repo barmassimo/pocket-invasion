@@ -161,6 +161,82 @@ func check_pickup_recapture(game: Node3D) -> void:
 	game.collect_pickups()
 	check(game.pickups.is_empty() and game.squad.size() == 3, "Freed fighters remain collectible while HELP is hidden")
 
+func check_high_scores(game: Node3D) -> void:
+	var original_table: LocalHighScores = game.high_scores
+	game.high_scores = Main.Scores.new()
+	game.lcd.high_scores = game.high_scores
+	game.high_score_path = ProjectSettings.globalize_path("res://../artifacts/high-scores-test.json")
+	var table: LocalHighScores = game.high_scores
+	check(table.entries.size() == 10 and table.rank_for(1042) == -1 and table.rank_for(1043) == 9 and table.rank_for(4880) == 0, "Ten seeded scores use strict qualification and stable ties")
+	check(Main.Scores.clean_name("aB!c") == "ABC", "Names accept only uppercase arcade characters")
+	check(table.record(4880, "test pilot") == 0 and table.entries[0].name == "TEST PILOT" and table.entries.size() == 10, "New score displaces exactly the last row and uppercases the name")
+	check(table.save_scores(game.high_score_path) == OK, "Local score table writes successfully")
+	var loaded := Main.Scores.new()
+	loaded.load_scores(game.high_score_path)
+	check(loaded.entries == table.entries, "Scores survive loading a new table")
+	loaded.record(4881, "")
+	check(loaded.entries[0].name == "PILOT" and loaded.save_scores(game.high_score_path) == OK, "Empty names get a fallback and saving replaces the previous file")
+	var broken := FileAccess.open(game.high_score_path, FileAccess.WRITE)
+	broken.store_string('{"format":1,"entries":[null]}')
+	broken.close()
+	loaded.load_scores(game.high_score_path)
+	check(loaded.entries.size() == 10 and loaded.entries[0].name == "AKIRA", "Malformed local data restores the complete seeded table")
+	table.reset_defaults()
+	game.reset_run(true, 123)
+	game.set_physics_process(false)
+	game.score = 2310
+	game.finish()
+	game._physics_process(2.99)
+	check(not game.lcd.entering_name and game.pending_high_score, "Qualifying defeat waits three seconds before name entry")
+	game._physics_process(0.02)
+	check(game.lcd.entering_name and not game.lcd.attract_active and not game.running and game.sound.fanfare_active and not game.sound.music_active, "Qualifying defeat opens name entry with the exclusive victory loop")
+	check(game.lcd.volume_slider.visible and game.lcd.speaker_button.visible and game.lcd.version_label.visible, "Musical name entry retains sound controls and version")
+	var key := InputEventKey.new()
+	key.pressed = true
+	key.keycode = KEY_M
+	key.unicode = 109
+	game._unhandled_key_input(key)
+	check(game.lcd.name_buffer.begins_with("M") and not game.sound.muted, "Typed lowercase M becomes an uppercase name letter without muting")
+	key.unicode = 0
+	key.keycode = KEY_UP
+	game._unhandled_key_input(key)
+	key.keycode = KEY_RIGHT
+	game._unhandled_key_input(key)
+	key.keycode = KEY_DOWN
+	game._unhandled_key_input(key)
+	check(game.lcd.name_buffer.begins_with("MA-"), "Arcade arrows choose letters and wrap through the character set")
+	game.sound.toggle_mute()
+	check(game.sound.fanfare.stream_paused, "Mute silences the victory loop")
+	game.sound.toggle_mute()
+	game.set_sound_volume(0)
+	check(game.sound.fanfare.stream_paused, "Zero volume silences the victory loop")
+	game.set_sound_volume(50)
+	check(not game.sound.fanfare.stream_paused, "Volume restores the victory loop")
+	key.keycode = KEY_ENTER
+	game._unhandled_key_input(key)
+	check(not game.lcd.entering_name and game.lcd.attract_active and not game.sound.fanfare.playing and not game.pending_high_score and table.entries[5].name == "MA-", "Enter saves once, stops the fanfare and returns to the leaderboard demo")
+	check(not game.lcd.volume_slider.visible and not game.lcd.speaker_button.visible and game.lcd.version_label.visible, "Silent Top 10 hides audio controls but keeps the version")
+	loaded.load_scores(game.high_score_path)
+	check(loaded.entries == table.entries, "Confirmed score and name persist together")
+	game.reset_run(true, 123)
+	game.score = 6000
+	game.finish()
+	key.keycode = KEY_SPACE
+	game._unhandled_key_input(key)
+	check(game.lcd.entering_name and game.defeat_hold_remaining == 0 and not game.running, "Space skips a qualifying defeat hold into name entry without restarting")
+	key.keycode = KEY_ENTER
+	key.echo = true
+	game._unhandled_key_input(key)
+	check(game.lcd.entering_name, "Held Enter cannot accidentally confirm a name")
+	key.echo = false
+	game._unhandled_key_input(key)
+	game._unhandled_key_input(key)
+	check(game.running and not game.lcd.entering_name and not game.lcd.attract_active and not game.sound.fanfare.playing, "Next Enter starts a clean run and hides the leaderboard")
+	game.high_scores = original_table
+	game.lcd.high_scores = original_table
+	game.high_score_path = Main.Scores.SAVE_PATH
+	game.reset_run(false)
+
 func run() -> void:
 	var clean_identity: Dictionary = {"version": Info.version(), "commit": "a".repeat(40), "modified": false}
 	check(Info.label(clean_identity) == "v%s-aaaaaaa" % Info.version(), "Clean build identity uses compact version-hash format")
@@ -180,6 +256,7 @@ func run() -> void:
 	check(Info.validated(invalid_identity).is_empty(), "Invalid commit identity is rejected")
 	var game := Main.new()
 	root.add_child(game)
+	check_high_scores(game)
 	check(game.lcd.volume_slider.get_rect().end.y < game.lcd.version_label.position.y, "Raised volume control leaves clear space above version label")
 	check(game.lcd.version_label.position.x == 46 and game.lcd.version_label.get_rect().end.y < 773, "Version label stays inside the lower-left LCD panel")
 	check(game.lcd.intro.visible and not game.lcd.demo.visible and not game.running, "Startup shows the story without running the course or demo")
