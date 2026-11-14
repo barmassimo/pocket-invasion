@@ -7,6 +7,8 @@ const PAPER := Color("c4cca5")
 const Art = preload("res://scripts/target_art.gd")
 const LESSON_SECONDS: float = 9.0
 const LOOP_SECONDS: float = LESSON_SECONDS * 2.0
+const CONTENT_WIDTH: float = 308.0
+const ACTION_OFFSET := Vector2(14, 0)
 var clock: float = 0.0
 var font := SystemFont.new()
 
@@ -28,7 +30,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func text_at(y: float, text: String, size: int = 16) -> void:
-	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 348, size, INK)
+	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, CONTENT_WIDTH, size, INK)
 
 func ship(at: Vector2) -> void:
 	draw_texture_rect(LcdIcons.SHIP, Rect2(at - Vector2(17, 23), Vector2(34, 46)), false, INK)
@@ -54,13 +56,13 @@ func _draw() -> void:
 	# Hold each result completely still for the last three seconds.
 	var action: float = minf(time, 6.0)
 	text_at(0, "HOW TO PLAY", 20)
-	draw_line(Vector2(0, 48), Vector2(348, 48), INK)
+	draw_line(Vector2(0, 48), Vector2(CONTENT_WIDTH, 48), INK)
 	text_at(80, ["02 / BUILD YOUR FLEET", "03 / EARN POINTS"][lesson], 16)
-	draw_rect(Rect2(10, 104, 328, 350), INK, false)
-	draw_set_transform(Vector2(34, 0))
+	draw_rect(Rect2(10, 104, CONTENT_WIDTH - 20, 350), INK, false)
+	draw_set_transform(ACTION_OFFSET)
 	draw_shooting(action, lesson)
 	draw_set_transform(Vector2.ZERO)
-	draw_line(Vector2(0, 480), Vector2(348, 480), INK)
+	draw_line(Vector2(0, 480), Vector2(CONTENT_WIDTH, 480), INK)
 	if time >= 5.5:
 		var lines: Array = [
 			["BREAK THE CAPTURE SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
@@ -96,10 +98,10 @@ func draw_shooting(time: float, kind: int) -> void:
 		var y: float = lerpf(407, 233, approach)
 		if time >= 4.25 and time < 5.5:
 			var angle: float = (time - 4.25) * InvasionRules.PICKUP_SPIN_SPEED
-			draw_set_transform(Vector2(174, 213), angle)
+			draw_set_transform(ACTION_OFFSET + impact, angle)
 			ship(Vector2.ZERO)
 			# Restore the panel offset after drawing the rotating pickup.
-			draw_set_transform(Vector2(34, 0))
+			draw_set_transform(ACTION_OFFSET)
 			action_text(285, "MOVE TO COLLECT", 16)
 		var spread: float = smoothstep(5.5, 6.0, time)
 		ship(Vector2(140 - spread * 18, y))

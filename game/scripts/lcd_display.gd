@@ -7,8 +7,9 @@ signal mute_requested
 const Rules = preload("res://scripts/invasion_rules.gd")
 const Demo = preload("res://scripts/attract_demo.gd")
 const Intro = preload("res://scripts/story_intro.gd")
-const WINDOW_WIDTH: int = 775
-const PLAYFIELD_CENTER_X: float = 550.0
+const WINDOW_WIDTH: int = 725
+const PLAYFIELD_CENTER_X: float = 528.0
+const PLAYFIELD_RECT := Rect2(359, 27, 338, 746)
 const PAGE_COUNT: int = 3
 const INK := Color("253820")
 const GHOST := Color(0.16, 0.22, 0.12, 0.09)
@@ -31,7 +32,7 @@ func _ready() -> void:
 	lcd_font.font_names = PackedStringArray(["Consolas", "Courier New"])
 	lcd_font.font_weight = 700
 	demo = Demo.new() as AttractDemo
-	demo.position = Vector2(379, 65)
+	demo.position = Vector2(374, 65)
 	add_child(demo)
 	intro = Intro.new() as StoryIntro
 	intro.position = Vector2(349, 18)
@@ -41,10 +42,10 @@ func _ready() -> void:
 	page_navigation.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(page_navigation)
 	page_navigation.draw.connect(draw_page_navigation)
-	add_page_button(Vector2(459, 651), Vector2(32, 32), "<", "Previous page (Left arrow)", func() -> void: step_page(-1))
+	add_page_button(Vector2(434, 651), Vector2(32, 32), "<", "Previous page (Left arrow)", func() -> void: step_page(-1))
 	for page: int in range(PAGE_COUNT):
-		add_page_button(Vector2(498 + page * 18, 651), Vector2(18, 32), "", "Page %d" % (page + 1), select_page.bind(page))
-	add_page_button(Vector2(559, 651), Vector2(32, 32), ">", "Next page (Right arrow)", func() -> void: step_page(1))
+		add_page_button(Vector2(473 + page * 18, 651), Vector2(18, 32), "", "Page %d" % (page + 1), select_page.bind(page))
+	add_page_button(Vector2(534, 651), Vector2(32, 32), ">", "Next page (Right arrow)", func() -> void: step_page(1))
 	volume_slider = HSlider.new()
 	volume_slider.position = Vector2(87, 742)
 	volume_slider.size = Vector2(190, 28)
@@ -130,10 +131,10 @@ func page_remaining_fraction() -> float:
 
 func draw_page_navigation() -> void:
 	for page: int in range(PAGE_COUNT):
-		page_navigation.draw_circle(Vector2(507 + page * 18, 667), 4, INK if page == current_page() else Color("98a580"))
+		page_navigation.draw_circle(Vector2(482 + page * 18, 667), 4, INK if page == current_page() else Color("98a580"))
 	# A quiet, unlabelled countdown drains toward the fixed left edge.
-	page_navigation.draw_rect(Rect2(607, 666, 48, 2), Color("b0bb94"))
-	page_navigation.draw_rect(Rect2(607, 666, 48 * page_remaining_fraction(), 2), Color("65734a"))
+	page_navigation.draw_rect(Rect2(582, 666, 48, 2), Color("b0bb94"))
+	page_navigation.draw_rect(Rect2(582, 666, 48 * page_remaining_fraction(), 2), Color("65734a"))
 
 func _process(delta: float) -> void:
 	if not attract_active:
@@ -157,9 +158,16 @@ func caption(at: Vector2, text: String, size: int = 15) -> void:
 	draw_string(lcd_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, INK)
 
 func _draw() -> void:
-	# The same screen shows either the live course or the attract sequence.
-	if demo.visible:
-		draw_rect(Rect2(349, 18, 408, 764), Color("c4cca5"))
+	# Hide the 3D course everywhere outside the light panel, including beneath
+	# the HUD and the gaps between the bezel strokes.
+	var margin_color := Color("bdc79f")
+	draw_rect(Rect2(0, 0, PLAYFIELD_RECT.position.x, 800), margin_color)
+	draw_rect(Rect2(PLAYFIELD_RECT.end.x, 0, WINDOW_WIDTH - PLAYFIELD_RECT.end.x, 800), margin_color)
+	draw_rect(Rect2(PLAYFIELD_RECT.position.x, 0, PLAYFIELD_RECT.size.x, PLAYFIELD_RECT.position.y), margin_color)
+	draw_rect(Rect2(PLAYFIELD_RECT.position.x, PLAYFIELD_RECT.end.y, PLAYFIELD_RECT.size.x, 800 - PLAYFIELD_RECT.end.y), margin_color)
+	# The course and attract pages share the same surrounding margin.
+	if intro.visible or demo.visible:
+		draw_rect(PLAYFIELD_RECT, Color("c4cca5"))
 	# Passive-matrix texture, not CRT scanlines. Drawn once per HUD update.
 	for x: int in range(18, WINDOW_WIDTH - 17, 5):
 		draw_line(Vector2(x, 18), Vector2(x, 782), Color(0.15, 0.22, 0.1, 0.025))
@@ -182,7 +190,7 @@ func _draw() -> void:
 	caption(Vector2(46, 427), "THREAT LEVEL")
 	segment_text("%02d" % Rules.threat_level(float(seconds)), Vector2(47, 443), 34)
 	draw_line(Vector2(46, 626), Vector2(329, 626), INK)
-	draw_set_transform(Vector2(46, 745.5), 0.0, Vector2(0.75, 0.75))
+	draw_set_transform(Vector2(57, 747.6), 0.0, Vector2(0.60, 0.60))
 	draw_speaker(Vector2.ZERO)
 	draw_set_transform(Vector2.ZERO)
 

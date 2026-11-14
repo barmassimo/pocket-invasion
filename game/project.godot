@@ -6,7 +6,7 @@ config/icon="res://assets/icons/app-icon.svg"
 run/main_scene="res://scenes/main.tscn"
 
 [display]
-window/size/viewport_width=775
+window/size/viewport_width=725
 window/size/viewport_height=800
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"

@@ -521,8 +521,8 @@ func run() -> void:
 		var bottom_y: float = 0.0
 		for ship: Node3D in game.squad:
 			bottom_y = maxf(bottom_y, game.camera.unproject_position(ship.position + Vector3(0, 0.35, 0)).y)
-		edges_valid = edges_valid and top_y >= 24 and top_y <= 40 and bottom_y >= 760 and bottom_y <= 776
-	check(edges_valid, "Small and expanded fleets can reach both screen edges without leaving the frame")
+		edges_valid = edges_valid and top_y >= 34 and top_y <= 50 and bottom_y >= 750 and bottom_y <= 766
+	check(edges_valid, "Small and expanded fleets reach the inset top and bottom limits without entering the frame margin")
 	game.reset_run(true, 123)
 	game.spawn_clock = 999.0
 	var moving_threat: CourseTarget = game.spawn_target(game.squad[0].position.x, game.player_z - 1.0, 1, 999, 50)
@@ -685,6 +685,11 @@ func run() -> void:
 	await process_frame
 	var camera: Camera3D = game.get_viewport().get_camera_3d()
 	var viewport_size: Vector2 = game.get_viewport().get_visible_rect().size
+	var road_left: Vector2 = camera.unproject_position(Vector3(-Rules.ROAD_HALF, 0, 0))
+	var road_right: Vector2 = camera.unproject_position(Vector3(Rules.ROAD_HALF, 0, 0))
+	var pixel_scale: float = viewport_size.y / 800.0
+	check(absf((road_right.x - road_left.x) / pixel_scale - 338.46154) < 0.01, "Narrower window preserves the original projected course width and object scale")
+	check(absf((road_left.x + road_right.x) * 0.5 / pixel_scale - Main.Display.PLAYFIELD_CENTER_X) < 0.01 and road_left.x / pixel_scale > 348 and road_right.x / pixel_scale < Main.Display.WINDOW_WIDTH - 18, "Course is centered within the compact right panel with clear bezel margins")
 	var formation_visible: bool = true
 	for soldier: Node3D in game.squad:
 		var screen: Vector2 = camera.unproject_position(soldier.position)

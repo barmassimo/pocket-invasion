@@ -153,8 +153,10 @@ func build_ui() -> void:
 	recapture = Recapture.new() as RecaptureFlash
 	recapture.camera = camera
 	layer.add_child(recapture)
-	message = label_at(Vector2(380, 310), 22, Color.WHITE)
-	message.size = Vector2(340, 220)
+	recapture.position = Display.PLAYFIELD_RECT.position
+	recapture.size = Display.PLAYFIELD_RECT.size
+	message = label_at(Vector2(Display.PLAYFIELD_CENTER_X - 160, 310), 22, Color.WHITE)
+	message.size = Vector2(320, 220)
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layer.add_child(message)
 	toast = label_at(Vector2(80, 510), 18, Color("90ffe0"))
@@ -243,7 +245,7 @@ func vertical_limits() -> Vector2:
 	var count: int = squad.size()
 	var rows: int = maxi(0, (count - 1) / Rules.formation_columns(count))
 	var depth: float = rows * Rules.formation_spacing(count).y
-	return Vector2(screen_z(25.0) + 0.32, screen_z(775.0) - depth - 0.32)
+	return Vector2(screen_z(Display.PLAYFIELD_RECT.position.y + 8.0) + 0.32, screen_z(Display.PLAYFIELD_RECT.end.y - 8.0) - depth - 0.32)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is not InputEventKey or not event.pressed or event.echo:

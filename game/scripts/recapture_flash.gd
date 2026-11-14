@@ -11,8 +11,6 @@ var flashes: Array[Dictionary] = []
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	position = Vector2(349, 18)
-	size = Vector2(408, 764)
 	clip_contents = true
 
 func play(at: Vector3, target: Node3D, ship_scale: Vector2, rotation_angle: float = 0.0) -> void:

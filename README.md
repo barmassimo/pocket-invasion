@@ -126,6 +126,8 @@ Original synthesized arcade sounds provide feedback for shots, hits, destroyed t
 
 Every surviving target is a contact threat, including missed supplies. Only ships intersecting it are removed; targets passing beside the fleet cause no damage. Every intact target uses the same micro-explosion when it hits a formation ship, including alien-piloted and captured-fighter/Fleet ships. The controls demo uses this same contact feedback. The 0.45-second capture beam is reserved for eligible freed fighters being recaptured by alien-piloted ships; it removes the pickup without adding targets, changing alien HP or granting rewards. The intro keeps its original capture sequence. Pickup warning timers and capture effects freeze on pause; pending capture effects finish during the defeat hold and clear on restart. The formation compacts after losses, so steer away from ongoing contacts. There are no multiplication gates.
 
+The logical window is 725 × 800. The right panel fits around the original 11-unit-wide course with about 10 pixels of margin on each side. The camera preserves the original pixel scale. Matching olive margins surround the right panel in play, briefing and demo, aligned with the HUD top and bottom. Only the left HUD panel has a thin black inner outline. The course, enemy labels, projectiles and effects are visually clipped to the light rectangle, so nothing appears over its surrounding margins or the HUD. Vertical movement stops 10 pixels earlier at both ends to keep fighters inside the inset area; horizontal limits, collisions and encounter tuning are unchanged. Intro text and demo animations use the compact panel width.
+
 ## Validation and local data
 
 ```powershell

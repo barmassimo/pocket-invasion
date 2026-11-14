@@ -15,10 +15,10 @@ func _ready() -> void:
 	font.font_names = PackedStringArray(["Consolas", "Courier New"])
 	font.font_weight = 700
 	paragraph(60, "FROM COMMAND CENTER", 20)
-	paragraph(347, "Command Center to last fighter.\nEarth has fallen. The aliens hold it.", 18)
-	paragraph(415, "You are the last fighter in flight.", 18)
-	paragraph(459, "Our captured pilots are alive.", 18)
-	paragraph(503, "Free them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.", 18)
+	paragraph(340, "Earth has fallen.\nThe aliens hold it.", 17)
+	paragraph(412, "You are the last fighter\nstill in flight.", 17)
+	paragraph(474, "Our captured pilots are alive.", 17)
+	paragraph(518, "Free them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.", 16)
 	paragraph(600, "WE ARE COUNTING ON YOU.", 19)
 
 func _process(delta: float) -> void:
@@ -31,7 +31,7 @@ func _process(delta: float) -> void:
 func paragraph(y: float, text: String, size: int) -> void:
 	var label := Label.new()
 	label.position = Vector2(16, y - size)
-	label.size.x = 376
+	label.size.x = 326
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_override("font", font)
@@ -40,11 +40,11 @@ func paragraph(y: float, text: String, size: int) -> void:
 	add_child(label)
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, 408, 764), PAPER)
-	draw_line(Vector2(30, 100), Vector2(378, 100), INK)
-	draw_rect(Rect2(137, 79, 134, 24), INK)
-	draw_string(font, Vector2(147, 96), "TOP SECRET", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, PAPER)
+	draw_line(Vector2(25, 100), Vector2(333, 100), INK)
+	draw_rect(Rect2(112, 79, 134, 24), INK)
+	draw_string(font, Vector2(122, 96), "TOP SECRET", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, PAPER)
 	# Flat orbital vignette. Only the illustration animates; the briefing stays still.
+	draw_set_transform(Vector2(-25, 0))
 	draw_circle(Vector2(141, 210), 72, INK, true, -1, true)
 	draw_circle(Vector2(141, 210), 68, PAPER, true, -1, true)
 	draw_colored_polygon(PackedVector2Array([
@@ -55,10 +55,11 @@ func _draw() -> void:
 		Vector2(156, 235), Vector2(181, 223), Vector2(197, 238),
 		Vector2(181, 260), Vector2(168, 267)]), INK)
 	draw_capture_sequence()
-	draw_line(Vector2(30, 315), Vector2(378, 315), INK)
-	draw_string(font, Vector2(30, 695), "[ENTER / SPACE] START", HORIZONTAL_ALIGNMENT_CENTER, 348, 18, INK)
-	draw_string(font, Vector2(30, 724), "[P] PAUSE    [M] MUTE", HORIZONTAL_ALIGNMENT_CENTER, 348, 12, INK)
-	draw_string(font, Vector2(30, 746), "[F / F11] FULLSCREEN", HORIZONTAL_ALIGNMENT_CENTER, 348, 12, INK)
+	draw_set_transform(Vector2.ZERO)
+	draw_line(Vector2(25, 315), Vector2(333, 315), INK)
+	draw_string(font, Vector2(25, 695), "[ENTER / SPACE] START", HORIZONTAL_ALIGNMENT_CENTER, 308, 18, INK)
+	draw_string(font, Vector2(25, 724), "[P] PAUSE    [M] MUTE", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
+	draw_string(font, Vector2(25, 746), "[F / F11] FULLSCREEN", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
 
 func draw_capture_sequence() -> void:
 	var t: float = animation_time - START_DELAY
