@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.2.0 - 2026-11-14
+
 ### Added
 
 - Clickable HUD version linking to the approved project repository, captured
