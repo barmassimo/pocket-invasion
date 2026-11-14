@@ -2,41 +2,38 @@
 
 ## Unreleased
 
-### Fixed
-
-- Freed fighters become recapturable as soon as the HELP! blinking starts at
-  five seconds, without an additional five-second protection period.
+## 1.1.0 - 2026-11-14
 
 ### Added
 
-- GitHub Actions release workflow on Linux, triggered by stable version tags or
-  manually for an existing tag, with automated checks, Web/Windows ZIPs and hashes.
+- GitHub Actions releases on Linux, triggered by stable version tags or manually
+  for an existing tag, with automated checks, Web/Windows ZIPs and checksums.
 - Optional Linux support for the shared bootstrap, validation, export and launch
   scripts using the pinned standard engine and existing export presets.
 - Local Top 10 with fictional starting pilots, uppercase keyboard/arcade name
   entry and a triumphant chiptune loop for qualifying scores.
-- Windows and Web exports include the project GPL, engine license, third-party
-  copyright and license texts, distribution information and build identity.
-- Web exports provide a linked license page; local hosting serves text and JSON
-  notices with the appropriate content types.
-- GNU GPL version 3 or later license for the source code, documentation and
-  original game assets, with copyright and licensing information in README.
+- GNU GPL version 3 or later licensing for source, documentation and original
+  assets; Windows and Web packages include project, engine and third-party
+  notices, source-access information and build identity.
+- Linked Web license page and appropriate text/JSON MIME types in local hosting.
+- Briefing and gameplay screenshots in README.
 
 ### Changed
 
 - Blink only the freed fighter's HELP! sign, keeping its ship and reward visible.
-
 - Show the Top 10 and How to Play keys in the left column during the demo,
   keeping the version visible and hiding the silent demo's volume controls.
-- Keep the Enter/Space start prompt in the left column only, removing its
-  duplicate from the three briefing/demo pages.
-- Give the command-center message a uniform font size and line spacing, with
-  one blank line between paragraphs and a compact gap below the illustration.
+- Refine briefing spacing and typography, keep the start prompt in the left
+  column only, and bracket `[ARROWS]` in briefing/demo hints.
 - Qualifying defeats open name entry after three seconds or Enter/Space;
   confirming returns to the demo with the updated leaderboard.
-- Enclose `[ARROWS]` in square brackets in the briefing and demonstration controls.
 - Show only the application version when Git identity or a valid exported build
   snapshot is unavailable, without an extra suffix.
+
+### Fixed
+
+- Freed fighters become recapturable as soon as the HELP! blinking starts at
+  five seconds, without an additional five-second protection period.
 
 ## 1.0.0 - 2026-11-14
 
