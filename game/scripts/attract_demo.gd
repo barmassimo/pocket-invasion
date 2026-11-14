@@ -63,17 +63,17 @@ func _draw() -> void:
 	draw_shooting(action, lesson)
 	draw_set_transform(Vector2.ZERO)
 	draw_line(Vector2(0, 480), Vector2(CONTENT_WIDTH, 480), INK)
-	if time >= 5.5:
+	if time >= (4.25 if lesson == 0 else 5.5):
 		var lines: Array = [
 			["BREAK THE CAPTURE SHIP.", "TOUCH THE FREE FIGHTER", "TO REBUILD YOUR FLEET."],
-			["BREAK ALIENS FOR POINTS.", "MOVE WITH [W] [A] [S] [D]", "OR THE ARROW KEYS."]][lesson]
+			["DESTROY ALIENS FOR POINTS."]][lesson]
 		for i: int in range(lines.size()):
 			text_at(512 + i * 25, lines[i], 16)
 	else:
 		text_at(546, "FIRE IS AUTOMATIC", 14)
-	text_at(648, "[ENTER / SPACE] START", 18)
-	text_at(677, "[P] PAUSE    [M] MUTE", 12)
-	text_at(699, "[F / F11] FULLSCREEN", 12)
+	text_at(642, "[ENTER / SPACE] START", 18)
+	text_at(665, "[W] [A] [S] [D] / ARROWS: MOVE", 12)
+	text_at(689, "[P] PAUSE  [M] MUTE  [F / F11] FULLSCREEN", 12)
 
 func action_text(y: float, text: String, size: int = 16) -> void:
 	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 280, size, INK)

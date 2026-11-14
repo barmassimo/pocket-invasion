@@ -187,7 +187,7 @@ func _draw() -> void:
 	caption(Vector2(46, 244), "MISSION TIME")
 	segment_text("%02d:%02d" % [seconds / 60, seconds % 60], Vector2(47, 254), 34)
 	draw_line(Vector2(46, 403), Vector2(329, 403), INK)
-	caption(Vector2(46, 427), "THREAT LEVEL")
+	caption(Vector2(46, 427), "LEVEL")
 	segment_text("%02d" % Rules.threat_level(float(seconds)), Vector2(47, 443), 34)
 	draw_line(Vector2(46, 626), Vector2(329, 626), INK)
 	draw_set_transform(Vector2(57, 747.6), 0.0, Vector2(0.60, 0.60))
