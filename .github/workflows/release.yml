@@ -1,0 +1,120 @@
+name: Release
+run-name: Release ${{ inputs.tag || github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing stable tag (vMAJOR.MINOR.PATCH) matching the application version'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pocket-invasion-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Validate requested tag
+        id: tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') {
+            throw 'Expected vMAJOR.MINOR.PATCH, without suffixes or leading zeros.'
+          }
+          "tag=$env:RELEASE_TAG" >> $env:GITHUB_OUTPUT
+
+      - name: Check out the release tag
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify version, tag and clean source
+        env:
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
+        run: ./scripts/Test-Release.ps1 -Tag $env:RELEASE_TAG
+
+      - name: Prepare the pinned Linux engine
+        run: ./scripts/Bootstrap.ps1 -Download
+
+      - name: Import and run automated gameplay checks
+        run: ./scripts/Validate.ps1
+
+      - name: Export Web
+        run: ./scripts/Export-Web.ps1 -Download
+
+      - name: Export Windows x64
+        run: ./scripts/Export-Windows.ps1 -Download
+
+      - name: Verify distribution files and package both builds
+        env:
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
+        run: ./scripts/Test-Release.ps1 -Tag $env:RELEASE_TAG -Package
+
+      - name: Save release packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-packages
+          path: artifacts/release/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Save validation and export logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-logs
+          path: artifacts/*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified packages
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-packages
+          path: packages
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          set -euo pipefail
+          cd packages
+          sha256sum --check SHA256SUMS.txt
+          # Create as draft: assets are attached before the release becomes visible.
+          # Existing releases are rejected by gh; never overwrite assets or tags.
+          gh release create "$RELEASE_TAG" \
+            "PocketInvasion-$RELEASE_TAG-web.zip" \
+            "PocketInvasion-$RELEASE_TAG-windows.zip" SHA256SUMS.txt \
+            --verify-tag --draft --title "Pocket Invasion $RELEASE_TAG" \
+            --generate-notes \
+            --notes 'Download the Web or Windows x64 ZIP and keep all companion license files. Serve the extracted Web directory through an HTTP(S) static server. Corresponding source, including project assets and build scripts, is available in this release under Source code (zip) and Source code (tar.gz).'
+          gh release edit "$RELEASE_TAG" --draft=false
+          echo "Published Pocket Invasion $RELEASE_TAG (Web and Windows x64)." >> "$GITHUB_STEP_SUMMARY"

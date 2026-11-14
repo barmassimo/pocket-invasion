@@ -4,6 +4,9 @@
 
 Run `scripts/Run.ps1` from PowerShell in the project root after preparing the
 environment as described in [README](../README.md#prepare-and-play).
+Optional Linux x64 use requires PowerShell 7 and a graphical desktop; see
+[Linux setup](DEVELOPMENT.md#optional-linux-development). Downloadable release
+packages target Windows x64 and Web; a native Linux game package is not produced.
 Enter or Space starts from any briefing/demo page. Arrows or WASD move the fleet
 in four directions; firing is automatic. Destroy aliens for points and break
 containment ships, then touch the freed fighters to grow the fleet. Contact with

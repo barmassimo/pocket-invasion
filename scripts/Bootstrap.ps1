@@ -1,5 +1,10 @@
 param([switch]$Download)
 $ErrorActionPreference = 'Stop'
+if ($IsLinux) {
+    & "$PSScriptRoot/Bootstrap-Linux.ps1" -Download:$Download
+    return
+}
+if ($env:OS -ne 'Windows_NT') { throw 'Only Windows x64 and Linux x64 are supported.' }
 $root = Split-Path $PSScriptRoot -Parent
 $version = '4.7.2-stable'
 $archive = Join-Path $root "artifacts/Godot_v${version}_win64.exe.zip"

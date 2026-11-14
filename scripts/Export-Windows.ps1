@@ -45,7 +45,7 @@ if (Test-Path -LiteralPath $manifest) {
 }
 $outputDir = Join-Path $root 'artifacts/windows'
 New-Item -ItemType Directory -Force $outputDir | Out-Null
-$engine = Join-Path $root 'tools/godot/Godot_v4.7.2-stable_win64_console.exe'
+$engine = & "$PSScriptRoot/Get-GodotPath.ps1"
 & "$PSScriptRoot/Write-BuildInfo.ps1"
 & $engine --headless --path (Join-Path $root 'game') --log-file (Join-Path $root 'artifacts/windows-export.log') --export-release Windows (Join-Path $outputDir 'PocketInvasion.exe')
 if ($LASTEXITCODE -ne 0) { throw "Windows export failed with exit code $LASTEXITCODE. See artifacts/windows-export.log." }

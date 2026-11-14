@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 & "$PSScriptRoot/Bootstrap.ps1"
-$engine = Join-Path $root 'tools/godot/Godot_v4.7.2-stable_win64_console.exe'
+$engine = & "$PSScriptRoot/Get-GodotPath.ps1"
 New-Item -ItemType Directory -Force (Join-Path $root 'artifacts') | Out-Null
 & $engine --headless --path "$root/game" --editor --import --quit --log-file "$root/artifacts/import.log"
 if ($LASTEXITCODE -ne 0) { throw 'Godot import failed.' }

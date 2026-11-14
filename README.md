@@ -91,6 +91,16 @@ automatic source downloads. See [distribution details](docs/DEVELOPMENT.md).
 
 ## Versions and build identity
 
+GitHub Actions runs tests and exports on **Linux (`ubuntu-24.04`)**, then publishes
+Web and Windows x64 ZIPs in a GitHub Release. Push an existing prepared stable tag
+`vMAJOR.MINOR.PATCH`, or select **Actions → Release → Run workflow** and enter that
+tag. It must match the application version; the workflow does not choose a version
+or create a tag. See [CI release instructions](docs/DEVELOPMENT.md#github-actions-releases).
+
+The same bootstrap, validation, export and launch scripts also support Linux x64
+with PowerShell 7 (`pwsh`), using a separate checkout from Windows. This is optional;
+Windows development retains its existing requirements and commands.
+
 The lower-left HUD shows the application version and seven-character source commit
 as `vMAJOR.MINOR.PATCH-hash`, without spaces or parentheses, with `-modified` appended
 when local changes are present.

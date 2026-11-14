@@ -47,3 +47,9 @@ The portable pinned engine and its self-contained editor data live under
 to the project. Build identity and export snapshots are separate from the
 application version and player data. See [development](DEVELOPMENT.md) and
 [README](../README.md) for setup, exports and verification.
+
+The command scripts select a native Windows or Linux editor through
+`Get-GodotPath.ps1`; export targets remain Web and Windows x64 on either host.
+GitHub Actions builds a clean tagged snapshot on Linux with read-only repository
+access. A separate publishing job receives write access only after validation and
+packaging succeed, then attaches both ZIPs and checksums to the tag's release.

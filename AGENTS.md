@@ -36,6 +36,7 @@ Exact target rewards, damage values, formation layout and difficulty progression
 ## Stack and self-contained environment
 
 - Use the standard precompiled Godot engine for Windows x64 and typed GDScript. Do not use the .NET edition or require C#.
+- Linux x64 CI and optional local Linux development may use the same pinned standard engine version with PowerShell 7. Share the bootstrap, validation and export scripts across hosts; retain Windows x64 and Web as distribution targets. Keep Windows setup requirements unchanged and use a separate checkout/tool directory per host OS.
 - No Visual Studio, MSVC Build Tools, separately installed Windows SDK, global runtimes or native compilation requirements.
 - Use a pinned stable Godot version selected and verified when implementation starts. Do not assume a version mentioned in an earlier discussion is current or suitable.
 - Keep Godot under `tools/godot/` inside this project. Create an empty `_sc_` file alongside the editor executable before its first launch to enable self-contained mode.

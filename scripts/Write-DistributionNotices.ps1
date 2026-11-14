@@ -4,7 +4,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$engine = Join-Path $root 'tools/godot/Godot_v4.7.2-stable_win64_console.exe'
+$engine = & "$PSScriptRoot/Get-GodotPath.ps1"
 $dataPath = Join-Path $root 'artifacts/distribution-license-data.json'
 $logPath = Join-Path $root 'artifacts/distribution-licenses.log'
 & $engine --headless --path (Join-Path $root 'game') --script res://scripts/write_license_data.gd --log-file $logPath -- $dataPath

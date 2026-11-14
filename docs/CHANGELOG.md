@@ -9,6 +9,10 @@
 
 ### Added
 
+- GitHub Actions release workflow on Linux, triggered by stable version tags or
+  manually for an existing tag, with automated checks, Web/Windows ZIPs and hashes.
+- Optional Linux support for the shared bootstrap, validation, export and launch
+  scripts using the pinned standard engine and existing export presets.
 - Local Top 10 with fictional starting pilots, uppercase keyboard/arcade name
   entry and a triumphant chiptune loop for qualifying scores.
 - Windows and Web exports include the project GPL, engine license, third-party
