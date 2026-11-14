@@ -14,9 +14,6 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	font.font_names = PackedStringArray(["Consolas", "Courier New"])
 	font.font_weight = 700
-	paragraph(60, "FROM COMMAND CENTER", 20)
-	# One label gives every line and blank paragraph separator the same metrics.
-	paragraph(360, "Earth has fallen.\nThe aliens hold it.\n\nYou are the last fighter\nstill in flight.\n\nOur captured pilots are alive.\n\nFree them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.\n\nWE ARE COUNTING ON YOU.", 17)
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():
@@ -26,18 +23,14 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func paragraph(y: float, text: String, size: int) -> void:
-	var label := Label.new()
-	label.position = Vector2(16, y - size)
-	label.size.x = 326
-	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_override("font", font)
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_constant_override("line_spacing", 0)
-	label.add_theme_color_override("font_color", INK)
-	add_child(label)
+	# Fixed baselines keep fallback font metrics from moving text into navigation.
+	var lines: PackedStringArray = text.split("\n")
+	for i: int in range(lines.size()):
+		draw_string(font, Vector2(16, y + i * 21), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 326, size, INK)
 
 func _draw() -> void:
+	paragraph(60, "FROM COMMAND CENTER", 20)
+	paragraph(360, "Earth has fallen.\nThe aliens hold it.\n\nYou are the last fighter\nstill in flight.\n\nOur captured pilots are alive.\n\nFree them. Rebuild your formation.\nWe are holding as long as we can.\nGive Earth a fighting chance.\n\nWE ARE COUNTING ON YOU.", 17)
 	draw_line(Vector2(25, 100), Vector2(333, 100), INK)
 	draw_rect(Rect2(112, 79, 134, 24), INK)
 	draw_string(font, Vector2(122, 96), "TOP SECRET", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, PAPER)

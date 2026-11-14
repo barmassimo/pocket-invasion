@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.2.1 - 2026-11-14
+
+### Fixed
+
+- Keep briefing text clear of page navigation when Web fallback fonts have
+  taller line metrics than the Windows fonts.
+
 ## 1.2.0 - 2026-11-14
 
 ### Added
