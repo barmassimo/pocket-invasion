@@ -27,6 +27,8 @@ Exact target rewards, damage values, formation layout and difficulty progression
 - Simple unshaded geometry or flat sprites and readable labels are sufficient. External models, textures and audio are optional improvements, not prerequisites.
 - Enemy spaceship designs should evoke 1950s–1960s alien science fiction while keeping compact, filled silhouettes compatible with collision detection. Use the approved simple rounded B-Curved bodies for score and fleet rewards. Do not use trapezoids, perspective cues or shapes suggesting 3D volume. Keep hull and cockpit contour language consistent: an angular hull uses an angular cockpit frame; a curved hull uses a curved cockpit frame. Do not combine sharp-cornered hulls with circular or oval cockpit outlines. Keep the pilot's antennae inside the hull silhouette; avoid thin external protrusions and large empty gaps. Keep visible hulls and collision footprints closely aligned.
 - Prioritize responsive controls, readable encounters and satisfying feedback over visual complexity.
+- Maintain an application icon and use it for the game window and distributions;
+  create one if it is missing.
 - No advertising, monetization, accounts, online services, cloud features or analytics.
 - Redistribution, installers, signing, stores and release export templates are outside the initial scope. Running from the local Godot editor or command line is sufficient.
 - Do not begin building the game merely because this guide exists; follow the user's request in the current chat.
@@ -39,7 +41,10 @@ Exact target rewards, damage values, formation layout and difficulty progression
 - Keep Godot under `tools/godot/` inside this project. Create an empty `_sc_` file alongside the editor executable before its first launch to enable self-contained mode.
 - Keep editor data, settings and caches in the local `editor_data/` directory. During development, retain default project user-data behavior compatible with self-contained mode; check where saves and logs actually go.
 - Do not modify the global PATH, registry associations or system installation directories. Scripts must locate tools relative to their own project root.
-- Provide a PowerShell bootstrap script with fixed download URLs/version and verified SHA-256 hashes from official sources. Check downloads before extracting or executing them. Fail clearly on mismatches.
+- Provide a PowerShell bootstrap script with fixed download URLs and versions.
+- Verify downloaded files against expected SHA-256 hashes from official sources
+  before extracting, executing or using them. Record the source and expected hash;
+  fail clearly on mismatches.
 - Bootstrap must reuse a valid existing environment and must not silently upgrade or replace it. Once prepared, normal development and play must work offline.
 - Do not download export templates until exporting is requested. Do not add a package manager or a second runtime without a concrete need.
 - Keep generated tools and caches out of Git; preserve the scripts and version/hash information needed to recreate them.
@@ -53,7 +58,7 @@ Exact target rewards, damage values, formation layout and difficulty progression
 - `tools/godot/`: pinned portable engine and its editor data.
 - `scripts/`: PowerShell bootstrap, editor launch, game launch and focused validation.
 - `artifacts/`: generated reports, captures and other verification outputs.
-- `docs/`: additional documentation only when needed.
+- `docs/`: architecture, user manual, development guide and release history.
 
 Keep generated Godot project imports under `game/.godot/` and ignore them in Git. Do not copy the engine into the game's resource directory. Keep downloaded archives under `artifacts/` if retained.
 
@@ -132,9 +137,14 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
 
 - When this mechanism is requested, both Web and Windows builds must include the
   application version, source Git commit and local modification state captured
-  at build time. Show the identity at the bottom left of the HUD. GitHub repository
-  URLs and clickable commit links are deferred until explicitly requested by the user.
+  at build time. Show the identity at the bottom left of the HUD.
   Use the same identity in bundled build metadata and startup logs where available.
+- When a repository remote is available, ask the user before making the displayed
+  version clickable or including the repository URL in distributions, because the
+  repository may be private. The presence of a remote alone is not authorization.
+  If approved, link to the repository root, not a specific commit, tag or release.
+  Capture the verified repository URL at build time; do not invent a URL when no
+  remote is available. This rule does not itself authorize implementing the link.
 - Display a compact identity such as `v1.2.3-abcdef0` or
   `v1.2.3-abcdef0-modified`, without spaces or parentheses, and retain the full
   commit hash in build metadata.
@@ -160,6 +170,39 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
   verified then, replace any previous snapshot with unavailable identity; never
   reuse a stale hash. A build made with verified identity retains its hash when
   subsequently run outside the repository.
+
+## Documentation maintenance
+
+- Keep `README.md` and repository-wide `AGENTS.md` at the root, and project
+  documentation under `docs/`.
+- Maintain `docs/ARCHITECTURE.md` for components, data flow, timing, design decisions
+  and material technical constraints. Read it when understanding architecture,
+  resuming work or planning changes across components; reading it is not required
+  for every small, self-contained edit.
+- Maintain `docs/MANUAL.md` for interactions, controls, shortcuts, defaults, setup
+  and user-visible limitations. Describe current behavior, not its history.
+- Maintain `docs/DEVELOPMENT.md` for environment, build and verification commands,
+  fixture requirements, report locations and known validation limitations.
+- Keep README concise: introduction, requirements, setup/play commands and links
+  to detailed documentation. Update it when presentation, scope, requirements or
+  initial setup changes.
+- Update affected documentation as part of the same task without waiting for a
+  separate request. This is an agent responsibility, not a background synchronizer.
+  Update only documents whose content actually changes.
+- Organize architecture documentation by topic and replace outdated descriptions
+  rather than appending dated implementation reports or routine fix narratives.
+- Keep pending release notes under `Unreleased` in `docs/CHANGELOG.md` without
+  changing the application version. On a requested release, consolidate relevant
+  notes into a concise version entry, grouped by Added/Changed/Fixed as applicable.
+  Record only verifiable history; do not infer missing versions or label untagged
+  work as a published release.
+- Keep detailed verification evidence in `artifacts/`; do not transcribe every
+  pass count, capture or intermediate attempt into permanent documentation.
+  Preserve material limitations that affect interpreting results.
+- Review relative links when moving or renaming documents. Keep commands portable
+  across repository locations and do not publish personal absolute paths or present
+  ignored local fixtures as bundled prerequisites.
+- Documentation-only changes need link and command review, not game reruns.
 
 ## Launch and validation
 
