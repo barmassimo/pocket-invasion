@@ -58,7 +58,7 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	draw_line(Vector2(25, 315), Vector2(333, 315), INK)
 	draw_string(font, Vector2(25, 689), "[ENTER / SPACE] START", HORIZONTAL_ALIGNMENT_CENTER, 308, 18, INK)
-	draw_string(font, Vector2(25, 712), "[W] [A] [S] [D] / ARROWS: MOVE", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
+	draw_string(font, Vector2(25, 712), "[W] [A] [S] [D] / [ARROWS]: MOVE", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
 	draw_string(font, Vector2(25, 736), "[P] PAUSE  [M] MUTE  [F / F11] FULLSCREEN", HORIZONTAL_ALIGNMENT_CENTER, 308, 12, INK)
 
 func draw_capture_sequence() -> void:

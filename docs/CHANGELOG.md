@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Enclose `[ARROWS]` in square brackets in the briefing and demonstration controls.
 - Show only the application version when Git identity or a valid exported build
   snapshot is unavailable, without an extra suffix.
 
