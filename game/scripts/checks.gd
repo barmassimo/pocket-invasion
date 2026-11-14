@@ -121,16 +121,16 @@ func check_pickup_recapture(game: Node3D) -> void:
 	pickup.advance(4.99)
 	check(pickup.spin.visible and pickup.caption.visible and not pickup.help_sign.visible and not pickup.can_be_recaptured(), "Freed fighters remain steady and protected before five seconds without a HELP sign")
 	pickup.advance(0.20)
-	check(not pickup.spin.visible and not pickup.caption.visible and not pickup.help_sign.visible and not pickup.can_be_recaptured(), "Fighter, reward and HELP sign share the hidden warning phase")
+	check(pickup.spin.visible and pickup.caption.visible and not pickup.help_sign.visible and pickup.can_be_recaptured(), "Only HELP blinks off while the fighter and reward stay visible and recapturable")
 	pickup.advance(0.18)
-	check(pickup.spin.visible and pickup.caption.visible and pickup.help_sign.visible, "Blinking shows the fighter, reward and HELP sign together")
+	check(pickup.spin.visible and pickup.caption.visible and pickup.help_sign.visible, "HELP blinks on while the fighter and reward remain visible")
 	var alien: CourseTarget = game.spawn_target(pickup.position.x, pickup.position.z, 1, 100, 50)
-	pickup.age = 9.99
+	pickup.age = 4.99
 	game.recapture_pickups()
-	check(game.pickups.size() == 1 and game.recapture.flashes.is_empty(), "Alien contact cannot recapture during the five-second warning")
+	check(game.pickups.size() == 1 and game.recapture.flashes.is_empty(), "Alien contact cannot recapture before blinking starts")
 	pickup.advance(0.01)
 	game.recapture_pickups()
-	check(game.pickups.is_empty() and game.recapture.flashes.size() == 1 and game.squad.size() == 1 and game.score == 0 and alien.hp == 100, "At ten seconds alien contact removes only the freed fighter without granting rewards or damaging the alien")
+	check(game.pickups.is_empty() and game.recapture.flashes.size() == 1 and game.squad.size() == 1 and game.score == 0 and alien.hp == 100, "At exactly five seconds alien contact removes only the freed fighter without granting rewards or damaging the alien")
 	game.recapture_pickups()
 	check(game.recapture.flashes.size() == 1, "A captured fighter cannot be captured twice")
 	game.recapture.advance(0.3)
@@ -159,7 +159,7 @@ func check_pickup_recapture(game: Node3D) -> void:
 	game.pickups[0].age = 5.19
 	game.pickups[0].advance(0.0)
 	game.collect_pickups()
-	check(game.pickups.is_empty() and game.squad.size() == 3, "Blinking fighters remain collectible even on an invisible blink frame")
+	check(game.pickups.is_empty() and game.squad.size() == 3, "Freed fighters remain collectible while HELP is hidden")
 
 func run() -> void:
 	var clean_identity: Dictionary = {"version": Info.version(), "commit": "a".repeat(40), "modified": false}

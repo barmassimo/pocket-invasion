@@ -18,7 +18,6 @@ const PICKUP_DRIFT_SPEED: float = 0.75
 const PICKUP_SPIN_SPEED: float = 0.55
 const PICKUP_RADIUS: float = 0.32
 const PICKUP_BLINK_SECONDS: float = 5.0
-const PICKUP_RECAPTURE_SECONDS: float = 10.0
 const PICKUP_BLINK_INTERVAL: float = 0.18
 const START_DIFFICULTY_SECONDS: float = 60.0
 const DISPLAY_START_THREAT: int = 1

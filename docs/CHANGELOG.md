@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- Freed fighters become recapturable as soon as the HELP! blinking starts at
+  five seconds, without an additional five-second protection period.
+
 ### Added
 
 - Windows and Web exports include the project GPL, engine license, third-party
@@ -12,6 +17,8 @@
   original game assets, with copyright and licensing information in README.
 
 ### Changed
+
+- Blink only the freed fighter's HELP! sign, keeping its ship and reward visible.
 
 - Enclose `[ARROWS]` in square brackets in the briefing and demonstration controls.
 - Show only the application version when Git identity or a valid exported build

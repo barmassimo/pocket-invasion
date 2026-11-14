@@ -53,10 +53,7 @@ func refresh() -> void:
 
 func advance(delta: float) -> void:
 	age += delta
-	var shown: bool = age < Rules.PICKUP_BLINK_SECONDS or fmod(age - Rules.PICKUP_BLINK_SECONDS, Rules.PICKUP_BLINK_INTERVAL * 2.0) < Rules.PICKUP_BLINK_INTERVAL
-	spin.visible = shown
-	caption.visible = shown
-	help_sign.visible = shown and age >= Rules.PICKUP_BLINK_SECONDS
+	help_sign.visible = age >= Rules.PICKUP_BLINK_SECONDS and fmod(age - Rules.PICKUP_BLINK_SECONDS, Rules.PICKUP_BLINK_INTERVAL * 2.0) < Rules.PICKUP_BLINK_INTERVAL
 	previous_position = position
 	position.x += velocity.x * delta
 	position.z += velocity.y * delta
@@ -67,4 +64,4 @@ func advance(delta: float) -> void:
 	spin.rotation.y += Rules.PICKUP_SPIN_SPEED * delta
 
 func can_be_recaptured() -> bool:
-	return age >= Rules.PICKUP_RECAPTURE_SECONDS
+	return age >= Rules.PICKUP_BLINK_SECONDS
