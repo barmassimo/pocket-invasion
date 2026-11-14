@@ -74,6 +74,21 @@ The first Web build was verified on 2026-11-13 in the in-app Chromium browser: i
 
 Volume changes only update the music pause state when it actually changes, avoiding redundant unpause calls that can restart Web Sample playback in Godot 4.7.2. The Web build was regenerated after this correction; native checks passed and changing the slider in the browser produced no console warnings/errors. The user confirmed that deployment on IIS works with the included MIME mappings and reported that the audio glitch appears resolved. This is user listening feedback, not an exhaustive load test; Web loop resume after an actual pause/mute remains unverified.
 
+## Distribution licenses
+
+Both export scripts add `LICENSE.txt` (GNU GPLv3), `GODOT_LICENSE.txt`,
+`THIRD_PARTY_NOTICES.txt`, `DISTRIBUTION.txt` and `build-info.json` alongside the
+game files. Keep these files in Windows packages and Web uploads. Third-party
+copyrights and full license texts are generated offline from the pinned engine's
+built-in license tables, which can include components unused by a particular export.
+
+Web exports also include `licenses.html`, accessible from the small **Licenses**
+link at the bottom right of the game page. No repository URL is embedded.
+
+Source archives are not generated or included in these output directories.
+When publishing on GitHub, provide the corresponding source through the release's
+automatic source downloads. See [distribution details](docs/DEVELOPMENT.md).
+
 ## Versions and build identity
 
 The lower-left HUD shows the application version and seven-character source commit
@@ -177,6 +192,20 @@ The first sandboxed verification could not create the default user-data director
 ## Prototype limits
 
 One randomized endless mode, flat SVG enemy artwork in a simple 3D scene, fixed elevated camera, keyboard controls and synthesized effects and an original minimal chiptune loop. Difficulty, visuals and sound mix are initial tuning; long-term difficulty is not exhaustively playtested. There are no frame-rate claims, installers, third-party assets, network features, or services. Web export is available as described above. Rules and tuning are in `game/scripts/invasion_rules.gd`; seeded encounter generation is in `game/scripts/encounters.gd`.
+
+## License
+
+Copyright (C) 2026 Massimo Barbieri.
+
+Pocket Invasion's source code, documentation and original game assets are licensed
+under the GNU General Public License, version 3 or (at your option) any later
+version (`GPL-3.0-or-later`). See [LICENSE](LICENSE) for the full terms. The project
+is provided without warranty.
+
+Godot Engine and third-party components retain their respective licenses.
+Distributed Windows and Web builds must include the applicable copyright and
+license notices and provide access to their corresponding source under the GPL.
+See [Godot's license guidance](https://docs.godotengine.org/en/stable/about/complying_with_licenses.html).
 
 
 

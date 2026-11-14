@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Windows and Web exports include the project GPL, engine license, third-party
+  copyright and license texts, distribution information and build identity.
+- Web exports provide a linked license page; local hosting serves text and JSON
+  notices with the appropriate content types.
+- GNU GPL version 3 or later license for the source code, documentation and
+  original game assets, with copyright and licensing information in README.
+
 ### Changed
 
 - Enclose `[ARROWS]` in square brackets in the briefing and demonstration controls.

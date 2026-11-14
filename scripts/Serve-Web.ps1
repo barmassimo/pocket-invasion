@@ -4,7 +4,7 @@ $root = Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts/web'
 if (!(Test-Path -LiteralPath (Join-Path $root 'index.html'))) { throw 'Run scripts/Export-Web.ps1 first.' }
 # Loopback-only static server for local testing; no runtime installation or URL ACL needed.
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $Port)
-$types = @{ '.html' = 'text/html; charset=utf-8'; '.js' = 'text/javascript'; '.wasm' = 'application/wasm'; '.pck' = 'application/octet-stream'; '.png' = 'image/png'; '.svg' = 'image/svg+xml' }
+$types = @{ '.html' = 'text/html; charset=utf-8'; '.js' = 'text/javascript'; '.wasm' = 'application/wasm'; '.pck' = 'application/octet-stream'; '.png' = 'image/png'; '.svg' = 'image/svg+xml'; '.txt' = 'text/plain; charset=utf-8'; '.json' = 'application/json' }
 $listener.Start()
 Write-Host "Open http://127.0.0.1:$Port/ in a desktop browser. Ctrl+C stops the server."
 try {

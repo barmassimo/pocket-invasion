@@ -54,5 +54,6 @@ foreach ($file in @('PocketInvasion.exe', 'PocketInvasion.pck')) {
     $path = Join-Path $outputDir $file
     if (!(Test-Path -LiteralPath $path) -or (Get-Item -LiteralPath $path).Length -eq 0) { throw "Export output missing or empty: $file" }
 }
+& "$PSScriptRoot/Write-DistributionNotices.ps1" -OutputDir $outputDir -Platform Windows
 Write-Host "Windows build exported to $outputDir"
 

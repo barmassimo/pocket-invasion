@@ -55,4 +55,5 @@ foreach ($file in @('index.html', 'index.js', 'index.wasm', 'index.pck')) {
     if (!(Test-Path -LiteralPath $path) -or (Get-Item -LiteralPath $path).Length -eq 0) { throw "Export output missing or empty: $file" }
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'web.config') -Destination (Join-Path $outputDir 'web.config') -Force
+& "$PSScriptRoot/Write-DistributionNotices.ps1" -OutputDir $outputDir -Platform Web
 Write-Host "Web build exported to $outputDir"
