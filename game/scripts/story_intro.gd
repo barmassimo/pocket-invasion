@@ -7,13 +7,11 @@ const Art = preload("res://scripts/target_art.gd")
 const LOOP_SECONDS: float = 13.0
 const START_DELAY: float = 1.6
 const MID := Color("65734a")
-var font := SystemFont.new()
+var font: Font = ThemeDB.fallback_font
 var animation_time: float = 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	font.font_names = PackedStringArray(["Consolas", "Courier New"])
-	font.font_weight = 700
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree():

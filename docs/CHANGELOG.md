@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.2.2 - 2026-11-14
+
+### Fixed
+
+- Use Godot's embedded Open Sans SemiBold for HUD, briefing, demo and target
+  labels on both Windows and Web, removing dependence on installed system fonts.
+
 ## 1.2.1 - 2026-11-14
 
 ### Fixed

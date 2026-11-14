@@ -61,9 +61,7 @@ func make_caption(font_size: int) -> Label3D:
 	label.modulate = Color("20341f")
 	label.outline_modulate = Color("c4cca5")
 	label.outline_size = 5
-	var lcd_font := SystemFont.new()
-	lcd_font.font_names = PackedStringArray(["Consolas", "Courier New"])
-	lcd_font.font_weight = 700
+	var lcd_font: Font = ThemeDB.fallback_font
 	label.font = lcd_font
 	return label
 

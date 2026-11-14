@@ -37,9 +37,7 @@ func setup(amount: int, drift: float) -> void:
 	caption.modulate = Color("253820")
 	caption.outline_modulate = Color("c4cca5")
 	caption.outline_size = 5
-	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["Consolas", "Courier New"])
-	font.font_weight = 700
+	var font: Font = ThemeDB.fallback_font
 	caption.font = font
 	caption.position = Vector3(0, Art.PLANE_HEIGHT, 0.65)
 	add_child(caption)

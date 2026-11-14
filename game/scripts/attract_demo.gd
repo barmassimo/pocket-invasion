@@ -10,13 +10,11 @@ const LOOP_SECONDS: float = LESSON_SECONDS * 2.0
 const CONTENT_WIDTH: float = 308.0
 const ACTION_OFFSET := Vector2(14, 0)
 var clock: float = 0.0
-var font := SystemFont.new()
+var font: Font = ThemeDB.fallback_font
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	font.font_names = PackedStringArray(["Consolas", "Courier New"])
-	font.font_weight = 700
 
 func set_playing(playing: bool) -> void:
 	if playing:

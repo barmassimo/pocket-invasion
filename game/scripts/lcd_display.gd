@@ -28,7 +28,7 @@ var volume_slider: HSlider
 var speaker_button: Button
 var page_navigation: Control
 var version_label: LinkButton
-var lcd_font := SystemFont.new()
+var lcd_font: Font = ThemeDB.fallback_font
 var high_scores: LocalHighScores
 var entering_name: bool = false
 var name_buffer: String = ""
@@ -39,8 +39,6 @@ var entry_rank: int = 0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	lcd_font.font_names = PackedStringArray(["Consolas", "Courier New"])
-	lcd_font.font_weight = 700
 	demo = Demo.new() as AttractDemo
 	demo.position = Vector2(374, 65)
 	add_child(demo)

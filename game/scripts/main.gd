@@ -143,9 +143,7 @@ func label_at(at: Vector2, size: int, color: Color) -> Label:
 	l.position = at
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", Color("253820"))
-	var lcd_font := SystemFont.new()
-	lcd_font.font_names = PackedStringArray(["Consolas", "Courier New"])
-	lcd_font.font_weight = 700
+	var lcd_font: Font = ThemeDB.fallback_font
 	l.add_theme_font_override("font", lcd_font)
 	return l
 

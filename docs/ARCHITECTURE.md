@@ -13,8 +13,10 @@ the three-page cycle (`story_intro.gd` plus `attract_demo.gd`), page navigation,
 volume widgets and the uppercase arcade name editor. Demo animations create no
 gameplay entities or audio. A fixed camera renders the flat course in the inset
 right panel; HUD masking keeps the course out of the bezel and left column.
-Briefing text uses fixed 21-unit line baselines, including blank lines, so Web
-fallback font metrics cannot expand the paragraph into the page navigation.
+All text labels use `ThemeDB.fallback_font`: Open Sans SemiBold embedded in the
+pinned Godot engine, shared by Windows and Web without system font lookup or
+additional font downloads. Briefing text uses fixed 21-unit line baselines,
+including blank lines, to keep the paragraph clear of the page navigation.
 
 ## Defeat and high scores
 
