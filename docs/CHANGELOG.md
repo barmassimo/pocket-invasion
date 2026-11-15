@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Blink the PAUSED message every half second while gameplay stays frozen.
+
 ### Fixed
 
 - Keep fighters at their original visible size above 24 ships, preserving

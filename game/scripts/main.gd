@@ -15,7 +15,9 @@ var pending_high_score: bool = false
 var high_score_path: String = Scores.SAVE_PATH
 const PLAYER_Z: float = 5.0
 const DEFEAT_HOLD_SECONDS: float = 10.0
+const PAUSE_BLINK_INTERVAL: float = 0.5
 var defeat_hold_remaining: float = 0.0
+var pause_blink_time: float = 0.0
 var squad: Array[Node3D] = []
 var targets: Array[CourseTarget] = []
 var bullets: Array[MeshInstance3D] = []
@@ -214,6 +216,8 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	started = play
 	pending_high_score = false
 	defeat_hold_remaining = 0.0
+	pause_blink_time = 0.0
+	message.modulate.a = 1.0
 	lcd.set_playing(play)
 	message.visible = play
 	message.text = "" if play else "POCKET INVASION\n\nREADY"
@@ -284,6 +288,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		sound.stop_effects()
 		sound.set_music_playing(running)
 		message.text = "PAUSED" if not running else ""
+		pause_blink_time = 0.0
+		message.modulate.a = 1.0
+
+func _process(delta: float) -> void:
+	if started and not running and not squad.is_empty():
+		pause_blink_time = fmod(pause_blink_time + delta, PAUSE_BLINK_INTERVAL * 2.0)
+		message.modulate.a = 1.0 if pause_blink_time < PAUSE_BLINK_INTERVAL else 0.0
+	else:
+		pause_blink_time = 0.0
+		message.modulate.a = 1.0
 
 func _physics_process(delta: float) -> void:
 	# Finish any pending cosmetic beam even when the last ship was just lost.

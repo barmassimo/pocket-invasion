@@ -20,7 +20,8 @@ show the blinking HELP! sign, alien-piloted ships can recapture them on
 contact, including while the sign is hidden. Only HELP! blinks; the fighter and
 reward stay visible. You can still collect them.
 
-P pauses/resumes, M mutes/unmutes, F or F11 toggles fullscreen, and Esc leaves
+P pauses/resumes; PAUSED blinks every half second while the course is frozen.
+M mutes/unmutes, F or F11 toggles fullscreen, and Esc leaves
 fullscreen. The volume slider controls music and effects. Start keys do nothing
 during a run or pause. Restart clears all previous run entities and counters.
 During gameplay and pause, the footer shows only volume and mute controls;
