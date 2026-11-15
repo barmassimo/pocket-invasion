@@ -12,8 +12,13 @@ in four directions; firing is automatic. Destroy aliens for points and break
 containment ships, then touch the freed fighters to grow the fleet. Contact with
 an intact enemy removes only fighters actually touched. The run ends at zero ships.
 
-Fighters keep the same visible size at every fleet count. Large fleets still
-use tighter ranks and gain more columns as they grow.
+Fighters keep the same visible size and horizontal/vertical spacing at every
+fleet count. Rows hold up to six fighters through 24 ships, eight through 32,
+then gain one column per eight reinforcements up to 18 columns. Additional
+fighters add rows behind the front row; incomplete rows stay centered.
+Larger formations occupy more space and leave less room to move.
+There is no fixed fighter-count cap: the growing footprint and exposure to
+enemy contact are the intended natural constraint on fleet size.
 
 Freed fighters are protected from recapture for five seconds. As soon as they
 show the blinking HELP! sign, alien-piloted ships can recapture them on

@@ -101,23 +101,31 @@ Keep generated Godot project imports under `game/.godot/` and ignore them in Git
   MINOR. An explicitly requested release containing only documentation, tests or
   development tooling changes uses PATCH.
 - For this standalone game, assess MAJOR compatibility from the player's
-  perspective, rather than only from a programming API. Incompatible changes to
-  existing default behavior, controls or gameplay rules, loss of compatibility
+  perspective and the significance of the impact, rather than only from a
+  programming API or any difference in default behavior. Reserve MAJOR for
+  changes that materially disrupt existing play or supported use: substantial
+  incompatible changes to controls or core gameplay rules, loss of compatibility
   with existing saved data/settings if introduced, removal of supported use, or
-  new mandatory platform, hardware, browser or external-tool requirements warrant
-  a MAJOR proposal. Requiring network access to install a new mandatory tool is
-  itself a new requirement, even if installation is automatic.
+  new mandatory platform, hardware, browser or external-tool requirements.
+  Small adjustments to formation spacing/layout, presentation, movement margins
+  or balance are compatible tuning when they preserve the core gameplay and
+  existing controls and requirements. These do not require a MAJOR proposal or
+  separate compatibility approval, even when they change defaults. Apply the
+  normal MINOR/PATCH criteria above. Requiring network access to install a new
+  mandatory tool is itself a new requirement, even if installation is automatic.
 - Before implementing a change that meets those MAJOR criteria, explain the
   specific incompatibility and its effect on existing players, propose MAJOR,
   and obtain the user's explicit agreement. Approval of a general feature or an
   unqualified release request does not by itself approve an unexplained
   incompatibility. When approved for release, reset MINOR and PATCH to 0.
-- Optional capabilities remain compatible only when existing use retains the same
-  defaults and requirements. A new setting preserves compatibility only if it is
-  optional and leaving it unset preserves existing default behavior. Internal
+- Optional capabilities preserve compatibility when existing use retains its
+  requirements and has no materially disruptive changes. New settings should be
+  optional and preserve existing default behavior when unset, except for the
+  compatible small adjustments described above. Internal
   refactoring alone does not warrant MAJOR when player behavior and requirements
   remain compatible. Correcting a defect to restore documented/intended behavior
-  can be PATCH; do not disguise deliberate changes to defaults as fixes.
+  can be PATCH; describe deliberate tuning as changes rather than fixes unless
+  it corrects a documented defect.
 - A requested release includes updating the application version and CHANGELOG,
   running appropriate checks, committing the intended release changes and metadata,
   and creating the matching `vMAJOR.MINOR.PATCH` tag, with exactly the requested

@@ -489,6 +489,16 @@ func run() -> void:
 		limits_valid = limits_valid and game.squad.size() == 124 and game.soldier_batches[0].multimesh.visible_instance_count == 124
 	check(limits_valid, "Fleet grows beyond 48 with every ship rendered at all survival times")
 	check(Rules.formation_columns(32) == 8 and Rules.formation_columns(33) == 9 and Rules.formation_columns(40) == 9 and Rules.formation_columns(41) == 10, "Formation starts widening above 32 ships, adding a column per eight reinforcements")
+	var spacing_valid: bool = true
+	for count: int in range(1, 257):
+		var positions: Array[Vector3] = Rules.offsets(count)
+		var columns: int = Rules.formation_columns(count)
+		for i: int in range(1, count):
+			if i % columns != 0:
+				spacing_valid = spacing_valid and is_equal_approx(positions[i].x - positions[i - 1].x, Rules.SPACING)
+			if i >= columns:
+				spacing_valid = spacing_valid and is_equal_approx(positions[i].z - positions[i - columns].z, Rules.SPACING)
+	check(spacing_valid, "Fleets from 1 to 256 retain their original horizontal and vertical spacing")
 	var widening_valid: bool = true
 	var previous_limit: float = Rules.movement_limit(32)
 	for count: int in range(33, 257):
@@ -816,8 +826,8 @@ func run() -> void:
 	var formation_visible: bool = true
 	for soldier: Node3D in game.squad:
 		var screen: Vector2 = camera.unproject_position(soldier.position)
-		formation_visible = formation_visible and screen.y > viewport_size.y * 0.8 and screen.y < viewport_size.y - 20.0
-	check(formation_visible, "Expanded formation stays visible in the bottom fifth of the screen")
+		formation_visible = formation_visible and screen.y > Main.Display.PLAYFIELD_RECT.position.y * pixel_scale and screen.y < Main.Display.PLAYFIELD_RECT.end.y * pixel_scale
+	check(formation_visible, "Expanded formation stays visible inside the playfield without compressing ranks")
 	game.reset_run(true, 123)
 	var constant_damage: bool = true
 	for fleet_size: int in range(1, 125):

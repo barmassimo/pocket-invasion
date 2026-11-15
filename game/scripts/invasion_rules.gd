@@ -10,7 +10,7 @@ const CAMERA_FOCUS := Vector3(0, 0, -8.2)
 const SPACING: float = 0.58
 const WIDE_FORMATION_THRESHOLD: int = 32
 const SHIPS_PER_EXTRA_COLUMN: int = 8
-const MAX_FORMATION_COLUMNS: int = 20
+const MAX_FORMATION_COLUMNS: int = 18
 const SHOT_INTERVAL: float = 0.45
 const MAX_BULLETS: int = 768
 const MAX_PICKUPS: int = 64
@@ -94,12 +94,8 @@ static func formation_columns(count: int) -> int:
 	var extra: int = ceili(float(maxi(0, count - WIDE_FORMATION_THRESHOLD)) / SHIPS_PER_EXTRA_COLUMN)
 	return mini(8 + extra, MAX_FORMATION_COLUMNS)
 
-static func formation_spacing(count: int) -> Vector2:
-	if count <= 24:
-		return Vector2(SPACING, SPACING)
-	# Keep additional ranks inside the existing formation depth.
-	var rear_row: int = maxi(1, (count - 1) / formation_columns(count))
-	return Vector2(0.46, minf(0.30, 1.5 / rear_row))
+static func formation_spacing(_count: int) -> Vector2:
+	return Vector2(SPACING, SPACING)
 
 static func movement_limit(count: int) -> float:
 	return ROAD_HALF - float(mini(count, formation_columns(count)) - 1) * formation_spacing(count).x / 2.0 - 0.3

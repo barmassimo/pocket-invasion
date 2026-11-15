@@ -4,12 +4,13 @@
 
 ### Changed
 
+- Keep formation spacing constant at every fleet size; cap rows at 18 columns
+  to fit the course without compressing fighters.
 - Blink the PAUSED message every half second while gameplay stays frozen.
 
 ### Fixed
 
-- Keep fighters at their original visible size above 24 ships, preserving
-  formation spacing and collision rules.
+- Keep fighters at their original visible size above 24 ships.
 - Reject empty or spaces-only names in Top 10 entry, flashing the name field
   once without saving or leaving the screen.
 
