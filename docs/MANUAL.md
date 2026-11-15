@@ -12,6 +12,9 @@ in four directions; firing is automatic. Destroy aliens for points and break
 containment ships, then touch the freed fighters to grow the fleet. Contact with
 an intact enemy removes only fighters actually touched. The run ends at zero ships.
 
+Fighters keep the same visible size at every fleet count. Large fleets still
+use tighter ranks and gain more columns as they grow.
+
 Freed fighters are protected from recapture for five seconds. As soon as they
 show the blinking HELP! sign, alien-piloted ships can recapture them on
 contact, including while the sign is hidden. Only HELP! blinks; the fighter and

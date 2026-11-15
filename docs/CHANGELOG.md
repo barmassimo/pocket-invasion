@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Keep fighters at their original visible size above 24 ships, preserving
+  formation spacing and collision rules.
 - Reject empty or spaces-only names in Top 10 entry, flashing the name field
   once without saving or leaving the screen.
 

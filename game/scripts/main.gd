@@ -232,14 +232,13 @@ func arrange() -> void:
 	for i: int in range(squad.size()):
 		squad[i].position = positions[i] + Vector3(player_x, 0, player_z)
 	var offsets: Array[Vector3] = [Vector3(0, 0.35, 0)]
-	var icon_scale: Vector3 = Vector3(0.70, 1.0, 0.43) if squad.size() > 24 else Vector3.ONE
 	for part: int in range(soldier_batches.size()):
 		var instances: MultiMesh = soldier_batches[part].multimesh
 		if instances.instance_count < squad.size():
 			instances.instance_count = maxi(squad.size(), instances.instance_count * 2)
 		instances.visible_instance_count = squad.size()
 		for i: int in range(squad.size()):
-			soldier_batches[part].multimesh.set_instance_transform(i, Transform3D(Basis.from_scale(icon_scale), squad[i].position + offsets[part] * icon_scale))
+			soldier_batches[part].multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY, squad[i].position + offsets[part]))
 
 func screen_z(y: float) -> float:
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
