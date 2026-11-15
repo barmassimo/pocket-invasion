@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Add a small gap after the automatic-fire instruction beneath the leaderboard.
 - Keep formation spacing constant at every fleet size; cap rows at 18 columns
   to fit the course without compressing fighters.
 - Blink the PAUSED message every half second while gameplay stays frozen.

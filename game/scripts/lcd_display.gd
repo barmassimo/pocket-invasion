@@ -334,7 +334,7 @@ func draw_high_scores() -> void:
 	caption(Vector2(46, 471), "HOW TO PLAY", 20)
 	var lines: Array[String] = ["[ENTER / SPACE] START", "[WASD / ARROWS] MOVE", "FIRE IS AUTOMATIC", "[P] PAUSE   [M] MUTE", "[F / F11] FULLSCREEN", "[ESC] EXIT FULLSCREEN"]
 	for i: int in range(lines.size()):
-		caption(Vector2(46, 505 + i * 27), lines[i], 15)
+		caption(Vector2(46, 505 + i * 27 + (12 if i >= 3 else 0)), lines[i], 15)
 
 func draw_name_entry() -> void:
 	draw_string(lcd_font, Vector2(374, 186), "TOP 10 / WELL DONE!", HORIZONTAL_ALIGNMENT_CENTER, 308, 22, INK)
