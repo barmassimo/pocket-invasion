@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.2.5 - 2026-11-16
+
 ### Fixed
 
 - Apply the default UI font at runtime so fresh-checkout imports do not fail
