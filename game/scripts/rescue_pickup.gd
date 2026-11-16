@@ -37,7 +37,7 @@ func setup(amount: int, drift: float) -> void:
 	caption.modulate = Color("253820")
 	caption.outline_modulate = Color("c4cca5")
 	caption.outline_size = 5
-	var font: Font = ThemeDB.fallback_font
+	var font: Font = preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf")
 	caption.font = font
 	caption.position = Vector3(0, Art.PLANE_HEIGHT, 0.65)
 	add_child(caption)

@@ -19,10 +19,11 @@ volume widgets and the uppercase arcade name editor. Demo animations create no
 gameplay entities or audio. A fixed camera renders the flat course in the inset
 right panel; HUD masking keeps the course out of the bezel and left column.
 Interface text uses bundled Share Tech Mono (SIL OFL 1.1), with system fallback
-disabled. Pause/defeat messages, briefing, help instructions and pilot names share
-this font, including leaderboard scores. Seven-segment HUD counters are unchanged.
-Target/pickup numbers, numeric reward/loss notices and the Help demo's HP/reward/ship readouts
-retain Godot's embedded Open Sans SemiBold (`ThemeDB.fallback_font`). Font provenance
+disabled. All text shares this font, including target/pickup HP and rewards,
+numeric reward/loss notices, Help readouts and leaderboard scores. The project
+default also uses it for inherited UI text such as tooltips. Seven-segment HUD
+counters remain drawn geometry. The HELP! sign is outlined SVG artwork.
+Font provenance
 and license live in `game/assets/fonts/share-tech-mono/`; no font installation or
 runtime download is needed on Windows or Web. Briefing text uses fixed 21-unit line baselines,
 including blank lines, to keep the paragraph clear of the page navigation.

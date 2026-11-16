@@ -61,7 +61,7 @@ func make_caption(font_size: int) -> Label3D:
 	label.modulate = Color("20341f")
 	label.outline_modulate = Color("c4cca5")
 	label.outline_size = 5
-	var lcd_font: Font = ThemeDB.fallback_font
+	var lcd_font: Font = preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf")
 	label.font = lcd_font
 	return label
 

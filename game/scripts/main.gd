@@ -180,8 +180,6 @@ func build_ui() -> void:
 	layer.add_child(toast_icon)
 
 func notice(text: String, duration: float, kind: int = -1) -> void:
-	# Preserve the existing numeric reward/loss readouts.
-	toast.add_theme_font_override("font", ThemeDB.fallback_font if text.begins_with("+") or text.begins_with("-") else preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf"))
 	toast.text = text
 	toast_clock = duration
 	toast_icon.visible = kind >= 0

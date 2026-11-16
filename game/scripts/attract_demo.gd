@@ -40,8 +40,8 @@ func target(at: Vector2, hp: int, kind: int) -> void:
 		draw_texture_rect(Art.FLEET, rect, false)
 	else:
 		draw_texture_rect(Art.PILOT, Rect2(at - Vector2(19, 24), Vector2(38, 48)), false)
-	draw_string(ThemeDB.fallback_font, at + Vector2(-30, 62), "+1" if kind == 0 else "+50", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, INK)
-	draw_string(ThemeDB.fallback_font, at + Vector2(-50, -57), "HP %d" % hp, HORIZONTAL_ALIGNMENT_CENTER, 100, 18, INK)
+	draw_string(font, at + Vector2(-30, 62), "+1" if kind == 0 else "+50", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, INK)
+	draw_string(font, at + Vector2(-50, -57), "HP %d" % hp, HORIZONTAL_ALIGNMENT_CENTER, 100, 18, INK)
 
 func explosion(at: Vector2, progress: float) -> void:
 	for i: int in range(8):
@@ -71,8 +71,7 @@ func _draw() -> void:
 		text_at(546, "FIRE IS AUTOMATIC", 14)
 
 func action_text(y: float, text: String, size: int = 16) -> void:
-	var readout: bool = text.begins_with("+") or text.begins_with("SHIPS ")
-	draw_string(ThemeDB.fallback_font if readout else font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 280, size, INK)
+	draw_string(font, Vector2(0, y), text, HORIZONTAL_ALIGNMENT_CENTER, 280, size, INK)
 
 func draw_shooting(time: float, kind: int) -> void:
 	var impact: Vector2 = Vector2(140, 213)
