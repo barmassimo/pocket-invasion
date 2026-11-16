@@ -30,7 +30,7 @@ var speaker_button: Button
 var page_navigation: Control
 var version_label: LinkButton
 var copyright_label: LinkButton
-var lcd_font: Font = ThemeDB.fallback_font
+var lcd_font: Font = preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf")
 var high_scores: LocalHighScores
 var entering_name: bool = false
 var name_buffer: String = ""

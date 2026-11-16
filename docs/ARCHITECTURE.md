@@ -18,9 +18,13 @@ the three-page cycle (`story_intro.gd` plus `attract_demo.gd`), page navigation,
 volume widgets and the uppercase arcade name editor. Demo animations create no
 gameplay entities or audio. A fixed camera renders the flat course in the inset
 right panel; HUD masking keeps the course out of the bezel and left column.
-All text labels use `ThemeDB.fallback_font`: Open Sans SemiBold embedded in the
-pinned Godot engine, shared by Windows and Web without system font lookup or
-additional font downloads. Briefing text uses fixed 21-unit line baselines,
+Interface text uses bundled Share Tech Mono (SIL OFL 1.1), with system fallback
+disabled. Pause/defeat messages, briefing, help instructions and pilot names share
+this font, including leaderboard scores. Seven-segment HUD counters are unchanged.
+Target/pickup numbers, numeric reward/loss notices and the Help demo's HP/reward/ship readouts
+retain Godot's embedded Open Sans SemiBold (`ThemeDB.fallback_font`). Font provenance
+and license live in `game/assets/fonts/share-tech-mono/`; no font installation or
+runtime download is needed on Windows or Web. Briefing text uses fixed 21-unit line baselines,
 including blank lines, to keep the paragraph clear of the page navigation.
 
 ## Defeat and high scores

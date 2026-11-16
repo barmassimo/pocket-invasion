@@ -145,7 +145,7 @@ func label_at(at: Vector2, size: int, color: Color) -> Label:
 	l.position = at
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", Color("253820"))
-	var lcd_font: Font = ThemeDB.fallback_font
+	var lcd_font: Font = preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf")
 	l.add_theme_font_override("font", lcd_font)
 	return l
 
@@ -180,6 +180,8 @@ func build_ui() -> void:
 	layer.add_child(toast_icon)
 
 func notice(text: String, duration: float, kind: int = -1) -> void:
+	# Preserve the existing numeric reward/loss readouts.
+	toast.add_theme_font_override("font", ThemeDB.fallback_font if text.begins_with("+") or text.begins_with("-") else preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf"))
 	toast.text = text
 	toast_clock = duration
 	toast_icon.visible = kind >= 0

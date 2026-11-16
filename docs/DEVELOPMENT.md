@@ -22,6 +22,10 @@ license files or introduce another runtime. The engine's tables can list compone
 unused by the exported target; they are retained to preserve the supplied notices.
 Generated intermediate data and logs stay under `artifacts/`.
 
+The notices also include the bundled Share Tech Mono font's copyright and full
+SIL OFL 1.1 text from `game/assets/fonts/share-tech-mono/OFL.txt`. Its pinned source
+and file hashes are recorded in that directory's `SOURCE.md`.
+
 Web outputs also contain `licenses.html`, linked from the exported game HTML.
 Keep this page and all companion notices when uploading the Web directory.
 The local server serves `.txt` as UTF-8 plain text and `.json` as JSON.

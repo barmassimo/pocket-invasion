@@ -31,6 +31,8 @@ foreach ($license in ($data.licenses.PSObject.Properties | Sort-Object Name)) {
     [void]$notices.AppendLine("`n=== License text: $($license.Name) ===")
     [void]$notices.AppendLine([string]$license.Value)
 }
+[void]$notices.AppendLine("`n=== Share Tech Mono (bundled game font) ===")
+[void]$notices.AppendLine([IO.File]::ReadAllText((Join-Path $root 'game/assets/fonts/share-tech-mono/OFL.txt')))
 [IO.File]::WriteAllText((Join-Path $OutputDir 'THIRD_PARTY_NOTICES.txt'), $notices.ToString(), $utf8)
 $identityPath = Join-Path $root 'game/build_info.json'
 Copy-Item -LiteralPath $identityPath -Destination (Join-Path $OutputDir 'build-info.json') -Force

@@ -7,7 +7,7 @@ const Art = preload("res://scripts/target_art.gd")
 const LOOP_SECONDS: float = 13.0
 const START_DELAY: float = 1.6
 const MID := Color("65734a")
-var font: Font = ThemeDB.fallback_font
+var font: Font = preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf")
 var animation_time: float = 0.0
 
 func _ready() -> void:
@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func paragraph(y: float, text: String, size: int) -> void:
-	# Fixed baselines keep fallback font metrics from moving text into navigation.
+	# Fixed baselines keep the paragraph clear of page navigation.
 	var lines: PackedStringArray = text.split("\n")
 	for i: int in range(lines.size()):
 		draw_string(font, Vector2(16, y + i * 21), lines[i], HORIZONTAL_ALIGNMENT_CENTER, 326, size, INK)
