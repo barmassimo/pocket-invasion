@@ -12,9 +12,6 @@ window/size/viewport_height=800
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
-[gui]
-theme/custom_font="res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf"
-
 [rendering]
 renderer/rendering_method="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.741, 0.780, 0.624, 1)

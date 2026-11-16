@@ -51,6 +51,8 @@ var bullet_mesh: BoxMesh
 var toast_icon: TextureRect
 
 func _ready() -> void:
+	# Apply after asset import: project-level custom_font loads too early on a fresh checkout.
+	ThemeDB.get_default_theme().default_font = preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf")
 	for argument: String in OS.get_cmdline_user_args():
 		if argument.begins_with("--seed=") and argument.trim_prefix("--seed=").is_valid_int():
 			debug_seed = argument.trim_prefix("--seed=").to_int()

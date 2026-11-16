@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- Apply the default UI font at runtime so fresh-checkout imports do not fail
+  GitHub build validation before the bundled font has been imported.
+
 ## 1.2.4 - 2026-11-16
 
 ### Changed

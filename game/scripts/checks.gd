@@ -282,6 +282,7 @@ func run() -> void:
 	check(Info.validated(invalid_identity).is_empty(), "Invalid commit identity is rejected")
 	var game := Main.new()
 	root.add_child(game)
+	check(ThemeDB.get_default_theme().default_font == preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf"), "Inherited UI text uses the bundled font after startup")
 	check_high_scores(game)
 	check(game.lcd.volume_slider.get_rect().end.y < 773, "Volume control stays inside the bottom of the LCD panel")
 	check(game.lcd.version_label.position.x == 46 and game.lcd.version_label.get_rect().end.y < 773, "Version label stays inside the lower-left LCD panel")

@@ -52,6 +52,11 @@ Exporting does not publish or create a release, commit, tag or application versi
 
 ## Verification
 
+For first-import regressions, use a separate source copy without `game/.godot/`
+and inspect its first import log for errors; a warmed local import cache can
+hide missing imported resources. The bundled UI font is assigned to the default
+theme at runtime, avoiding a project custom-font load before asset import.
+
 `scripts/Validate.ps1` includes local leaderboard ordering, qualification/ties,
 JSON round trips, replacement saves, invalid-data recovery, uppercase input,
 arcade arrows, defeat transitions, confirmation, restart and fanfare volume/mute

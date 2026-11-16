@@ -21,8 +21,10 @@ right panel; HUD masking keeps the course out of the bezel and left column.
 Interface text uses bundled Share Tech Mono (SIL OFL 1.1), with system fallback
 disabled. All text shares this font, including target/pickup HP and rewards,
 numeric reward/loss notices, Help readouts and leaderboard scores. The project
-default also uses it for inherited UI text such as tooltips. Seven-segment HUD
-counters remain drawn geometry. The HELP! sign is outlined SVG artwork.
+default theme receives it at runtime for inherited UI text such as tooltips,
+after assets have been imported. No project-level custom font is configured,
+because Godot loads that setting before the first import on a fresh checkout.
+Seven-segment HUD counters remain drawn geometry. The HELP! sign is outlined SVG artwork.
 Font provenance
 and license live in `game/assets/fonts/share-tech-mono/`; no font installation or
 runtime download is needed on Windows or Web. Briefing text uses fixed 21-unit line baselines,
