@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.2.4 - 2026-11-16
+
 ### Changed
 
 - Use bundled Share Tech Mono for all text, including HP, rewards, Help readouts,
