@@ -472,7 +472,7 @@ func destroy_target(target: CourseTarget) -> void:
 		notice("PILOT FREE / COLLECT", 1.2)
 		score += 25
 	else:
-		sound.play_effect("break")
+		sound.play_effect("alien_break")
 		score += target.reward
 		notice("+%d" % target.reward, 1.2, 1)
 	targets.erase(target)

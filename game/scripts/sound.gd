@@ -20,6 +20,10 @@ func _ready() -> void:
 	create_effect("shot", [1250.0, 650.0], 0.065, 0.25, -22.0)
 	create_effect("hit", [360.0, 180.0], 0.055, 0.45, -25.0)
 	create_effect("break", [125.0, 55.0], 0.20, 0.70, -16.0)
+	players["break"].pitch_scale = 0.80
+	create_effect("alien_break", [125.0, 55.0], 0.20, 0.70, -16.0)
+	# Lower the whole explosion, including its noise, for alien ships.
+	players["alien_break"].pitch_scale = 0.65
 	create_effect("reinforce", [523.25, 659.25, 783.99], 0.24, 0.0, -16.0)
 	create_effect("loss", [260.0, 130.0], 0.18, 0.22, -18.0)
 	create_effect("defeat", [220.0, 164.81, 110.0], 0.55, 0.0, -15.0)
