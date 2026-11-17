@@ -17,6 +17,8 @@ var material: StandardMaterial3D
 var velocity := Vector2.ZERO
 var previous_x: float
 var previous_z: float
+var fire_clock: float = InvasionRules.ALIEN_FIRE_DELAY
+var shots_fired: int = 0
 
 func setup(type: int, health: int, gain: int, tier: int = 1) -> void:
 	kind = type

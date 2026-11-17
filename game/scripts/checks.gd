@@ -114,6 +114,126 @@ func check_health_curves() -> void:
 	check(smooth, "Alien HP starts from 5-6 for small ships at 30 seconds without a health cliff")
 	check(grows and gentler, "Alien HP grows monotonically for ten minutes and stays below the former curve at sampled times and every size")
 
+func check_double_alien_fire(game: Node3D) -> void:
+	game.reset_run(true, 123)
+	var opening: CourseTarget = game.spawn_target(0, -10, 1, 100, 50)
+	game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), Rules.ALIEN_FIRE_DELAY + 0.01, Rules.ALIEN_FIRE_DELAY + 0.01)
+	check(opening.shots_fired == 1 and game.alien_fire.orbs.size() == 1, "First alien attack uses only the short wind-up even at the initial 20% frequency")
+	for tier: int in [2, 3]:
+		game.reset_run(true, 123)
+		var alien: CourseTarget = game.spawn_target(0, -10, 1, 100, 50, tier)
+		alien.fire_clock = 0.0
+		game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 0.01, 0.01)
+		check(game.alien_fire.orbs.size() == 2 and alien.shots_fired == 1, "Two-pilot tier %d fires two simultaneous globes in one volley from the start" % tier)
+		var left: MeshInstance3D = game.alien_fire.orbs[0]
+		var right: MeshInstance3D = game.alien_fire.orbs[1]
+		check(left.position.x < 0 and right.position.x > 0 and left.position.z == right.position.z and left.get_meta("age") == right.get_meta("age"), "Double volley launches together from separate pilot positions (tier %d)" % tier)
+		check(float(left.get_meta("lateral")) < 0 and float(right.get_meta("lateral")) > 0, "Aligned double volley fans into two nonvertical parabolas (tier %d)" % tier)
+		game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 0.01, 0.02)
+		check(game.alien_fire.orbs.size() == 2 and alien.shots_fired == 1, "Both globes share a single firing cooldown (tier %d)" % tier)
+	game.reset_run(true, 123)
+	var single: CourseTarget = game.spawn_target(0, -10, 1, 100, 50, 1)
+	for i: int in range(Rules.MAX_ENERGY_ORBS - 1):
+		game.alien_fire.emit_from(game, single, 0.0)
+	var double: CourseTarget = game.spawn_target(0, -10, 1, 100, 50, 2)
+	game.alien_fire.emit_from(game, double, 0.0)
+	check(game.alien_fire.orbs.size() == Rules.MAX_ENERGY_ORBS - 1 and double.shots_fired == 0, "Orb capacity never splits a double volley or exceeds its bound")
+	game.reset_run(true, 123)
+
+func check_alien_fire(game: Node3D) -> void:
+	game.reset_run(true, 123)
+	game.spawn_clock = 999.0
+	game.spawn_target(-3, -10, 0, 100, 1)
+	var alien: CourseTarget = game.spawn_target(0, -10, 1, 100, 50)
+	game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 0.1, 0.1)
+	check(alien.fire_clock < Rules.ALIEN_FIRE_DELAY, "Alien firing clocks advance from the first gameplay tick")
+	check(is_equal_approx(Rules.alien_fire_rate(0.0), 0.2) and is_equal_approx(Rules.alien_fire_rate(30.0), 0.6) and Rules.alien_fire_rate(60.0) == 1.0 and Rules.alien_fire_rate(300.0) == 1.0, "Alien frequency ramps from 20% at start to full at sixty seconds and stays capped")
+	alien.fire_clock = Rules.ALIEN_FIRE_DELAY
+	game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), Rules.ALIEN_FIRE_DELAY - 0.01, 100.0)
+	check(game.alien_fire.orbs.is_empty(), "Alien fire gives a visible delay before the first orb")
+	game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 0.02, 100.02)
+	check(game.alien_fire.orbs.size() == 1 and alien.shots_fired == 1 and game.targets[0].shots_fired == 0, "Only alien-piloted ships fire energy orbs")
+	var phase_progress: Array[float] = []
+	for sample_time: float in [1.0, 30.0, 61.0, 300.0]:
+		alien.fire_clock = Rules.ALIEN_FIRE_INTERVAL
+		game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 0.5, sample_time)
+		phase_progress.append(Rules.ALIEN_FIRE_INTERVAL - alien.fire_clock)
+	check(phase_progress[0] < phase_progress[1] and phase_progress[1] < phase_progress[2] and is_equal_approx(phase_progress[2], 0.5) and is_equal_approx(phase_progress[2], phase_progress[3]), "Real target clocks accelerate during the ramp and retain the established cadence after sixty seconds")
+	var orb: MeshInstance3D = game.alien_fire.orbs[0]
+	var p0: Vector3 = game.alien_fire.point_at(orb, 0.0)
+	var p1: Vector3 = game.alien_fire.point_at(orb, 0.5)
+	var p2: Vector3 = game.alien_fire.point_at(orb, 1.0)
+	check(absf(p1.x - p0.x) > 0.5 and is_equal_approx(p2.x - p1.x, p1.x - p0.x) and p2.z - p1.z > p1.z - p0.z, "Aligned alien fire still follows an oblique accelerating parabola")
+	game.running = false
+	game._physics_process(0.5)
+	check(orb.position == p0 and float(orb.get_meta("age")) == 0.0, "Pause freezes energy orbs and firing timers")
+	game.running = true
+	game.alien_fire.advance(0.1, game.squad, game.ship_previous)
+	check((orb.material_override as StandardMaterial3D).albedo_texture == game.alien_fire.TEXTURE_ALT, "Electric discharges alternate around the energy core")
+	game.destroy_target(alien)
+	check(game.alien_fire.orbs.size() == 1, "An emitted orb survives destruction of its source")
+	game.reset_run(true, 123)
+	check(game.alien_fire.orbs.is_empty(), "Restart clears every hostile orb")
+	var reset_alien: CourseTarget = game.spawn_target(0, -10, 1, 100, 50)
+	game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 1.0, game.elapsed + 1.0)
+	check(game.alien_fire.orbs.is_empty() and reset_alien.fire_clock < Rules.ALIEN_FIRE_DELAY, "Restart resets the frequency ramp without reintroducing opening protection")
+	for i: int in range(3):
+		game.add_soldier()
+	game.arrange()
+	# Separated fighters verify that the discharge never damages remote ships.
+	for i: int in range(game.squad.size()):
+		game.squad[i].position = Vector3(-3.0 + i * 2.0, 0, 5.0)
+	alien = game.spawn_target(0, -10, 2, 100, 50)
+	game.alien_fire.emit_from(game, alien, 4.0)
+	orb = game.alien_fire.orbs[0]
+	# Cross the first fighter between ticks along the actual curved path.
+	var victim: Node3D = game.squad[0]
+	var displacement: Vector3 = game.alien_fire.point_at(orb, 0.5) - orb.position
+	orb.set_meta("origin", victim.position - displacement)
+	orb.position = victim.position - displacement
+	var losses: Array[Node3D] = game.alien_fire.advance(1.0, game.squad, game.ship_previous)
+	check(losses.size() == 1 and losses[0] == victim and game.alien_fire.orbs.is_empty(), "Swept curved orb discharges at the first impact without damaging distant fighters")
+	game.resolve_contacts(losses)
+	check(game.squad.size() == 3 and game.score == 0, "Local orb damage compacts survivors without rewards or distant casualties")
+	game.reset_run(true, 123)
+	for i: int in range(8):
+		game.add_soldier()
+	for i: int in range(9):
+		game.squad[i].position = Vector3((i % 3 - 1) * Rules.SPACING, 0, (i / 3 - 1) * Rules.SPACING)
+	var centered: Array[Node3D] = game.alien_fire.discharge(Vector3.ZERO, game.squad, game.ship_previous, 0.5)
+	var grazing: Array[Node3D] = game.alien_fire.discharge(Vector3(-1.45, 0, 0), game.squad, game.ship_previous, 0.5)
+	var missed: Array[Node3D] = game.alien_fire.discharge(Vector3(-3, 0, 0), game.squad, game.ship_previous, 0.5)
+	check(centered.size() > grazing.size() and grazing.size() > 0 and missed.is_empty(), "A centered discharge destroys more nearby fighters than a grazing hit; a miss destroys none")
+	# Resolve a real centered curved impact against a compact multi-row fleet.
+	alien = game.spawn_target(0, -10, 1, 100, 50)
+	game.alien_fire.emit_from(game, alien, 4.0)
+	orb = game.alien_fire.orbs[0]
+	orb.set_meta("origin", Vector3.ZERO)
+	orb.position = Vector3.ZERO
+	losses = game.alien_fire.advance(0.01, game.squad, game.ship_previous)
+	check(losses.size() > 1 and game.alien_fire.orbs.is_empty(), "A single centered energy orb destroys several fighters and is consumed once")
+	game.resolve_contacts(losses)
+	check(game.squad.size() == 9 - losses.size(), "Multiple orb casualties are removed together before formation compaction")
+	game.reset_run(true, 123)
+	alien = game.spawn_target(0, -10, 1, 100, 50)
+	for i: int in range(Rules.MAX_ENERGY_ORBS + 5):
+		game.alien_fire.emit_from(game, alien, 0.0)
+	check(game.alien_fire.orbs.size() == Rules.MAX_ENERGY_ORBS, "Hostile orb count stays bounded")
+	var empty_squad: Array[Node3D] = []
+	var empty_previous: Dictionary[Node3D, Vector3] = {}
+	game.alien_fire.advance(Rules.ORB_LIFETIME, empty_squad, empty_previous)
+	check(game.alien_fire.orbs.is_empty(), "Missed energy orbs expire without fleet damage")
+	game.reset_run(true, 123)
+	alien = game.spawn_target(0, -10, 1, 100, 50)
+	game.alien_fire.emit_from(game, alien, 0.0)
+	orb = game.alien_fire.orbs[0]
+	orb.set_meta("origin", game.squad[0].position)
+	orb.position = game.squad[0].position
+	game.resolve_contacts(game.alien_fire.advance(0.01, game.squad, game.ship_previous))
+	game._physics_process(0.01)
+	check(game.squad.is_empty() and not game.running, "Losing the last fighter to an energy orb ends the run")
+	game.reset_run(true, 123)
+
 func check_pickup_recapture(game: Node3D) -> void:
 	game.reset_run(true, 123)
 	game.spawn_pickup(Vector3(3, 0, -20), 4)
@@ -735,6 +855,8 @@ func run() -> void:
 	game.reset_run()
 	check(game.pickups.is_empty(), "Restart clears all uncollected fighters")
 	check_pickup_recapture(game)
+	check_alien_fire(game)
+	check_double_alien_fire(game)
 	game.reset_run()
 	var tough: CourseTarget = game.spawn_target(0, -4, 1, 2, 50)
 	game.bullets.append(game.box(Vector3.ONE * 0.1, Vector3(0, 0.5, 0), game.yellow))

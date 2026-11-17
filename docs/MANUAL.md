@@ -12,6 +12,19 @@ in four directions; firing is automatic. Destroy aliens for points and break
 containment ships, then touch the freed fighters to grow the fleet. Contact with
 an intact enemy removes only fighters actually touched. The run ends at zero ships.
 
+Alien-piloted ships also fire small energy globes surrounded by flickering electric
+discharges. Their paths curve diagonally down the course, always with sideways
+motion, distinct from the fleet's straight shots. On impact a globe discharges
+locally and disappears: a centered hit can destroy several nearby fighters,
+while grazing the fleet removes fewer. Distant fighters are unaffected and
+dodged globes cause no losses. Alien firing is active from the start, with frequency
+ramping from 20% to full over the first 60 seconds. Each ship's first attack has
+only a short wind-up; the ramp controls repeat shots. Ships with two alien pilots
+fire two globes simultaneously from separate positions, sharing one firing clock.
+After that each ship keeps the same cadence; more aliens mean more total fire.
+Containment ships do not shoot. Pause freezes globes and firing clocks, and
+restart clears them and resets the frequency ramp.
+
 Fighters keep the same visible size and horizontal/vertical spacing at every
 fleet count. Rows hold up to six fighters through 24 ships, eight through 32,
 then gain one column per eight reinforcements up to 18 columns. Additional

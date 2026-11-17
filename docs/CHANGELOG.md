@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 1.3.0 - 2026-11-17
+
+### Added
+
+- Alien ships fire small energy globes with animated electric discharges and
+  oblique parabolic trajectories. Local impact discharges destroy more nearby
+  fighters on centered hits and fewer on grazing hits.
+- Enemy firing is active from the start, with repeat-fire frequency gradually
+  reaching its full cadence over the first minute.
+- Ships with two alien pilots launch two globes simultaneously.
+
 ## 1.2.5 - 2026-11-16
 
 ### Fixed

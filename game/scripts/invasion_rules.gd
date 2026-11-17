@@ -29,9 +29,24 @@ const ALIEN_HEALTH_LINEAR: Array[float] = [0.0, 18.0, 24.0]
 const ALIEN_HEALTH_POWER: Array[float] = [0.0, 8.0, 10.0]
 const ALIEN_HEALTH_EXPONENT: float = 1.6
 const BULLET_SPEED: float = 28.0
+const MAX_ENERGY_ORBS: int = 64
+const ALIEN_FIRE_DELAY: float = 1.15
+const ALIEN_FIRE_INTERVAL: float = 2.8
+const ALIEN_FIRE_RAMP: float = 60.0
+const ALIEN_INITIAL_FIRE_RATE: float = 0.2
+const ORB_DISCHARGE_RADIUS: float = 0.80
+const ORB_RADIUS: float = 0.13
+const ORB_LATERAL_SPEED: float = 1.5
+const ORB_FORWARD_SPEED: float = 3.0
+const ORB_ACCELERATION: float = 4.0
+const ORB_LIFETIME: float = 6.0
 const SIZE_SCALES: Array[float] = [0.8, 1.0, 1.25, 1.5, 1.8]
 const SIZE_HEALTH: Array[float] = [0.7, 1.0, 1.5, 4.0, 7.0]
 const SQUAD_REWARDS: Array[int] = [1, 2, 4, 8, 16]
+
+static func alien_fire_rate(survival_time: float) -> float:
+	var progress: float = clampf(survival_time / ALIEN_FIRE_RAMP, 0.0, 1.0)
+	return lerpf(ALIEN_INITIAL_FIRE_RATE, 1.0, progress)
 
 static func target_health(kind: int, elapsed: float, variation: float, tier: int = 1) -> int:
 	if kind != 0:

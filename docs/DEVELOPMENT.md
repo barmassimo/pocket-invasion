@@ -64,6 +64,12 @@ checks. Score fixtures are written only under `artifacts/high-scores-test.json`;
 the checks do not overwrite the player's real leaderboard. See [architecture](ARCHITECTURE.md)
 for the state flow and [manual](MANUAL.md) for current controls and storage limits.
 
+Energy-orb checks cover alien-only firing, launch delay, nonvertical parabolas,
+animated discharges, swept impacts, centered versus grazing local damage,
+immediate firing-clock progress, the 60-second frequency ramp, simultaneous
+two-pilot volleys and their shared cooldown/capacity, defeat, pause, restart and
+bounded projectile cleanup.
+
 Verify exported notice files are present and nonempty, the GPL copy matches the
 root license, and the exported metadata matches the game's captured identity.
 Check the Web license link and its local file links in a browser. Verify startup

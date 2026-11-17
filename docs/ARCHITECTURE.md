@@ -8,6 +8,24 @@ live in `invasion_rules.gd`; seeded encounter planning is in `encounters.gd`.
 Targets, target motion and rescue pickups have focused scripts. MultiMesh batches
 render fighters and bullets while simulation positions remain separate.
 
+`alien_fire.gd` owns bounded hostile energy orbs. Alien targets have individual
+firing clocks; containment targets never fire. Each orb retains its launch origin,
+age and nonzero constant lateral velocity, with forward acceleration describing
+an exact parabola in the course plane. Fixed-step updates sweep short curve
+segments against moving fighters and consume each orb at its first impact.
+That impact discharges over a local 0.80-unit screen-circular radius, testing
+fighter footprints interpolated at the impact time. Central hits overlap more
+fighters than edge hits; remote fighters are never selected by a damage count.
+Survival time scales repeat-shot clock progress from 20% at the start to 100%
+at 60 seconds, with no opening protection. Each ship's first attack uses the
+unscaled 1.15-second wind-up. Cadence stays capped thereafter;
+enemy count supplies further growth in total fire. Two-pilot ships emit a pair
+from the two pilot positions in one tick with a shared cooldown. Capacity is
+reserved for the complete pair, so the global limit never splits a volley.
+Orb and hull casualties are collected before a single formation compaction.
+Two flat SVG frames alternate electric discharges outside the collidable core.
+Pause freezes firing and flight; reset frees all orbs. Tuning lives in the rules.
+
 Formation spacing stays at 0.58 world units on both axes for all fleet sizes.
 Column capacity rises from six to eight above 24 ships, then gains one per eight
 reinforcements above 32, capped at 18 so full-width rows fit the course without

@@ -9,6 +9,8 @@ const Display = preload("res://scripts/lcd_display.gd")
 const Recapture = preload("res://scripts/recapture_flash.gd")
 const Pickup = preload("res://scripts/rescue_pickup.gd")
 const Scores = preload("res://scripts/high_scores.gd")
+const EnemyFire = preload("res://scripts/alien_fire.gd")
+var alien_fire: AlienFire = EnemyFire.new()
 const HIGH_SCORE_HOLD_SECONDS: float = 3.0
 var high_scores: LocalHighScores = Scores.new()
 var pending_high_score: bool = false
@@ -194,6 +196,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 		print("RUN_SEED=", encounters.run_seed)
 	sound.stop_all()
 	recapture.clear()
+	alien_fire.clear()
 	for collection: Array in [squad, targets, bullets, particles, pickups]:
 		for item: Node in collection:
 			item.free()
@@ -352,7 +355,8 @@ func _physics_process(delta: float) -> void:
 		target.animate(delta)
 	advance_bullets(delta)
 	sync_bullets()
-	resolve_contacts()
+	resolve_contacts(alien_fire.advance(delta, squad, ship_previous))
+	alien_fire.fire(self, targets, Vector3(player_x, 0, player_z), delta, elapsed)
 	collect_pickups()
 	recapture_pickups()
 	for i: int in range(pickups.size() - 1, -1, -1):
@@ -475,10 +479,11 @@ func collect_pickups() -> void:
 		notice("+%d" % gained, 1.2, 0)
 		arrange()
 
-func resolve_contacts() -> void:
+func resolve_contacts(casualties: Array[Node3D] = []) -> void:
 	# Collect all touched soldiers before compacting the formation.
-	var casualties: Array[Node3D] = []
 	for soldier: Node3D in squad:
+		if soldier in casualties:
+			continue
 		for target: CourseTarget in targets:
 			var before: Vector3 = ship_previous.get(soldier, soldier.position)
 			var relative_from := Vector3(before.x - target.previous_x, 0, before.z - target.previous_z)
