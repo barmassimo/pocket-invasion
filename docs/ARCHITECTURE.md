@@ -7,6 +7,8 @@ projectile/contact tests, pickups, defeat timing and restart. Rules and limits
 live in `invasion_rules.gd`; seeded encounter planning is in `encounters.gd`.
 Targets, target motion and rescue pickups have focused scripts. MultiMesh batches
 render fighters and bullets while simulation positions remain separate.
+Player fighter and exhaust materials use linear texture filtering and alpha
+blending to soften contour aliasing without changing their solid fill colors.
 
 `alien_fire.gd` owns bounded hostile energy orbs. Alien targets have individual
 firing clocks; containment targets never fire. Each orb retains its launch origin,

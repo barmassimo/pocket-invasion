@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Smooth player fighter and exhaust contours with linear texture filtering and
+  alpha blending, leaving other artwork unchanged.
 - Enlarge player formation fighters visually by 10%, keeping formation spacing,
   collision sizes and freed fighters unchanged.
 

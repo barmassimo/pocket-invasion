@@ -119,9 +119,8 @@ func build_world() -> void:
 	ships.multimesh.mesh = hull
 	var hull_material: StandardMaterial3D = blue.duplicate() as StandardMaterial3D
 	hull_material.albedo_texture = LcdIcons.SHIP
-	hull_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	hull_material.alpha_scissor_threshold = 0.5
-	hull_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	hull_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	hull_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 	ships.material_override = hull_material
 	soldier_batches.append(ships)
 	exhaust_batch = create_batch(Vector3.ONE, blue, Rules.MAX_FORMATION_COLUMNS)
