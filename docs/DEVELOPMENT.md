@@ -70,6 +70,11 @@ immediate firing-clock progress, the 60-second frequency ramp, simultaneous
 two-pilot volleys and their shared cooldown/capacity, defeat, pause, restart and
 bounded projectile cleanup.
 
+Recapture steering checks cover the five-second protection, hidden HELP blink,
+both lateral directions, nearest eligible selection, range and forward-only
+seeking, alien-only behavior, a near miss converted into contact, bounded lateral
+deviation, unchanged forward speed, pause and restart.
+
 Verify exported notice files are present and nonempty, the GPL copy matches the
 root license, and the exported metadata matches the game's captured identity.
 Check the Web license link and its local file links in a browser. Verify startup

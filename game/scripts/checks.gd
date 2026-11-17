@@ -234,7 +234,57 @@ func check_alien_fire(game: Node3D) -> void:
 	check(game.squad.is_empty() and not game.running, "Losing the last fighter to an energy orb ends the run")
 	game.reset_run(true, 123)
 
+func check_recapture_steering(game: Node3D) -> void:
+	game.reset_run(true, 123)
+	game.spawn_pickup(Vector3(1.4, 0, -6), 1)
+	var pickup: RescuePickup = game.pickups[0]
+	var alien: CourseTarget = game.spawn_target(0, -8, 1, 100, 50)
+	alien.velocity = Vector2.ZERO
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) == 0.0, "Aliens never seek protected freed fighters")
+	pickup.age = 5.19
+	pickup.advance(0.0)
+	check(not pickup.help_sign.visible and Main.Motion.seek_pickup(alien, game.pickups, 6.0) > 0.0, "Aliens seek only recapturable fighters even during the hidden HELP blink")
+	pickup.position.x = -1.4
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) < 0.0, "Recapture steering works to the left as well as the right")
+	pickup.position.x = 5.0
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) == 0.0, "Aliens ignore distant freed fighters")
+	pickup.position = Vector3(1, 0, -9)
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) == 0.0, "Aliens never turn back toward fighters behind them")
+	pickup.position = Vector3(1.4, 0, -6)
+	alien.kind = 0
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) == 0.0, "Containment ships never seek freed fighters")
+	alien.kind = 2
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) > 0.0, "Both alien-piloted target kinds seek nearby vulnerable fighters")
+	game.spawn_pickup(Vector3(-0.4, 0, -7), 1)
+	game.pickups[1].age = 6.0
+	check(Main.Motion.seek_pickup(alien, game.pickups, 6.0) < 0.0, "Aliens steer toward the nearest eligible fighter")
+	for seek: bool in [false, true]:
+		game.reset_run(true, 123)
+		game.spawn_pickup(Vector3(1.4, 0, -6), 1)
+		game.pickups[0].age = 6.0
+		alien = game.spawn_target(0, -8, 1, 100, 50)
+		alien.velocity = Vector2.ZERO
+		for step: int in range(60):
+			if seek:
+				Main.Motion.advance(game.targets, 6.0, 1.0 / 60.0, game.pickups)
+			else:
+				Main.Motion.advance(game.targets, 6.0, 1.0 / 60.0)
+			for fighter: RescuePickup in game.pickups:
+				fighter.advance(1.0 / 60.0)
+			game.recapture_pickups()
+		check(game.pickups.is_empty() if seek else game.pickups.size() == 1, "Gentle steering captures a nearby fighter that a straight pass misses (seek %s)" % seek)
+		check(is_equal_approx(alien.position.z, -2.0) and absf(alien.position.x) <= Rules.RECAPTURE_SEEK_SPEED, "Seeking preserves forward speed and bounds lateral deviation")
+		if seek:
+			game.running = false
+			var parked: Vector3 = alien.position
+			var steering: float = alien.recapture_steering
+			game._physics_process(0.1)
+			check(alien.position == parked and alien.recapture_steering == steering, "Pause freezes recapture steering")
+	game.reset_run(true, 123)
+	check(game.targets.is_empty() and game.pickups.is_empty(), "Restart clears seekers and their pickup candidates")
+
 func check_pickup_recapture(game: Node3D) -> void:
+	check_recapture_steering(game)
 	game.reset_run(true, 123)
 	game.spawn_pickup(Vector3(3, 0, -20), 4)
 	var pickup: RescuePickup = game.pickups[0]

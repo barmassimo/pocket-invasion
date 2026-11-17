@@ -7,6 +7,12 @@ projectile/contact tests, pickups, defeat timing and restart. Rules and limits
 live in `invasion_rules.gd`; seeded encounter planning is in `encounters.gd`.
 Targets, target motion and rescue pickups have focused scripts. MultiMesh batches
 render fighters and bullets while simulation positions remain separate.
+Target motion applies a capped, acceleration-limited lateral correction toward
+the nearest recapturable fighter ahead within a short screen-space radius of
+the hull. Containment ships and protected pickups are excluded. Forward travel,
+wall bounds and hull separation remain active; steering eases out when no nearby
+candidate remains. Tuning lives in `invasion_rules.gd`, and each target owns its
+transient steering state, cleared with run entities on restart.
 Player fighter and exhaust materials use linear texture filtering and alpha
 blending to soften contour aliasing without changing their solid fill colors.
 

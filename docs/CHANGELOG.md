@@ -13,6 +13,8 @@
 
 ### Added
 
+- Alien-piloted ships gently deviate toward nearby vulnerable freed fighters
+  to recapture them while passing.
 - Add pulsing LCD rocket exhaust to fighters with no other fighter directly
   behind them. Pause freezes the animation and restart resets it.
 

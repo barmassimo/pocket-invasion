@@ -15,6 +15,7 @@ var pilots: Array[MeshInstance3D] = []
 var flash: float = 0.0
 var material: StandardMaterial3D
 var velocity := Vector2.ZERO
+var recapture_steering: float = 0.0
 var previous_x: float
 var previous_z: float
 var fire_clock: float = InvasionRules.ALIEN_FIRE_DELAY

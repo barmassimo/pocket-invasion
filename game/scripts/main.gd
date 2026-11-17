@@ -383,7 +383,7 @@ func _physics_process(delta: float) -> void:
 				add_child(bullet)
 				bullet.set_meta("damage", Rules.shot_damage(squad.size()))
 				bullets.append(bullet)
-	Motion.advance(targets, speed, delta)
+	Motion.advance(targets, speed, delta, pickups)
 	for pickup: RescuePickup in pickups:
 		pickup.advance(delta)
 	for target: CourseTarget in targets:

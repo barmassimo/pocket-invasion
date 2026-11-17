@@ -8,19 +8,21 @@ const DRIFT_MAX: float = 0.55
 const SOLVER_PASSES: int = 16
 const CAPTION_CLEARANCE: float = 0.35
 
-static func advance(targets: Array[CourseTarget], course_speed: float, delta: float) -> void:
+static func advance(targets: Array[CourseTarget], course_speed: float, delta: float, pickups: Array[RescuePickup] = []) -> void:
 	var fastest: float = 0.0
 	for target: CourseTarget in targets:
 		target.previous_x = target.position.x
 		target.previous_z = target.position.z
-		fastest = maxf(fastest, target.velocity.length() + target.travel_speed(course_speed))
+		fastest = maxf(fastest, target.velocity.length() + target.travel_speed(course_speed) + Rules.RECAPTURE_SEEK_SPEED)
 	# Small spatial steps keep moving hulls from crossing between collision tests.
 	var steps: int = maxi(1, ceili(maxf(delta * 120.0, fastest * delta / 0.15)))
 	var dt: float = delta / steps
 	for step: int in range(steps):
 		for target: CourseTarget in targets:
+			var steering: float = seek_pickup(target, pickups, course_speed)
+			target.recapture_steering = move_toward(target.recapture_steering, steering, Rules.RECAPTURE_SEEK_ACCELERATION * dt)
 			target.velocity.y *= exp(-2.5 * dt)
-			target.position.x += target.velocity.x * dt
+			target.position.x += (target.velocity.x + target.recapture_steering) * dt
 			target.position.z += (target.travel_speed(course_speed) + target.velocity.y) * dt
 		for iteration: int in range(SOLVER_PASSES):
 			for target: CourseTarget in targets:
@@ -31,11 +33,32 @@ static func advance(targets: Array[CourseTarget], course_speed: float, delta: fl
 		for target: CourseTarget in targets:
 			resolve_wall(target)
 
+static func seek_pickup(target: CourseTarget, pickups: Array[RescuePickup], course_speed: float) -> float:
+	if target.kind == 0:
+		return 0.0
+	var nearest: RescuePickup = null
+	var nearest_distance: float = INF
+	for pickup: RescuePickup in pickups:
+		if not pickup.can_be_recaptured() or pickup.position.z < target.position.z:
+			continue
+		var offset := Vector2(pickup.position.x - target.position.x, (pickup.position.z - target.position.z) * TargetArt.projection_scale())
+		var distance: float = offset.length()
+		if distance <= target.half.x + Rules.PICKUP_RADIUS + Rules.RECAPTURE_SEEK_RANGE and distance < nearest_distance:
+			nearest = pickup
+			nearest_distance = distance
+	if nearest == null:
+		return 0.0
+	# Only a shallow lateral correction; forward travel and collision drift remain.
+	var limit: float = minf(Rules.RECAPTURE_SEEK_SPEED, course_speed * 0.18)
+	return clampf((nearest.position.x - target.position.x) * 2.0, -limit, limit)
+
 static func resolve_wall(target: CourseTarget) -> void:
 	var limit: float = maxf(0.0, Rules.ROAD_HALF - target.half.x)
 	if absf(target.position.x) >= limit:
 		var side: float = 1.0 if target.position.x >= 0 else -1.0
 		target.position.x = side * limit
+		if target.recapture_steering * side > 0.0:
+			target.recapture_steering = 0.0
 		if target.velocity.x * side > 0.0:
 			# The border is immovable (infinite mass); every object bounces inward.
 			target.velocity.x *= -RESTITUTION
@@ -72,7 +95,7 @@ static func resolve_pair(a: CourseTarget, b: CourseTarget, course_speed: float) 
 	move_b.x = clamped_b - b.position.x
 	a.position += Vector3(move_a.x, 0, move_a.y)
 	b.position += Vector3(move_b.x, 0, move_b.y)
-	var relative_velocity: Vector2 = b.velocity - a.velocity + Vector2(0, b.travel_speed(course_speed) - a.travel_speed(course_speed))
+	var relative_velocity: Vector2 = b.velocity - a.velocity + Vector2(b.recapture_steering - a.recapture_steering, b.travel_speed(course_speed) - a.travel_speed(course_speed))
 	var approach: float = relative_velocity.dot(normal)
 	if approach < 0.0:
 		var impulse: Vector2 = -(1.0 + RESTITUTION) * approach / inverse_sum * normal

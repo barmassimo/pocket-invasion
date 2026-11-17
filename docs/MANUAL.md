@@ -39,6 +39,8 @@ Freed fighters are protected from recapture for five seconds. As soon as they
 show the blinking HELP! sign, alien-piloted ships can recapture them on
 contact, including while the sign is hidden. Only HELP! blinks; the fighter and
 reward stay visible. You can still collect them.
+Nearby alien-piloted ships gently steer sideways toward these vulnerable fighters
+as they pass, while continuing down the course. They do not turn back to pursue them.
 
 P pauses/resumes; PAUSED blinks every half second while the course is frozen.
 M mutes/unmutes, F or F11 toggles fullscreen, and Esc leaves
