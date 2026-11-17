@@ -807,7 +807,7 @@ func run() -> void:
 	var pickup_mesh := pickup_hull.mesh as PlaneMesh
 	var pickup_corner: Vector2 = game.camera.unproject_position(pickup_hull.to_global(Vector3(pickup_mesh.size.x * 0.5, 0, pickup_mesh.size.y * 0.5)))
 	var fleet_corner: Vector2 = game.camera.unproject_position(freed.position + Vector3(Rules.FIGHTER_SIZE.x * 0.5, 0.35, Rules.FIGHTER_SIZE.y * 0.5))
-	check(pickup_corner.distance_to(fleet_corner) < 0.001, "Freed fighters match the initial fleet's exact projected size")
+	check(pickup_corner.distance_to(fleet_corner) < 0.001, "Freed fighters retain their original projected size")
 	var rigid_rotation: bool = true
 	var mesh_half: Vector2 = pickup_mesh.size * 0.5
 	var expected_size: Vector2 = Rules.FIGHTER_SIZE * Vector2(1.0, Main.Target.Art.projection_scale()) * (800.0 / game.camera.size)

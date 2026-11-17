@@ -16,6 +16,7 @@ var high_scores: LocalHighScores = Scores.new()
 var pending_high_score: bool = false
 var high_score_path: String = Scores.SAVE_PATH
 const PLAYER_Z: float = 5.0
+const PLAYER_FIGHTER_SIZE: Vector2 = Rules.FIGHTER_SIZE * 1.10
 const DEFEAT_HOLD_SECONDS: float = 10.0
 const PAUSE_BLINK_INTERVAL: float = 0.5
 var defeat_hold_remaining: float = 0.0
@@ -114,7 +115,7 @@ func build_world() -> void:
 	bullet_mesh = bullet_batch.multimesh.mesh as BoxMesh
 	var ships: MultiMeshInstance3D = create_batch(Vector3.ONE, blue, Rules.START_SOLDIERS)
 	var hull := PlaneMesh.new()
-	hull.size = Rules.FIGHTER_SIZE
+	hull.size = PLAYER_FIGHTER_SIZE
 	ships.multimesh.mesh = hull
 	var hull_material: StandardMaterial3D = blue.duplicate() as StandardMaterial3D
 	hull_material.albedo_texture = LcdIcons.SHIP
@@ -278,7 +279,7 @@ func sync_exhaust() -> void:
 			continue
 		var frame: int = (floori(elapsed / 0.10) + i) % 3
 		var length_scale: float = [0.70, 1.0, 0.82][frame]
-		var tail: float = Rules.FIGHTER_SIZE.y * (57.0 / 64.0 - 0.5)
+		var tail: float = PLAYER_FIGHTER_SIZE.y * (57.0 / 64.0 - 0.5)
 		var at: Vector3 = squad[i].position + Vector3(0, 0.35, tail + 0.12 * length_scale)
 		instances.set_instance_transform(emitted, Transform3D(Basis.from_scale(Vector3(1, 1, length_scale)), at))
 		emitted += 1

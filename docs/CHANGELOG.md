@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Enlarge player formation fighters visually by 10%, keeping formation spacing,
+  collision sizes and freed fighters unchanged.
+
 ### Added
 
 - Add pulsing LCD rocket exhaust to fighters with no other fighter directly
