@@ -49,6 +49,7 @@ var lcd: LcdDisplay
 var recapture: RecaptureFlash
 var bullet_batch: MultiMeshInstance3D
 var soldier_batches: Array[MultiMeshInstance3D] = []
+var exhaust_batch: MultiMeshInstance3D
 var bullet_mesh: BoxMesh
 var toast_icon: TextureRect
 
@@ -122,6 +123,13 @@ func build_world() -> void:
 	hull_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	ships.material_override = hull_material
 	soldier_batches.append(ships)
+	exhaust_batch = create_batch(Vector3.ONE, blue, Rules.MAX_FORMATION_COLUMNS)
+	var exhaust := PlaneMesh.new()
+	exhaust.size = Vector2(0.15, 0.24)
+	exhaust_batch.multimesh.mesh = exhaust
+	var exhaust_material: StandardMaterial3D = hull_material.duplicate() as StandardMaterial3D
+	exhaust_material.albedo_texture = preload("res://assets/icons/exhaust.svg")
+	exhaust_batch.material_override = exhaust_material
 
 func create_batch(size: Vector3, material: StandardMaterial3D, capacity: int) -> MultiMeshInstance3D:
 	var batch := MultiMeshInstance3D.new()
@@ -248,6 +256,33 @@ func arrange() -> void:
 		instances.visible_instance_count = squad.size()
 		for i: int in range(squad.size()):
 			soldier_batches[part].multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY, squad[i].position + offsets[part]))
+	sync_exhaust()
+
+func sync_exhaust() -> void:
+	var instances: MultiMesh = exhaust_batch.multimesh
+	instances.visible_instance_count = 0
+	if squad.is_empty():
+		return
+	# Full rows cover those ahead; only the final two rows can have exposed engines.
+	var columns: int = Rules.formation_columns(squad.size())
+	var last_row: int = ((squad.size() - 1) / columns) * columns
+	var emitted: int = 0
+	for i: int in range(maxi(0, last_row - columns), squad.size()):
+		var covered: bool = false
+		var next_row: int = (i / columns + 1) * columns
+		for j: int in range(next_row, mini(next_row + columns, squad.size())):
+			if absf(squad[i].position.x - squad[j].position.x) < Rules.FIGHTER_SIZE.x:
+				covered = true
+				break
+		if covered:
+			continue
+		var frame: int = (floori(elapsed / 0.10) + i) % 3
+		var length_scale: float = [0.70, 1.0, 0.82][frame]
+		var tail: float = Rules.FIGHTER_SIZE.y * (57.0 / 64.0 - 0.5)
+		var at: Vector3 = squad[i].position + Vector3(0, 0.35, tail + 0.12 * length_scale)
+		instances.set_instance_transform(emitted, Transform3D(Basis.from_scale(Vector3(1, 1, length_scale)), at))
+		emitted += 1
+	instances.visible_instance_count = emitted
 
 func screen_z(y: float) -> float:
 	var viewport_size: Vector2 = get_viewport().get_visible_rect().size

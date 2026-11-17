@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Add pulsing LCD rocket exhaust to fighters with no other fighter directly
+  behind them. Pause freezes the animation and restart resets it.
+
 ## 1.3.0 - 2026-11-17
 
 ### Added

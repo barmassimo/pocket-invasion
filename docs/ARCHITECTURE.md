@@ -30,6 +30,10 @@ Formation spacing stays at 0.58 world units on both axes for all fleet sizes.
 Column capacity rises from six to eight above 24 ships, then gains one per eight
 reinforcements above 32, capped at 18 so full-width rows fit the course without
 compression. Movement limits use the current formation width and depth.
+A separate MultiMesh draws cosmetic rocket exhaust on fighters without a
+horizontally overlapping fighter in the row behind. Only the final two rows
+need checking, since earlier rows have complete rows behind them. Three flame
+lengths follow the run clock, freezing during pause and resetting on restart.
 
 `lcd_display.gd` draws the olive LCD panels, game statistics and Top 10. It owns
 the three-page cycle (`story_intro.gd` plus `attract_demo.gd`), page navigation,

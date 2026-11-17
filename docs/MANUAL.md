@@ -29,6 +29,8 @@ Fighters keep the same visible size and horizontal/vertical spacing at every
 fleet count. Rows hold up to six fighters through 24 ships, eight through 32,
 then gain one column per eight reinforcements up to 18 columns. Additional
 fighters add rows behind the front row; incomplete rows stay centered.
+Rocket exhaust animates on fighters with no fighter directly behind them,
+including exposed fighters ahead of a shorter last row. Pause freezes the flame.
 Larger formations occupy more space and leave less room to move.
 There is no fixed fighter-count cap: the growing footprint and exposure to
 enemy contact are the intended natural constraint on fleet size.
