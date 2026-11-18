@@ -19,6 +19,31 @@ chance of including one, with a guaranteed appearance after
 two consecutive waves without one. This gives about 54.4% of waves a small
 containment ship on average. You must still free and collect the fighter.
 
+Rare egg/medallion ships show HP above the hull and `FIRE x2` below it. They
+appear first in the seventh wave, then once every ten waves, without replacing
+the guaranteed reinforcement opportunity. They have at least 30 HP, increasing
+with mission time, and fire hostile energy globes. Contact with their hulls
+removes touched fighters just like other intact targets. They do not recapture
+freed fighters.
+
+Destroying an egg ship releases a floating human weapon module surrounded by
+alien energy and labeled `POW`. Destroying the carrier grants neither points
+nor fighters and does not activate the bonus: touch the module with a surviving
+formation member to collect it. Shots pass through modules, and enemies cannot
+recapture them. An uncollected module drifts down the course; after five seconds
+the whole object and `POW` label blink together, remaining collectible even
+while hidden. After three more seconds it disappears, or sooner if it leaves
+the course.
+
+Collecting `POW` doubles the entire fleet's automatic firing frequency for ten
+seconds. Shot sounds play at the same faster cadence. Each projectile still
+deals 1 HP and travels at normal speed; boosted shots are slightly wider and
+hollow in the center. The fleet has no surrounding energy aura. Another module
+refreshes the bonus to ten seconds without stacking speed or duration. When the
+bonus expires, new shots return to the normal solid shape and cadence; shots
+already in flight keep their launch appearance. Pause freezes both module
+expiry and bonus duration. Restart clears modules, the bonus and all shots.
+
 Alien-piloted ships also fire small energy globes surrounded by flickering electric
 discharges. Their paths curve diagonally down the course, always with sideways
 motion, distinct from the fleet's straight shots. On impact a globe discharges

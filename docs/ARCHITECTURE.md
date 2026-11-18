@@ -11,18 +11,26 @@ Their +1 reward stays fixed. The first wave's recovery ship always has 5 HP;
 later HP is sampled uniformly from 5 and 10, independent of difficulty and fleet size.
 Targets, target motion and rescue pickups have focused scripts. MultiMesh batches
 render fighters and bullets while simulation positions remain separate.
+Normal bullets and hollow POW bullets use separate MultiMesh batches under one
+shared 768-projectile simulation limit. The POW mesh is a four-rail frame,
+0.14 units wide versus the normal 0.09, with the same 0.45-unit length.
+Each projectile keeps its launch mesh through effect expiry; swept collision
+padding, speed and one-HP damage are shared. Restart clears both render batches.
 Target motion applies a capped, acceleration-limited lateral correction toward
 the nearest recapturable fighter ahead within a short screen-space radius of
-the hull. Containment ships and protected pickups are excluded. Forward travel,
-wall bounds and hull separation remain active; steering eases out when no nearby
+the hull. Containment ships, egg carriers and protected pickups are excluded.
+Forward travel, wall bounds and hull separation remain active; steering eases out when no nearby
 candidate remains. Tuning lives in `invasion_rules.gd`, and each target owns its
 transient steering state, cleared with run entities on restart.
 Player fighter and exhaust materials use linear texture filtering and alpha
 blending to soften contour aliasing without changing their solid fill colors.
 
-`alien_fire.gd` owns bounded hostile energy orbs. Alien targets have individual
-firing clocks; containment targets never fire. Each orb retains its launch origin,
-age and nonzero constant lateral velocity, with forward acceleration describing
+`alien_fire.gd` owns bounded hostile energy orbs. Alien-piloted targets and egg
+carriers have individual firing clocks; fighter-containment targets never fire.
+`CourseTarget.can_fire()` includes egg carriers, while `is_alien()` limits
+fighter recapture and steering to the two alien-piloted score kinds.
+Each orb retains its launch origin, age and nonzero constant lateral velocity,
+with forward acceleration describing
 an exact parabola in the course plane. Fixed-step updates sweep short curve
 segments against moving fighters and consume each orb at its first impact.
 That impact discharges over a local 0.80-unit screen-circular radius, testing
@@ -37,6 +45,37 @@ reserved for the complete pair, so the global limit never splits a volley.
 Orb and hull casualties are collected before a single formation compaction.
 Two flat SVG frames alternate electric discharges outside the collidable core.
 Pause freezes firing and flight; reset frees all orbs. Tuning lives in the rules.
+
+## Rapid-fire pickups
+
+Kind 3 targets reuse the original egg/medallion artwork through runtime copies
+in `game/assets/enemies/egg-hull.svg` and `egg-core.svg`; the source layers remain
+in `docs/art-concepts/egg-original/`. HP appears above the hull and `FIRE x2`
+below it. `encounters.gd` inserts a small egg carrier in zero-based wave 6 and
+every tenth wave thereafter. A full wave replaces its last score slot, keeping
+the reinforcement target, the opening score opportunity and the three-target
+wave limit. Insertion draws no extra random numbers. Carrier HP is clamped to
+at least 30; the current small tier uses
+`max(30, round((40 + mission_seconds * 0.08) * 0.7))`.
+
+Destroying a carrier only drops a module; it grants no points or fighters.
+`fire_pickup.gd` owns the drifting human module, its alien-energy artwork and
+the `POW` label. They share a visual parent so all blink together after
+`PICKUP_BLINK_SECONDS` (five seconds), then expire three seconds later.
+`fire_boost.gd` owns these modules, swept collection by surviving formation
+members and the ten-second bonus timer. Modules are separate from rescue
+pickups: they are immune to shots and recapture and never become steering
+candidates. Off-course modules are removed; the active module cap is 16, with
+the oldest removed if a new drop fills capacity.
+
+The bonus doubles firing-clock progress instead of projectile damage. The clock
+retains its partial interval and fixed-step remainder; one shot sound plays
+per emitted volley, so audio and projectile cadence agree. Another collection
+refreshes ten seconds without stacking. No energy aura is rendered around the
+fleet. Fixed-step updates freeze timers during pause, and reset clears bonus
+state and modules. The existing briefing and attract cycle remain unchanged.
+
+## Formation and interface
 
 Formation spacing stays at 0.58 world units on both axes for all fleet sizes.
 Column capacity rises from six to eight above 24 ships, then gains one per eight

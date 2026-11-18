@@ -16,6 +16,15 @@
 
 ### Added
 
+- Rare egg/medallion carriers with at least 30 HP and hostile fire, appearing
+  once every ten waves after their first appearance in wave seven. Their
+  `FIRE x2` reward releases a floating human weapon module labeled `POW`,
+  surrounded by alien energy. Uncollected modules blink after five seconds
+  and disappear three seconds later.
+- Collectible POW grants ten seconds of doubled automatic firing frequency,
+  with matching shot sounds and wider, hollow projectiles dealing normal
+  one-HP damage. Collection refreshes the duration without stacking; pause
+  freezes timers and restart clears all bonus state. The fleet has no aura.
 - Alien-piloted ships gently deviate toward nearby vulnerable freed fighters
   to recapture them while passing.
 - Add pulsing LCD rocket exhaust to fighters with no other fighter directly

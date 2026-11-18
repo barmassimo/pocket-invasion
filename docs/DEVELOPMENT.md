@@ -64,8 +64,8 @@ checks. Score fixtures are written only under `artifacts/high-scores-test.json`;
 the checks do not overwrite the player's real leaderboard. See [architecture](ARCHITECTURE.md)
 for the state flow and [manual](MANUAL.md) for current controls and storage limits.
 
-Energy-orb checks cover alien-only firing, launch delay, nonvertical parabolas,
-animated discharges, swept impacts, centered versus grazing local damage,
+Energy-orb checks cover alien-piloted and egg-carrier firing, launch delay,
+nonvertical parabolas, animated discharges, swept impacts, centered versus grazing local damage,
 immediate firing-clock progress, the 60-second frequency ramp, simultaneous
 two-pilot volleys and their shared cooldown/capacity, defeat, pause, restart and
 bounded projectile cleanup.
@@ -74,6 +74,24 @@ Recapture steering checks cover the five-second protection, hidden HELP blink,
 both lateral directions, nearest eligible selection, range and forward-only
 seeking, alien-only behavior, a near miss converted into contact, bounded lateral
 deviation, unchanged forward speed, pause and restart.
+
+Rapid-fire checks cover rare egg scheduling, the 30-HP minimum, carrier firing
+without fighter recapture, `FIRE x2` on the hull and `POW` on the dropped module,
+drop versus collection rewards, the five-second delay and three-second expiry
+blink, swept collection during hidden frames, normal per-shot damage, doubled
+volley frequency, refresh without stacking, pause, expiry and restart. Rendering
+checks cover selection of the hollow POW mesh, return to solid normal shots and
+cleanup of both MultiMesh batches. These accelerated checks do not establish
+visual readability, listening quality, performance or exported-platform support.
+
+For visual playtesting, destroy a `FIRE x2` egg carrier and inspect the drifting
+module's human core, alien energy and `POW` label. Check its full-object blink,
+expiry, collection while blinking and the fleet's hollow, wider shots during
+the ten-second bonus. Listen for one sound per volley at twice the normal
+frequency, then normal cadence after expiry. Check collection refresh, pause
+and restart; the fleet should have no surrounding aura. The existing
+`preview_targets.gd` preview covers score/Fleet size tiers, not this pickup.
+Keep detailed captures, audio recordings and measurements under `artifacts/`.
 
 Verify exported notice files are present and nonempty, the GPL copy matches the
 root license, and the exported metadata matches the game's captured identity.
