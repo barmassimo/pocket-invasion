@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Keep hostile energy orbs visible in front of enemy hulls and cockpit artwork.
+
 ### Changed
 
 - Recaptured fighters return as 5-HP containment ships beside their captor,

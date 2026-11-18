@@ -31,6 +31,10 @@ func emit_orb(parent: Node3D, target: CourseTarget, aim_x: float, offset: float)
 		direction = signf(offset) if offset != 0.0 else (-1.0 if target.shots_fired % 2 == 0 else 1.0)
 	# The central disc matches the collision radius; the outer sparks are cosmetic.
 	var orb: MeshInstance3D = Art.layer(TEXTURE, Vector2.ONE * Rules.ORB_RADIUS * 3.2, Vector3.ZERO)
+	# Keep hostile shots readable over hulls and their priority-1 cockpit layers.
+	var material := orb.material_override as StandardMaterial3D
+	material.render_priority = 2
+	material.no_depth_test = true
 	parent.add_child(orb)
 	orb.position = target.position + Vector3(offset, Art.PLANE_HEIGHT + 0.01, target.half.y * 0.65)
 	orb.set_meta("origin", orb.position)

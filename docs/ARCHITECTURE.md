@@ -62,6 +62,8 @@ from the two pilot positions in one tick with a shared cooldown. Capacity is
 reserved for the complete pair, so the global limit never splits a volley.
 Orb and hull casualties are collected before a single formation compaction.
 Two flat SVG frames alternate electric discharges outside the collidable core.
+Orbs disable depth testing and use render priority 2, above hulls and their
+priority-1 cockpit layers, so overlapping enemy ships cannot hide hostile fire.
 Pause freezes firing and flight; reset frees all orbs. Tuning lives in the rules.
 
 ## Rapid-fire pickups
