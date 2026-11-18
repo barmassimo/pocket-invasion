@@ -7,8 +7,11 @@ projectile/contact tests, pickups, defeat timing and restart. Rules and limits
 live in `invasion_rules.gd`; seeded encounter planning is in `encounters.gd`.
 Recovery containment ships appear in the first wave, then with a 45.7276% per-wave
 chance or forcibly after two skipped waves (54.43% of waves on average).
-Their +1 reward stays fixed. The first wave's recovery ship always has 5 HP;
-later HP is sampled uniformly from 5 and 10, independent of difficulty and fleet size.
+Their +1 reward stays fixed. The first three planned containment ships of every
+run have 5 HP, including larger tiers, with their tier rewards unchanged.
+The encounter counter resets on restart. After these three ships, small recovery
+HP is sampled uniformly from 5 and 10, independent of difficulty and fleet size;
+larger containment ships use normal tier health.
 Targets, target motion and rescue pickups have focused scripts. MultiMesh batches
 render fighters and bullets while simulation positions remain separate.
 Normal bullets and hollow POW bullets use separate MultiMesh batches under one

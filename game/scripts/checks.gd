@@ -766,17 +766,22 @@ func run() -> void:
 			for wave_index: int in range(30):
 				var found: bool = false
 				for item: Dictionary in generator.plan(Rules.difficulty_time(survival + wave_index * 2.0), wave_index):
+					if item.kind == 0 and wave_index < 3:
+						opening_recovery_valid = opening_recovery_valid and item.hp == 5
 					if item.kind == 0 and item.tier == 0:
 						found = item.hp in [5, 10] and item.reward == 1
-						if wave_index == 0:
-							opening_recovery_valid = opening_recovery_valid and item.hp == 5 and item.reward == 1
-						elif found:
+						if wave_index >= 3 and found:
 							recovery_health_counts[item.hp] += 1
 				missed = 0 if found else missed + 1
 				two_skipped_seen = two_skipped_seen or missed == 2
 				recoveries_present = recoveries_present and missed <= 2 and (wave_index != 0 or found)
+			generator.reset(seed_value)
+			for wave_index: int in range(3):
+				for item: Dictionary in generator.plan(Rules.difficulty_time(survival), wave_index):
+					if item.kind == 0:
+						opening_recovery_valid = opening_recovery_valid and item.hp == 5 and item.reward == Rules.SQUAD_REWARDS[item.tier]
 	check(recoveries_present and two_skipped_seen, "Recovery +1 ships start each run and skip at most two waves, including at high difficulty")
-	check(opening_recovery_valid, "First-wave recovery ships always have 5 HP and reward +1 across seeds and difficulty")
+	check(opening_recovery_valid, "First three containment ships have 5 HP with unchanged tier rewards across seeds, difficulty and restart")
 	var total_recoveries: int = recovery_health_counts[5] + recovery_health_counts[10]
 	var balanced_health: bool = true
 	for hp: int in [5, 10]:

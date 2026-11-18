@@ -5,6 +5,7 @@ const Rules = preload("res://scripts/invasion_rules.gd")
 var rng := RandomNumberGenerator.new()
 var run_seed: int = 0
 var waves_since_recovery: int = Rules.RECOVERY_MAX_SKIPPED_WAVES
+var captive_ships_planned: int = 0
 
 func reset(seed_override: int = -1) -> void:
 	if seed_override < 0:
@@ -14,6 +15,7 @@ func reset(seed_override: int = -1) -> void:
 		run_seed = seed_override
 	rng.seed = run_seed
 	waves_since_recovery = Rules.RECOVERY_MAX_SKIPPED_WAVES
+	captive_ships_planned = 0
 
 func next_interval(elapsed: float = 0.0) -> float:
 	return maxf(0.65, rng.randf_range(2.3, 3.3) / Rules.encounter_pressure(elapsed))
@@ -47,8 +49,10 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 		var hp: int = Rules.target_health(kind, elapsed, rng.randf_range(0.85, 1.15), tier)
 		if kind == 0 and tier == 0:
 			hp = Rules.RECOVERY_HEALTH_OPTIONS[rng.randi_range(0, Rules.RECOVERY_HEALTH_OPTIONS.size() - 1)]
-			if wave == 0:
+		if kind == 0:
+			if captive_ships_planned < Rules.OPENING_CAPTIVE_SHIPS:
 				hp = Rules.RECOVERY_HEALTH
+			captive_ships_planned += 1
 		result.append({"x": x, "z": -24.0 - float(i) * rng.randf_range(2.0, 3.5), "kind": kind, "tier": tier, "hp": hp, "reward": Rules.target_reward(kind, tier, rng.randi_range(4, 7))})
 	for item: Dictionary in result:
 		item["drift"] = rng.randf_range(TargetMotion.DRIFT_MIN, TargetMotion.DRIFT_MAX) * (-1.0 if rng.randf() < 0.5 else 1.0)

@@ -9,8 +9,9 @@
   grows against the captor's side and detaches into independent movement in
   an accelerated version of the intro's conversion animation.
 - Make recovery containment ships appear in about 54.4% of waves, guaranteeing
-  one within three waves and keeping the +1 fighter reward. The first wave's
-  recovery ship always has 5 HP; later ships have equally likely 5 or 10 HP.
+  one within three waves and keeping the +1 fighter reward. The first three
+  containment ships of each run have 5 HP with unchanged rewards; subsequent
+  small recovery ships have equally likely 5 or 10 HP.
 - Lower the pitch of alien spaceship explosions.
 - Lower captive-pilot spaceship explosion pitch by 20%.
 - Smooth player fighter and exhaust contours with linear texture filtering and
