@@ -425,7 +425,7 @@ func check_pickup_recapture(game: Node3D) -> void:
 	game._physics_process(0.1)
 	check(is_equal_approx(captive.body.scale.x, growth) and is_equal_approx(captive.assembly_age, 0.40), "Pause freezes containment growth and attachment")
 	game.running = true
-	Main.Motion.advance(game.targets, 6.0, 0.42)
+	Main.Motion.advance(game.targets, 6.0, Rules.RECAPTURE_RELEASE_END - 0.40 + 0.02)
 	check(not captive.is_assembling() and captive.body.scale == Vector3.ONE and captive.caption.visible and captive.reward_caption.visible and Main.Motion.penetration(alien, captive).length() < 0.0001, "Conversion reaches full size and smoothly opens hull and label clearance")
 	var release_gap: float = absf(captive.position.x - alien.position.x) - alien.half.x - captive.half.x
 	check(release_gap >= Rules.RECAPTURE_RELEASE_GAP - 0.0001 and release_gap <= Rules.RECAPTURE_RELEASE_GAP + Rules.RECAPTURE_RELEASE_DRIFT * 0.03, "Released containment retains the halved gap without collision separation pushing it away")
@@ -477,7 +477,7 @@ func check_pickup_recapture(game: Node3D) -> void:
 	captive = game.targets[1]
 	game.targets.erase(fast)
 	fast.free()
-	Main.Motion.advance(game.targets, 6.0, 0.9)
+	Main.Motion.advance(game.targets, 6.0, Rules.RECAPTURE_RELEASE_END + 0.1)
 	check(not captive.is_assembling() and captive.hp == 5 and captive.body.visible, "Conversion completes safely even if the captor is destroyed")
 	game.reset_run(true, 123)
 	game.spawn_pickup(game.squad[0].position, 2)

@@ -27,9 +27,9 @@ candidate remains. Tuning lives in `invasion_rules.gd`, and each target owns its
 transient steering state, cleared with run entities on restart.
 Recapture replaces a vulnerable rescue pickup with a small kind-0 containment
 target at 5 HP, preserving its full fighter reward. The tractor beam plays first;
-from 0.25 to 0.60 seconds, the hull and captive emblem grow together with smooth
-easing, attached to the moving captor's inward edge. From 0.60 to 0.80 seconds,
-the full-size ship opens a 0.35-unit gap and then moves independently with
+from 0.25 to 0.70 seconds, the hull and captive emblem grow together with smooth
+easing, attached to the moving captor's inward edge. From 0.70 to 0.90 seconds,
+the full-size ship opens a 0.30-unit gap and then moves independently with
 an additional inward lateral drift of 0.225 units/second.
 Collision separation respects this smaller gap.
 This accelerates the intro's conversion/departure sequence.

@@ -7,7 +7,8 @@
 - Recaptured fighters return as 5-HP containment ships beside their captor,
   keeping their fighter reward and the tractor-beam animation. The new hull
   grows against the captor's side and detaches into independent movement in
-  an accelerated version of the intro's conversion animation.
+  an accelerated version of the intro's conversion animation, with 0.45 seconds
+  of growth and 0.9 seconds for the complete sequence.
 - Make recovery containment ships appear in about 54.4% of waves, guaranteeing
   one within three waves and keeping the +1 fighter reward. The first three
   containment ships of each run have 5 HP with unchanged rewards; subsequent
