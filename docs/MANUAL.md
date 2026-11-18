@@ -12,6 +12,13 @@ in four directions; firing is automatic. Destroy aliens for points and break
 containment ships, then touch the freed fighters to grow the fleet. Contact with
 an intact enemy removes only fighters actually touched. The run ends at zero ships.
 
+Small containment ships grant +1 fighter. The first wave always includes one
+with 5 HP. Later ships have 5 or 10 HP, each equally likely regardless of
+difficulty or fleet size. After the first wave, each wave has about a 45.7%
+chance of including one, with a guaranteed appearance after
+two consecutive waves without one. This gives about 54.4% of waves a small
+containment ship on average. You must still free and collect the fighter.
+
 Alien-piloted ships also fire small energy globes surrounded by flickering electric
 discharges. Their paths curve diagonally down the course, always with sideways
 motion, distinct from the fleet's straight shots. On impact a globe discharges

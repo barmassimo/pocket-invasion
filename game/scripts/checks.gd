@@ -598,6 +598,9 @@ func run() -> void:
 		previous_gain = gain
 	check(speed_accelerates, "Faster opening speed grows every physics tick with increasing gains for ten minutes")
 	var recoveries_present: bool = true
+	var opening_recovery_valid: bool = true
+	var recovery_health_counts: Dictionary = {5: 0, 10: 0}
+	var two_skipped_seen: bool = false
 	for seed_value: int in [42, 123, 456, 789, 2026]:
 		for survival: float in [0.0, 300.0, 1800.0]:
 			var generator := Encounters.new()
@@ -607,10 +610,22 @@ func run() -> void:
 				var found: bool = false
 				for item: Dictionary in generator.plan(Rules.difficulty_time(survival + wave_index * 2.0), wave_index):
 					if item.kind == 0 and item.tier == 0:
-						found = item.hp == 5 and item.reward == 1
+						found = item.hp in [5, 10] and item.reward == 1
+						if wave_index == 0:
+							opening_recovery_valid = opening_recovery_valid and item.hp == 5 and item.reward == 1
+						elif found:
+							recovery_health_counts[item.hp] += 1
 				missed = 0 if found else missed + 1
-				recoveries_present = recoveries_present and missed <= 1
-	check(recoveries_present, "Easy +1 crates appear at least every two waves, including at high difficulty")
+				two_skipped_seen = two_skipped_seen or missed == 2
+				recoveries_present = recoveries_present and missed <= 2 and (wave_index != 0 or found)
+	check(recoveries_present and two_skipped_seen, "Recovery +1 ships start each run and skip at most two waves, including at high difficulty")
+	check(opening_recovery_valid, "First-wave recovery ships always have 5 HP and reward +1 across seeds and difficulty")
+	var total_recoveries: int = recovery_health_counts[5] + recovery_health_counts[10]
+	var balanced_health: bool = true
+	for hp: int in [5, 10]:
+		var share: float = float(recovery_health_counts[hp]) / total_recoveries
+		balanced_health = balanced_health and share > 0.40 and share < 0.60
+	check(balanced_health, "Seeded recovery encounters cover only 5 and 10 HP with balanced frequencies")
 	var recovered_alone: bool = true
 	for survival: float in [0.0, 300.0, 1800.0]:
 		game.reset_run(true, 123)
@@ -633,7 +648,7 @@ func run() -> void:
 			game.ship_previous.clear()
 			game.collect_pickups()
 		recovered_alone = recovered_alone and game.squad.size() == 2 and game.pickups.is_empty()
-	check(recovered_alone, "One fighter can free then collect a recovery reinforcement at start, five and thirty minutes")
+	check(recovered_alone, "One fighter can free then collect a 5 HP recovery reinforcement at start, five and thirty minutes")
 	var rewards_grow: bool = true
 	for kind: int in range(3):
 		for tier: int in range(4):

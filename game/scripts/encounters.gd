@@ -4,7 +4,7 @@ extends RefCounted
 const Rules = preload("res://scripts/invasion_rules.gd")
 var rng := RandomNumberGenerator.new()
 var run_seed: int = 0
-var waves_since_recovery: int = 1
+var waves_since_recovery: int = Rules.RECOVERY_MAX_SKIPPED_WAVES
 
 func reset(seed_override: int = -1) -> void:
 	if seed_override < 0:
@@ -13,7 +13,7 @@ func reset(seed_override: int = -1) -> void:
 	else:
 		run_seed = seed_override
 	rng.seed = run_seed
-	waves_since_recovery = 1
+	waves_since_recovery = Rules.RECOVERY_MAX_SKIPPED_WAVES
 
 func next_interval(elapsed: float = 0.0) -> float:
 	return maxf(0.65, rng.randf_range(2.3, 3.3) / Rules.encounter_pressure(elapsed))
@@ -26,7 +26,7 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 		var temporary: float = lanes[i]
 		lanes[i] = lanes[pick]
 		lanes[pick] = temporary
-	var recovery: bool = waves_since_recovery >= 1 or rng.randf() < 0.35
+	var recovery: bool = waves_since_recovery >= Rules.RECOVERY_MAX_SKIPPED_WAVES or rng.randf() < Rules.RECOVERY_CHANCE
 	waves_since_recovery = 0 if recovery else waves_since_recovery + 1
 	var count: int = rng.randi_range(1, 2)
 	if wave == 0:
@@ -45,6 +45,10 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 			tier = 0 if recovery else maxi(1, tier)
 		var x: float = rng.randf_range(-1.2, 1.2) if wave == 0 else lanes[i] + rng.randf_range(-0.2, 0.2)
 		var hp: int = Rules.target_health(kind, elapsed, rng.randf_range(0.85, 1.15), tier)
+		if kind == 0 and tier == 0:
+			hp = Rules.RECOVERY_HEALTH_OPTIONS[rng.randi_range(0, Rules.RECOVERY_HEALTH_OPTIONS.size() - 1)]
+			if wave == 0:
+				hp = Rules.RECOVERY_HEALTH
 		result.append({"x": x, "z": -24.0 - float(i) * rng.randf_range(2.0, 3.5), "kind": kind, "tier": tier, "hp": hp, "reward": Rules.target_reward(kind, tier, rng.randi_range(4, 7))})
 	for item: Dictionary in result:
 		item["drift"] = rng.randf_range(TargetMotion.DRIFT_MIN, TargetMotion.DRIFT_MAX) * (-1.0 if rng.randf() < 0.5 else 1.0)

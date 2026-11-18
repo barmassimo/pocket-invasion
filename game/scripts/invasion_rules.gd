@@ -26,6 +26,11 @@ const START_DIFFICULTY_SECONDS: float = 60.0
 const DISPLAY_START_THREAT: int = 1
 const COURSE_SPEED_MULTIPLIER: float = 1.3
 const RECOVERY_HEALTH: int = 5
+const RECOVERY_HEALTH_OPTIONS: Array[int] = [5, 10]
+const RECOVERY_MAX_SKIPPED_WAVES: int = 2
+# With two skipped waves allowed, this yields 54.43% recovery waves on average:
+# halfway between the original 60.61% and the reduced 48.25%.
+const RECOVERY_CHANCE: float = 0.457276
 const OPENING_SCORE_SECONDS: float = 30.0
 const OPENING_SCORE_HEALTH: Array[int] = [0, 5, 6]
 const ALIEN_HEALTH_LINEAR: Array[float] = [0.0, 18.0, 24.0]
