@@ -71,6 +71,12 @@ Freed fighters are protected from recapture for five seconds. As soon as they
 show the blinking HELP! sign, alien-piloted ships can recapture them on
 contact, including while the sign is hidden. Only HELP! blinks; the fighter and
 reward stay visible. You can still collect them.
+Recapture keeps the tractor-beam animation and creates a new 5-HP containment
+ship beside the capturing alien. Destroy it to free the same fighters again;
+they must still be collected to join your formation.
+The new hull grows quickly against the alien's side, then detaches and moves
+on its own, like a faster version of the intro. The full sequence takes 0.8
+seconds; the forming ship becomes collidable and shootable when it detaches.
 Nearby alien-piloted ships gently steer sideways toward these vulnerable fighters
 as they pass, while continuing down the course. They do not turn back to pursue them.
 

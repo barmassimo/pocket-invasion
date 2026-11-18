@@ -20,6 +20,47 @@ var previous_x: float
 var previous_z: float
 var fire_clock: float = InvasionRules.ALIEN_FIRE_DELAY
 var shots_fired: int = 0
+var assembly_age: float = -1.0
+var assembly_captor: WeakRef
+var assembly_anchor := Vector3.ZERO
+var assembly_radius: float = 0.0
+var assembly_side: float = 1.0
+var hull_clearance: float = 0.35
+
+func is_assembling() -> bool:
+	return assembly_age >= 0.0
+
+func begin_assembly(captor: CourseTarget) -> void:
+	assembly_age = 0.0
+	assembly_captor = weakref(captor)
+	assembly_anchor = captor.position
+	assembly_radius = captor.half.x
+	assembly_side = -1.0 if captor.position.x > 0.0 else 1.0
+	hull_clearance = InvasionRules.RECAPTURE_RELEASE_GAP * 0.5
+	velocity.x = captor.velocity.x + assembly_side * InvasionRules.RECAPTURE_RELEASE_DRIFT
+	advance_assembly(0.0)
+	previous_x = position.x
+	previous_z = position.z
+
+func advance_assembly(delta: float) -> void:
+	assembly_age += delta
+	var captor: CourseTarget = assembly_captor.get_ref() as CourseTarget
+	if is_instance_valid(captor):
+		assembly_anchor = captor.position
+	var growth: float = smoothstep(InvasionRules.RECAPTURE_GROW_START, InvasionRules.RECAPTURE_GROW_END, assembly_age)
+	var departure: float = smoothstep(InvasionRules.RECAPTURE_GROW_END, InvasionRules.RECAPTURE_RELEASE_END, assembly_age)
+	# Like the intro, the shell closes around the fighter before departure.
+	# Keep its growing edge attached to the captor, then open label clearance.
+	position = assembly_anchor + Vector3(assembly_side * (assembly_radius + half.x * growth + InvasionRules.RECAPTURE_RELEASE_GAP * departure), 0, 0)
+	body.visible = growth > 0.0
+	emblem.visible = growth > 0.0
+	body.scale = Vector3.ONE * maxf(0.001, growth)
+	emblem.scale = body.scale
+	caption.visible = growth >= 1.0
+	reward_caption.visible = caption.visible
+	if assembly_age >= InvasionRules.RECAPTURE_RELEASE_END:
+		assembly_age = -1.0
+		assembly_captor = null
 
 func setup(type: int, health: int, gain: int, tier: int = 1) -> void:
 	kind = type

@@ -22,6 +22,21 @@ the hull. Containment ships, egg carriers and protected pickups are excluded.
 Forward travel, wall bounds and hull separation remain active; steering eases out when no nearby
 candidate remains. Tuning lives in `invasion_rules.gd`, and each target owns its
 transient steering state, cleared with run entities on restart.
+Recapture replaces a vulnerable rescue pickup with a small kind-0 containment
+target at 5 HP, preserving its full fighter reward. The tractor beam plays first;
+from 0.25 to 0.60 seconds, the hull and captive emblem grow together with smooth
+easing, attached to the moving captor's inward edge. From 0.60 to 0.80 seconds,
+the full-size ship opens a 0.35-unit gap and then moves independently with
+an additional inward lateral drift of 0.225 units/second.
+Collision separation respects this smaller gap.
+This accelerates the intro's conversion/departure sequence.
+HP and reward labels appear at full size. During assembly the target is excluded
+from shots, contact damage, wall and hull separation; normal simulation resumes
+on release. Weak references allow conversion to finish at the last anchor if the
+captor is destroyed. All timing is fixed-step, freezes on pause and clears on
+restart. At the target limit, recapture is deferred
+and the pickup remains available. Destroying the containment target follows the
+normal rescue drop and five-second protection cycle.
 Player fighter and exhaust materials use linear texture filtering and alpha
 blending to soften contour aliasing without changing their solid fill colors.
 

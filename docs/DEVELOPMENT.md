@@ -74,6 +74,10 @@ Recapture steering checks cover the five-second protection, hidden HELP blink,
 both lateral directions, nearest eligible selection, range and forward-only
 seeking, alien-only behavior, a near miss converted into contact, bounded lateral
 deviation, unchanged forward speed, pause and restart.
+Recapture checks also cover 5-HP containment, inward placement, preserved rewards,
+freeing and collecting the same fighters again, and target-capacity deferral.
+Conversion checks cover gradual growth attached to a moving captor, pause,
+smooth release, independent motion and completion after the captor is destroyed.
 
 Rapid-fire checks cover rare egg scheduling, the 30-HP minimum, carrier firing
 without fighter recapture, `FIRE x2` on the hull and `POW` on the dropped module,

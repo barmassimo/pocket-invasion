@@ -480,6 +480,8 @@ func advance_bullets(delta: float) -> void:
 		var nearest: CourseTarget = null
 		var first_fraction: float = INF
 		for target: CourseTarget in targets:
+			if target.is_assembling():
+				continue
 			var relative_from := before - Vector3(target.previous_x, 0, target.previous_z)
 			var relative_to := bullet.position - target.position
 			var fraction: float = Rules.shot_fraction(relative_from, relative_to, Vector3.ZERO, target.half)
@@ -561,6 +563,8 @@ func resolve_contacts(casualties: Array[Node3D] = []) -> void:
 		if soldier in casualties:
 			continue
 		for target: CourseTarget in targets:
+			if target.is_assembling():
+				continue
 			var before: Vector3 = ship_previous.get(soldier, soldier.position)
 			var relative_from := Vector3(before.x - target.previous_x, 0, before.z - target.previous_z)
 			var relative_to := Vector3(soldier.position.x - target.position.x, 0, soldier.position.z - target.position.z)
@@ -588,6 +592,12 @@ func recapture_pickups() -> void:
 			var before := pickup.previous_position - Vector3(target.previous_x, 0, target.previous_z)
 			var after := pickup.position - target.position
 			if Rules.shot_fraction(before, after, Vector3.ZERO, target.half, Rules.PICKUP_RADIUS) != INF:
+				# Return the captive to a small containment hull beside its captor.
+				# If capacity is full, leave the pickup available rather than lose it.
+				var captive: CourseTarget = spawn_target(target.position.x, target.position.z, 0, Rules.RECAPTURE_HEALTH, pickup.reward, 0)
+				if captive == null:
+					break
+				captive.begin_assembly(target)
 				recapture.play(pickup.position, target, Vector2.ONE, -pickup.spin.rotation.y)
 				pickup.free()
 				pickups.remove_at(i)

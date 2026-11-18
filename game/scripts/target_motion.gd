@@ -6,7 +6,6 @@ const RESTITUTION: float = 0.65
 const DRIFT_MIN: float = 0.25
 const DRIFT_MAX: float = 0.55
 const SOLVER_PASSES: int = 16
-const CAPTION_CLEARANCE: float = 0.35
 
 static func advance(targets: Array[CourseTarget], course_speed: float, delta: float, pickups: Array[RescuePickup] = []) -> void:
 	var fastest: float = 0.0
@@ -19,6 +18,8 @@ static func advance(targets: Array[CourseTarget], course_speed: float, delta: fl
 	var dt: float = delta / steps
 	for step: int in range(steps):
 		for target: CourseTarget in targets:
+			if target.is_assembling():
+				continue
 			var steering: float = seek_pickup(target, pickups, course_speed)
 			target.recapture_steering = move_toward(target.recapture_steering, steering, Rules.RECAPTURE_SEEK_ACCELERATION * dt)
 			target.velocity.y *= exp(-2.5 * dt)
@@ -32,6 +33,10 @@ static func advance(targets: Array[CourseTarget], course_speed: float, delta: fl
 					resolve_pair(targets[i], targets[j], course_speed)
 		for target: CourseTarget in targets:
 			resolve_wall(target)
+		# Follow the captor's final collision-corrected position during conversion.
+		for target: CourseTarget in targets:
+			if target.is_assembling():
+				target.advance_assembly(dt)
 
 static func seek_pickup(target: CourseTarget, pickups: Array[RescuePickup], course_speed: float) -> float:
 	if not target.is_alien():
@@ -53,6 +58,8 @@ static func seek_pickup(target: CourseTarget, pickups: Array[RescuePickup], cour
 	return clampf((nearest.position.x - target.position.x) * 2.0, -limit, limit)
 
 static func resolve_wall(target: CourseTarget) -> void:
+	if target.is_assembling():
+		return
 	var limit: float = maxf(0.0, Rules.ROAD_HALF - target.half.x)
 	if absf(target.position.x) >= limit:
 		var side: float = 1.0 if target.position.x >= 0 else -1.0
@@ -69,13 +76,15 @@ static func penetration(a: CourseTarget, b: CourseTarget) -> Vector2:
 	# A small presentation gap reserves space for HP and reward labels.
 	var projection: float = TargetArt.projection_scale()
 	var distance := Vector2(b.position.x - a.position.x, (b.position.z - a.position.z) * projection)
-	var depth: float = a.half.x + b.half.x + CAPTION_CLEARANCE * 2.0 - distance.length()
+	var depth: float = a.half.x + b.half.x + minf(a.hull_clearance, b.hull_clearance) * 2.0 - distance.length()
 	if depth <= 0.0:
 		return Vector2.ZERO
 	var normal: Vector2 = distance.normalized() if distance.length_squared() > 0.000001 else Vector2.RIGHT
 	return Vector2(normal.x, normal.y / projection) * depth
 
 static func resolve_pair(a: CourseTarget, b: CourseTarget, course_speed: float) -> void:
+	if a.is_assembling() or b.is_assembling():
+		return
 	var separation: Vector2 = penetration(a, b)
 	if separation == Vector2.ZERO:
 		return

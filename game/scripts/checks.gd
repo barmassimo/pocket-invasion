@@ -374,6 +374,7 @@ func check_recapture_steering(game: Node3D) -> void:
 		game.pickups[0].age = 6.0
 		alien = game.spawn_target(0, -8, 1, 100, 50)
 		alien.velocity = Vector2.ZERO
+		var simulated_time: float = 0.0
 		for step: int in range(60):
 			if seek:
 				Main.Motion.advance(game.targets, 6.0, 1.0 / 60.0, game.pickups)
@@ -382,8 +383,11 @@ func check_recapture_steering(game: Node3D) -> void:
 			for fighter: RescuePickup in game.pickups:
 				fighter.advance(1.0 / 60.0)
 			game.recapture_pickups()
+			simulated_time += 1.0 / 60.0
+			if game.pickups.is_empty():
+				break
 		check(game.pickups.is_empty() if seek else game.pickups.size() == 1, "Gentle steering captures a nearby fighter that a straight pass misses (seek %s)" % seek)
-		check(is_equal_approx(alien.position.z, -2.0) and absf(alien.position.x) <= Rules.RECAPTURE_SEEK_SPEED, "Seeking preserves forward speed and bounds lateral deviation")
+		check(is_equal_approx(alien.position.z, -8.0 + 6.0 * simulated_time) and absf(alien.position.x) <= Rules.RECAPTURE_SEEK_SPEED, "Seeking preserves forward speed and bounds lateral deviation")
 		if seek:
 			game.running = false
 			var parked: Vector3 = alien.position
@@ -410,13 +414,49 @@ func check_pickup_recapture(game: Node3D) -> void:
 	check(game.pickups.size() == 1 and game.recapture.flashes.is_empty(), "Alien contact cannot recapture before blinking starts")
 	pickup.advance(0.01)
 	game.recapture_pickups()
-	check(game.pickups.is_empty() and game.recapture.flashes.size() == 1 and game.squad.size() == 1 and game.score == 0 and alien.hp == 100, "At exactly five seconds alien contact removes only the freed fighter without granting rewards or damaging the alien")
+	check(game.pickups.is_empty() and game.recapture.flashes.size() == 1 and game.squad.size() == 1 and game.score == 0 and alien.hp == 100, "Recapture replaces the pickup without granting rewards or damaging the alien")
+	var captive: CourseTarget = game.targets[1]
+	check(captive.kind == 0 and captive.hp == 5 and captive.reward == 4, "Recapture creates a 5-HP containment ship preserving every captive fighter")
+	check(captive.is_assembling() and not captive.body.visible and not captive.caption.visible, "Recapture starts with the tractor beam rather than a full-size hull appearing")
+	Main.Motion.advance(game.targets, 6.0, 0.40)
+	var growth: float = captive.body.scale.x
+	check(growth > 0.0 and growth < 1.0 and is_equal_approx(alien.position.x - captive.position.x, alien.half.x + captive.half.x * growth) and captive.position.z == alien.position.z, "Growing containment stays attached to the moving captor's edge")
+	game.running = false
+	game._physics_process(0.1)
+	check(is_equal_approx(captive.body.scale.x, growth) and is_equal_approx(captive.assembly_age, 0.40), "Pause freezes containment growth and attachment")
+	game.running = true
+	Main.Motion.advance(game.targets, 6.0, 0.42)
+	check(not captive.is_assembling() and captive.body.scale == Vector3.ONE and captive.caption.visible and captive.reward_caption.visible and Main.Motion.penetration(alien, captive).length() < 0.0001, "Conversion reaches full size and smoothly opens hull and label clearance")
+	var release_gap: float = absf(captive.position.x - alien.position.x) - alien.half.x - captive.half.x
+	check(release_gap >= Rules.RECAPTURE_RELEASE_GAP - 0.0001 and release_gap <= Rules.RECAPTURE_RELEASE_GAP + Rules.RECAPTURE_RELEASE_DRIFT * 0.03, "Released containment retains the halved gap without collision separation pushing it away")
+	var relative_x: float = captive.position.x - alien.position.x
+	Main.Motion.advance(game.targets, 6.0, 0.10)
+	check(captive.position.x - alien.position.x < relative_x, "Completed containment departs with its own lateral motion")
 	game.recapture_pickups()
 	check(game.recapture.flashes.size() == 1, "A captured fighter cannot be captured twice")
 	game.recapture.advance(0.3)
 	check(not game.recapture.flashes.is_empty(), "Pickup capture uses the slower beam")
 	game.recapture.advance(0.16)
 	check(game.recapture.flashes.is_empty(), "Slower capture beam expires cleanly")
+	check(not captive.hit(4) and captive.hit(), "Recaptured containment requires exactly five normal hits")
+	game.destroy_target(captive)
+	check(game.pickups.size() == 1 and game.pickups[0].reward == 4 and not game.pickups[0].can_be_recaptured(), "Destroying recaptured containment frees the same fighters with renewed protection")
+	game.pickups[0].position = game.squad[0].position
+	game.pickups[0].previous_position = game.pickups[0].position
+	game.collect_pickups()
+	check(game.squad.size() == 5 and game.pickups.is_empty(), "Previously recaptured fighters can rejoin the formation")
+	game.reset_run(true, 123)
+	alien = game.spawn_target(-3, -8, 2, 100, 50)
+	game.spawn_pickup(alien.position, 1)
+	game.pickups[0].age = 6.0
+	for i: int in range(29):
+		game.spawn_target(0, -25, 0, 5, 1, 0)
+	game.recapture_pickups()
+	check(game.targets.size() == 30 and game.pickups.size() == 1 and game.recapture.flashes.is_empty(), "Target capacity never discards a recapturable fighter")
+	var removed: CourseTarget = game.targets.pop_back()
+	removed.free()
+	game.recapture_pickups()
+	check(game.pickups.is_empty() and game.targets.size() == 30 and game.targets.back().position.x > alien.position.x, "Deferred recapture succeeds when capacity returns and places containment inward from the left")
 	for kind: int in [0, 1, 2]:
 		game.reset_run(true, 123)
 		game.spawn_pickup(Vector3(3, 0, -8), 1)
@@ -434,6 +474,11 @@ func check_pickup_recapture(game: Node3D) -> void:
 	fast.half = Vector2(0.05, 0.05)
 	game.recapture_pickups()
 	check(game.pickups.is_empty(), "Fast alien crossings use swept pickup recapture")
+	captive = game.targets[1]
+	game.targets.erase(fast)
+	fast.free()
+	Main.Motion.advance(game.targets, 6.0, 0.9)
+	check(not captive.is_assembling() and captive.hp == 5 and captive.body.visible, "Conversion completes safely even if the captor is destroyed")
 	game.reset_run(true, 123)
 	game.spawn_pickup(game.squad[0].position, 2)
 	game.pickups[0].age = 5.19
