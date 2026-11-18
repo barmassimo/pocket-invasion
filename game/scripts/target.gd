@@ -26,17 +26,17 @@ func setup(type: int, health: int, gain: int, tier: int = 1) -> void:
 	size_tier = tier
 	previous_x = position.x
 	previous_z = position.z
-	hp = health
+	hp = maxi(InvasionRules.BOOST_MIN_HEALTH, health) if kind == InvasionRules.BOOST_KIND else health
 	reward = gain
 	var radius: float = 0.90 * InvasionRules.SIZE_SCALES[tier]
 	# Compensate the elevated camera so the flat hull reads as a circle on screen.
 	half = Vector2(radius, radius / Art.projection_scale())
-	body = Art.layer(Art.HULL, Vector2.ONE * radius * 2.0, Vector3(0, Art.PLANE_HEIGHT, 0))
+	body = Art.layer(Art.EGG_HULL if kind == InvasionRules.BOOST_KIND else Art.HULL, Vector2.ONE * radius * 2.0, Vector3(0, Art.PLANE_HEIGHT, 0))
 	add_child(body)
 	material = body.material_override as StandardMaterial3D
-	if kind == 0:
+	if kind == 0 or kind == InvasionRules.BOOST_KIND:
 		# Hull, captive fighter and clamps scale together, unlike the score pilots.
-		emblem = Art.layer(Art.FLEET, Vector2.ONE * radius * 2.0, Vector3(0, Art.PLANE_HEIGHT + 0.002, 0))
+		emblem = Art.layer(Art.EGG_CORE if kind == InvasionRules.BOOST_KIND else Art.FLEET, Vector2.ONE * radius * 2.0, Vector3(0, Art.PLANE_HEIGHT + 0.002, 0))
 		(emblem.material_override as StandardMaterial3D).render_priority = 1
 		add_child(emblem)
 	else:
@@ -70,7 +70,13 @@ func make_caption(font_size: int) -> Label3D:
 
 func refresh() -> void:
 	caption.text = "HP %d" % hp
-	reward_caption.text = "+%d" % reward
+	reward_caption.text = "FIRE x2" if kind == InvasionRules.BOOST_KIND else "+%d" % reward
+
+func is_alien() -> bool:
+	return kind == 1 or kind == 2
+
+func can_fire() -> bool:
+	return is_alien() or kind == InvasionRules.BOOST_KIND
 
 func travel_speed(course_speed: float) -> float:
 	return minf(6.4, course_speed) if kind == 0 and size_tier == 0 else course_speed

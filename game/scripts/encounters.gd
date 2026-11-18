@@ -53,6 +53,16 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 	for item: Dictionary in result:
 		item["drift"] = rng.randf_range(TargetMotion.DRIFT_MIN, TargetMotion.DRIFT_MAX) * (-1.0 if rng.randf() < 0.5 else 1.0)
 	ease_opening(result, elapsed)
+	# A regular extra reward replaces a score slot only when the wave is full.
+	# Keep the guaranteed recovery ship and at least one score alien.
+	if wave % Rules.BOOST_WAVE_INTERVAL == Rules.BOOST_FIRST_WAVE:
+		var egg: Dictionary = {"x": lanes[2], "z": -31.0, "kind": Rules.BOOST_KIND,
+			"tier": 0, "hp": Rules.target_health(Rules.BOOST_KIND, elapsed, 1.0, 0),
+			"reward": 1, "drift": -float(result[0].drift)}
+		if result.size() == 3:
+			result[2] = egg
+		else:
+			result.append(egg)
 	return result
 
 func ease_opening(result: Array[Dictionary], elapsed: float) -> void:

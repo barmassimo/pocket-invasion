@@ -15,7 +15,7 @@ func clear() -> void:
 func emit_from(parent: Node3D, target: CourseTarget, aim_x: float) -> void:
 	var count: int = 2 if Art.crew_count(target.size_tier) == 2 else 1
 	# Reserve a complete volley so a double ship never fires a partial pair.
-	if target.kind == 0 or orbs.size() + count > Rules.MAX_ENERGY_ORBS:
+	if not target.can_fire() or orbs.size() + count > Rules.MAX_ENERGY_ORBS:
 		return
 	for index: int in range(count):
 		var offset: float = (index - (count - 1) * 0.5) * Art.PILOT_SPACING
@@ -104,7 +104,7 @@ func fire(parent: Node3D, targets: Array[CourseTarget], aim: Vector3, delta: flo
 		return
 	var rate: float = Rules.alien_fire_rate(maxf(0.0, survival_time - delta * 0.5))
 	for target: CourseTarget in targets:
-		if target.kind == 0 or target.position.z < -22.0 or target.position.z + target.half.y >= aim.z - 2.0:
+		if not target.can_fire() or target.position.z < -22.0 or target.position.z + target.half.y >= aim.z - 2.0:
 			continue
 		# New arrivals keep a short wind-up even at the initial low cadence.
 		# The ramp scales repeat shots without delaying the first attack.

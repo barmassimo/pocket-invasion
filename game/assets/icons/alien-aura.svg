@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Flat LCD energy, intentionally no glow gradients or lighting. -->
+  <g fill="none" stroke="#65734a" stroke-width="5" stroke-linecap="round">
+    <path d="M49 48A110 110 0 0 1 188 38M213 66a110 110 0 0 1 12 106M199 211A110 110 0 0 1 65 219M38 192A110 110 0 0 1 31 76"/>
+    <path d="M67 59A91 91 0 0 1 180 52M199 83a91 91 0 0 1 4 86M177 204a91 91 0 0 1-97-1M53 170a91 91 0 0 1 0-82" stroke-width="3"/>
+  </g>
+  <g fill="#253820">
+    <path d="m189 28-6 20 15-3-10 22 25-30-17 3 7-17zM234 173l-19 3 7 13-22-2 29 15-6-17 17-3zM63 229l7-20-15 3 10-23-25 31 17-3-7 17zM21 78l19-3-7-13 22 2-29-15 6 17-17 3z"/>
+  </g>
+</svg>

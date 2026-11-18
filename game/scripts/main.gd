@@ -10,6 +10,8 @@ const Recapture = preload("res://scripts/recapture_flash.gd")
 const Pickup = preload("res://scripts/rescue_pickup.gd")
 const Scores = preload("res://scripts/high_scores.gd")
 const EnemyFire = preload("res://scripts/alien_fire.gd")
+const Boost = preload("res://scripts/fire_boost.gd")
+var fire_boost: FireBoost = Boost.new()
 var alien_fire: AlienFire = EnemyFire.new()
 const HIGH_SCORE_HOLD_SECONDS: float = 3.0
 var high_scores: LocalHighScores = Scores.new()
@@ -205,6 +207,7 @@ func reset_run(play: bool = true, seed_override: int = -1) -> void:
 	sound.stop_all()
 	recapture.clear()
 	alien_fire.clear()
+	fire_boost.clear()
 	for collection: Array in [squad, targets, bullets, particles, pickups]:
 		for item: Node in collection:
 			item.free()
@@ -354,6 +357,7 @@ func _physics_process(delta: float) -> void:
 					return_to_demo()
 		return
 	elapsed += delta
+	fire_boost.advance(delta)
 	sound.tick(delta)
 	ship_previous.clear()
 	for ship: Node3D in squad:
@@ -370,9 +374,11 @@ func _physics_process(delta: float) -> void:
 	if spawn_clock <= 0.0:
 		spawn_wave()
 		spawn_clock += encounters.next_interval(difficulty)
-	fire_clock = maxf(0.0, fire_clock - delta)
-	if fire_clock <= 0.0:
-		fire_clock = Rules.shot_interval(squad.size())
+	# Keep phase in normal-fire seconds: collection/expiry changes cadence
+	# immediately without discarding the partial interval or fixed-step remainder.
+	fire_clock -= delta * fire_boost.rate_multiplier()
+	if fire_clock <= 0.000001:
+		fire_clock += Rules.shot_interval(squad.size())
 		sound.play_effect("shot")
 		for soldier: Node3D in squad:
 			if bullets.size() < Rules.MAX_BULLETS:
@@ -393,6 +399,8 @@ func _physics_process(delta: float) -> void:
 	resolve_contacts(alien_fire.advance(delta, squad, ship_previous))
 	alien_fire.fire(self, targets, Vector3(player_x, 0, player_z), delta, elapsed)
 	collect_pickups()
+	if fire_boost.collect(squad, ship_previous):
+		sound.play_effect("reinforce")
 	recapture_pickups()
 	for i: int in range(pickups.size() - 1, -1, -1):
 		if pickups[i].position.z > 11.0:
@@ -471,6 +479,9 @@ func destroy_target(target: CourseTarget) -> void:
 		spawn_pickup(target.position, target.reward, target.velocity.x)
 		notice("PILOT FREE / COLLECT", 1.2)
 		score += 25
+	elif target.kind == Rules.BOOST_KIND:
+		sound.play_effect("break")
+		fire_boost.spawn(self, target.position, target.velocity.x)
 	else:
 		sound.play_effect("alien_break")
 		score += target.reward
@@ -542,7 +553,7 @@ func recapture_pickups() -> void:
 		if not pickup.can_be_recaptured():
 			continue
 		for target: CourseTarget in targets:
-			if target.kind == 0:
+			if not target.is_alien():
 				continue
 			var before := pickup.previous_position - Vector3(target.previous_x, 0, target.previous_z)
 			var after := pickup.position - target.position

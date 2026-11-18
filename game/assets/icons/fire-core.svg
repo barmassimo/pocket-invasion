@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Human machined weapon module: squared casing, twin barrels, circuit traces. -->
+  <path d="M43 30V13h14v17h14V13h14v17l12 12v55l-12 15H43L31 97V42z" fill="#253820"/>
+  <path d="M41 46h46v46H41z" fill="#c4cca5"/>
+  <path d="M48 55h32v26H48zM45 98h38v6H45z" fill="#65734a"/>
+  <path d="M52 68h24M64 57v22" stroke="#253820" stroke-width="5"/>
+  <path d="M35 52h8m-8 15h8m-8 15h8m42-30h8m-8 15h8m-8 15h8" stroke="#253820" stroke-width="4"/>
+</svg>

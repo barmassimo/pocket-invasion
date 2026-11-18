@@ -58,7 +58,7 @@ func check_opening_score_targets(game: Node3D) -> void:
 			var plan: Array[Dictionary] = generator.plan(Rules.difficulty_time(survival), wave_index)
 			var aliens: int = 0
 			for item: Dictionary in plan:
-				if item.kind != 0:
+				if item.kind in [1, 2]:
 					aliens += 1
 					valid = valid and item.tier == 0 and item.hp >= 5 and item.hp <= 6 and item.reward >= 40 and item.reward <= 70
 			valid = valid and aliens > 0 and plan.size() <= 3
@@ -113,6 +113,113 @@ func check_health_curves() -> void:
 				gentler = gentler and Rules.target_health(kind, t, 1.0, tier) < roundi(old_hp)
 	check(smooth, "Alien HP starts from 5-6 for small ships at 30 seconds without a health cliff")
 	check(grows and gentler, "Alien HP grows monotonically for ten minutes and stays below the former curve at sampled times and every size")
+
+func check_fire_boost(game: Node3D) -> void:
+	var eggs: int = 0
+	var plans_valid: bool = true
+	var generator := Encounters.new()
+	generator.reset(123)
+	for wave_index: int in range(100):
+		var plan: Array[Dictionary] = generator.plan(Rules.difficulty_time(wave_index * 2.8), wave_index)
+		var supplies: int = 0
+		var aliens: int = 0
+		for item: Dictionary in plan:
+			if item.kind == Rules.BOOST_KIND:
+				eggs += 1
+				plans_valid = plans_valid and item.hp >= 30 and wave_index % 10 == 6
+			if item.kind == 0:
+				supplies += 1
+			if item.kind in [1, 2]:
+				aliens += 1
+		plans_valid = plans_valid and supplies == 1 and plan.size() <= 3 and (wave_index >= 10 or aliens >= 1)
+	check(plans_valid and eggs == 10, "Rare egg ships appear once per ten waves, retain supplies and opening score aliens, and have at least 30 HP")
+	var minimum_valid: bool = true
+	for tier: int in range(5):
+		for time: float in [0.0, 60.0, 600.0]:
+			minimum_valid = minimum_valid and Rules.target_health(Rules.BOOST_KIND, time, 0.1, tier) >= 30
+	check(minimum_valid, "Egg health never falls below 30 even for small tiers and low variation")
+	game.reset_run(true, 123)
+	game.spawn_clock = 999.0
+	var egg: CourseTarget = game.spawn_target(0, -8, Rules.BOOST_KIND, 1, 2, 0)
+	check(egg.hp == 30 and egg.pilots.is_empty() and not egg.is_alien(), "Egg setup enforces 30 HP and uses archived medallion without alien pilots")
+	game.alien_fire.fire(game, game.targets, Vector3(0, 0, 5), 10.0, 10.0)
+	game.spawn_pickup(egg.position + Vector3(1, 0, 1), 1)
+	game.pickups[0].age = Rules.PICKUP_BLINK_SECONDS
+	check(game.alien_fire.orbs.size() == 1 and egg.shots_fired == 1, "Egg carriers fire hostile energy orbs with the existing cadence")
+	check(Main.Motion.seek_pickup(egg, game.pickups, 6.0) == 0.0, "Egg carriers do not seek freed fighters")
+	game.alien_fire.clear()
+	game.pickups[0].position = egg.position
+	game.pickups[0].previous_position = egg.position
+	game.recapture_pickups()
+	check(game.pickups.size() == 1, "Egg carriers cannot recapture vulnerable fighters")
+	check(egg.reward_caption.visible and egg.reward_caption.text == "FIRE x2", "Egg carrier displays FIRE x2 below the hull")
+	game.destroy_target(egg)
+	check(game.fire_boost.pickups.size() == 1 and game.squad.size() == 1 and game.score == 0 and game.fire_boost.remaining == 0.0, "Breaking an egg drops a module without immediately activating fire or granting score/fighters")
+	var pickup: FirePickup = game.fire_boost.pickups[0]
+	check(pickup.caption.text == "POW" and pickup.caption.get_parent() == pickup.visual, "POW belongs to the floating module and follows its blink visibility")
+	pickup.advance(4.999)
+	check(pickup.visual.visible and not pickup.expired(), "Fire module remains visible during the five-second protection interval")
+	pickup.advance(0.182)
+	check(not pickup.visual.visible and not pickup.expired(), "Fire module and POW label blink together after five seconds")
+	var before_age: float = pickup.age
+	var pause_key := InputEventKey.new()
+	pause_key.keycode = KEY_P
+	pause_key.pressed = true
+	game._unhandled_key_input(pause_key)
+	game._physics_process(1.0)
+	check(pickup.age == before_age, "Pause freezes dropped module lifetime")
+	game._unhandled_key_input(pause_key)
+	game.fire_boost.advance(8.001 - pickup.age)
+	check(game.fire_boost.pickups.is_empty(), "Uncollected module disappears after five seconds plus three seconds of blinking")
+	# Sweep the moving fighter completely through a hidden warning-frame module.
+	game.fire_boost.spawn(game, Vector3(0, 0, 0), 0.0)
+	pickup = game.fire_boost.pickups[0]
+	pickup.advance(5.19)
+	pickup.previous_position = pickup.position
+	game.ship_previous[game.squad[0]] = Vector3(-3, 0, pickup.position.z)
+	game.squad[0].position = Vector3(3, 0, pickup.position.z)
+	game.fire_boost.collect(game.squad, game.ship_previous)
+	check(game.fire_boost.pickups.is_empty() and game.fire_boost.remaining == 10.0, "Swept collection works during hidden blink frames and activates ten seconds of rapid fire")
+	game.arrange()
+	game.ship_previous.clear()
+	game._physics_process(1.0 / 60.0)
+	check(int(game.bullets[0].get_meta("damage")) == 1, "Rapid fire keeps normal damage per projectile")
+	var boosted_target: CourseTarget = game.spawn_target(0.05, 3.0, 1, 30, 50, 0)
+	game.advance_bullets(0.10)
+	check(boosted_target.hp == 29, "A rapid-fire projectile removes one actual target HP on swept impact")
+	game.targets.erase(boosted_target)
+	boosted_target.free()
+	var remaining: float = game.fire_boost.remaining
+	var before_clock: float = game.fire_clock
+	game._unhandled_key_input(pause_key)
+	game._physics_process(1.0)
+	check(game.fire_boost.remaining == remaining and game.fire_clock == before_clock, "Pause freezes the active bonus and rapid-fire phase")
+	game._unhandled_key_input(pause_key)
+	game.fire_boost.spawn(game, game.squad[0].position, 0.0)
+	game.fire_boost.collect(game.squad, game.ship_previous)
+	check(game.fire_boost.remaining == 10.0 and game.fire_boost.rate_multiplier() == 2.0, "Another module refreshes ten seconds without stacking firing speed")
+	game.fire_boost.advance(10.0)
+	game.fire_clock = 0.0
+	game._physics_process(1.0 / 60.0)
+	check(game.fire_boost.remaining == 0.0 and game.fire_boost.rate_multiplier() == 1.0 and int(game.bullets.back().get_meta("damage")) == 1, "After ten seconds firing cadence returns to normal")
+	game.fire_boost.spawn(game, Vector3(0, 0, -10), 0.0)
+	game.fire_boost.remaining = 10.0
+	game.reset_run(true, 123)
+	check(game.fire_boost.pickups.is_empty() and game.fire_boost.remaining == 0.0 and game.bullets.is_empty(), "Restart clears modules, rapid-fire bonus and previous shots")
+	# Measure actual launches for an exact multiple of both firing intervals.
+	var volley_counts: Array[int] = []
+	for boosted: bool in [false, true]:
+		game.reset_run(true, 123)
+		game.spawn_clock = 999.0
+		game.fire_clock = Rules.SHOT_INTERVAL
+		game.fire_boost.remaining = 10.0 if boosted else 0.0
+		var seen: Dictionary = {}
+		for step: int in range(108):
+			game._physics_process(1.0 / 60.0)
+			for bullet: MeshInstance3D in game.bullets:
+				seen[bullet.get_instance_id()] = true
+		volley_counts.append(seen.size())
+	check(volley_counts[0] == 4 and volley_counts[1] == 8, "Rapid fire launches exactly twice as many visible volleys over 1.8 seconds")
 
 func check_double_alien_fire(game: Node3D) -> void:
 	game.reset_run(true, 123)
@@ -454,6 +561,8 @@ func run() -> void:
 	root.add_child(game)
 	check(ThemeDB.get_default_theme().default_font == preload("res://assets/fonts/share-tech-mono/ShareTechMono-Regular.ttf"), "Inherited UI text uses the bundled font after startup")
 	check_high_scores(game)
+	check_fire_boost(game)
+	game.reset_run(false)
 	check(game.lcd.volume_slider.get_rect().end.y < 773, "Volume control stays inside the bottom of the LCD panel")
 	check(game.lcd.version_label.position.x == 46 and game.lcd.version_label.get_rect().end.y < 773, "Version label stays inside the lower-left LCD panel")
 	check(game.lcd.intro.visible and not game.lcd.demo.visible and not game.running, "Startup shows the story without running the course or demo")

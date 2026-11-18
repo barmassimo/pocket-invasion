@@ -34,7 +34,7 @@ static func advance(targets: Array[CourseTarget], course_speed: float, delta: fl
 			resolve_wall(target)
 
 static func seek_pickup(target: CourseTarget, pickups: Array[RescuePickup], course_speed: float) -> float:
-	if target.kind == 0:
+	if not target.is_alien():
 		return 0.0
 	var nearest: RescuePickup = null
 	var nearest_distance: float = INF

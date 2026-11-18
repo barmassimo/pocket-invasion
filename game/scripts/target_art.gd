@@ -5,6 +5,8 @@ extends RefCounted
 const HULL: Texture2D = preload("res://assets/enemies/hull.svg")
 const PILOT: Texture2D = preload("res://assets/enemies/pilot.svg")
 const FLEET: Texture2D = preload("res://assets/enemies/fleet.svg")
+const EGG_HULL: Texture2D = preload("res://assets/enemies/egg-hull.svg")
+const EGG_CORE: Texture2D = preload("res://assets/enemies/egg-core.svg")
 const PLANE_HEIGHT: float = 0.35
 const PILOT_SIZE := Vector2(0.76, 0.95)
 const PILOT_SPACING: float = 0.70

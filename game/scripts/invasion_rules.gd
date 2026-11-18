@@ -19,6 +19,14 @@ const PICKUP_SPIN_SPEED: float = 0.55
 const PICKUP_RADIUS: float = 0.32
 const PICKUP_BLINK_SECONDS: float = 5.0
 const PICKUP_BLINK_INTERVAL: float = 0.18
+const BOOST_KIND: int = 3
+const BOOST_WAVE_INTERVAL: int = 10
+const BOOST_FIRST_WAVE: int = 6
+const BOOST_MIN_HEALTH: int = 30
+const BOOST_PICKUP_WARNING: float = 3.0
+const BOOST_DURATION: float = 10.0
+const BOOST_FIRE_RATE: float = 2.0
+const MAX_BOOST_PICKUPS: int = 16
 const RECAPTURE_SEEK_RANGE: float = 1.6
 const RECAPTURE_SEEK_SPEED: float = 0.8
 const RECAPTURE_SEEK_ACCELERATION: float = 2.4
@@ -57,6 +65,8 @@ static func alien_fire_rate(survival_time: float) -> float:
 	return lerpf(ALIEN_INITIAL_FIRE_RATE, 1.0, progress)
 
 static func target_health(kind: int, elapsed: float, variation: float, tier: int = 1) -> int:
+	if kind == BOOST_KIND:
+		return maxi(BOOST_MIN_HEALTH, roundi((40.0 + maxf(0.0, elapsed - START_DIFFICULTY_SECONDS) * 0.08) * variation * SIZE_HEALTH[tier]))
 	if kind != 0:
 		# Alien growth starts after the easy opening, without the difficulty offset.
 		var minutes: float = maxf(0.0, elapsed - START_DIFFICULTY_SECONDS - OPENING_SCORE_SECONDS) / 60.0
@@ -95,6 +105,8 @@ static func encounter_pressure(elapsed: float) -> float:
 	return 1.0 + 0.22 * log(1.0 + maxf(0.0, elapsed) / 45.0) + 0.1 * pow(minutes, 1.3)
 
 static func target_reward(kind: int, tier: int, score_roll: int = 5) -> int:
+	if kind == BOOST_KIND:
+		return 1
 	if kind == 0:
 		return SQUAD_REWARDS[tier]
 	return clampi(score_roll, 4, 7) * 10 * (1 << tier)
