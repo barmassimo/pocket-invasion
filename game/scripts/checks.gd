@@ -184,6 +184,7 @@ func check_fire_boost(game: Node3D) -> void:
 	game.ship_previous.clear()
 	game._physics_process(1.0 / 60.0)
 	check(int(game.bullets[0].get_meta("damage")) == 1, "Rapid fire keeps normal damage per projectile")
+	check(game.bullets[0].mesh == game.pow_bullet_mesh and game.pow_bullet_batch.multimesh.visible_instance_count == 1 and game.bullet_batch.multimesh.visible_instance_count == 0, "POW launches the hollow projectile using its dedicated render batch")
 	var boosted_target: CourseTarget = game.spawn_target(0.05, 3.0, 1, 30, 50, 0)
 	game.advance_bullets(0.10)
 	check(boosted_target.hp == 29, "A rapid-fire projectile removes one actual target HP on swept impact")
@@ -202,10 +203,12 @@ func check_fire_boost(game: Node3D) -> void:
 	game.fire_clock = 0.0
 	game._physics_process(1.0 / 60.0)
 	check(game.fire_boost.remaining == 0.0 and game.fire_boost.rate_multiplier() == 1.0 and int(game.bullets.back().get_meta("damage")) == 1, "After ten seconds firing cadence returns to normal")
+	check(game.bullets.back().mesh == game.bullet_mesh and game.bullet_batch.multimesh.visible_instance_count > 0, "New shots return to the solid narrow mesh after POW expires")
 	game.fire_boost.spawn(game, Vector3(0, 0, -10), 0.0)
 	game.fire_boost.remaining = 10.0
 	game.reset_run(true, 123)
 	check(game.fire_boost.pickups.is_empty() and game.fire_boost.remaining == 0.0 and game.bullets.is_empty(), "Restart clears modules, rapid-fire bonus and previous shots")
+	check(game.bullet_batch.multimesh.visible_instance_count == 0 and game.pow_bullet_batch.multimesh.visible_instance_count == 0, "Restart clears both normal and POW projectile render batches")
 	# Measure actual launches for an exact multiple of both firing intervals.
 	var volley_counts: Array[int] = []
 	for boosted: bool in [false, true]:

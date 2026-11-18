@@ -51,9 +51,11 @@ var debug_seed: int = -1
 var lcd: LcdDisplay
 var recapture: RecaptureFlash
 var bullet_batch: MultiMeshInstance3D
+var pow_bullet_batch: MultiMeshInstance3D
 var soldier_batches: Array[MultiMeshInstance3D] = []
 var exhaust_batch: MultiMeshInstance3D
 var bullet_mesh: BoxMesh
+var pow_bullet_mesh: ArrayMesh
 var toast_icon: TextureRect
 
 func _ready() -> void:
@@ -115,6 +117,9 @@ func build_world() -> void:
 	box(Vector3(11, 0.3, 40), Vector3(0, -0.3, -8), mat(Color("c4cca5")))
 	bullet_batch = create_batch(Vector3(0.09, 0.09, 0.45), yellow, Rules.MAX_BULLETS)
 	bullet_mesh = bullet_batch.multimesh.mesh as BoxMesh
+	pow_bullet_batch = create_batch(Vector3.ONE, yellow, Rules.MAX_BULLETS)
+	pow_bullet_mesh = make_pow_bullet_mesh()
+	pow_bullet_batch.multimesh.mesh = pow_bullet_mesh
 	var ships: MultiMeshInstance3D = create_batch(Vector3.ONE, blue, Rules.START_SOLDIERS)
 	var hull := PlaneMesh.new()
 	hull.size = PLAYER_FIGHTER_SIZE
@@ -148,11 +153,36 @@ func create_batch(size: Vector3, material: StandardMaterial3D, capacity: int) ->
 	add_child(batch)
 	return batch
 
+func make_pow_bullet_mesh() -> ArrayMesh:
+	# Four solid rails leave a real opening: the course shows through the center.
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var width: float = 0.14
+	var length: float = 0.45
+	var rim: float = 0.025
+	for side: float in [-1.0, 1.0]:
+		var rail := BoxMesh.new()
+		rail.size = Vector3(rim, 0.09, length)
+		surface.append_from(rail, 0, Transform3D(Basis.IDENTITY, Vector3(side * (width - rim) * 0.5, 0, 0)))
+		var end := BoxMesh.new()
+		end.size = Vector3(width - rim * 2.0, 0.09, rim)
+		surface.append_from(end, 0, Transform3D(Basis.IDENTITY, Vector3(0, 0, side * (length - rim) * 0.5)))
+	return surface.commit()
+
 func sync_bullets() -> void:
-	bullet_batch.multimesh.visible_instance_count = bullets.size()
-	for i: int in range(bullets.size()):
-		bullets[i].visible = false
-		bullet_batch.multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY, bullets[i].position))
+	var normal_count: int = 0
+	var pow_count: int = 0
+	for bullet: MeshInstance3D in bullets:
+		bullet.visible = false
+		var transform := Transform3D(Basis.IDENTITY, bullet.position)
+		if bullet.mesh == pow_bullet_mesh:
+			pow_bullet_batch.multimesh.set_instance_transform(pow_count, transform)
+			pow_count += 1
+		else:
+			bullet_batch.multimesh.set_instance_transform(normal_count, transform)
+			normal_count += 1
+	bullet_batch.multimesh.visible_instance_count = normal_count
+	pow_bullet_batch.multimesh.visible_instance_count = pow_count
 
 func label_at(at: Vector2, size: int, color: Color) -> Label:
 	var l := Label.new()
@@ -383,7 +413,7 @@ func _physics_process(delta: float) -> void:
 		for soldier: Node3D in squad:
 			if bullets.size() < Rules.MAX_BULLETS:
 				var bullet := MeshInstance3D.new()
-				bullet.mesh = bullet_mesh
+				bullet.mesh = pow_bullet_mesh if fire_boost.remaining > 0.0 else bullet_mesh
 				bullet.visible = false
 				bullet.position = soldier.position + Vector3(0.05, Target.Art.PLANE_HEIGHT, -0.4)
 				add_child(bullet)
