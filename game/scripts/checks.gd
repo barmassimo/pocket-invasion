@@ -157,6 +157,25 @@ func check_fire_boost(game: Node3D) -> void:
 	check(game.fire_boost.pickups.size() == 1 and game.squad.size() == 1 and game.score == 0 and game.fire_boost.remaining == 0.0, "Breaking an egg drops a module without immediately activating fire or granting score/fighters")
 	var pickup: FirePickup = game.fire_boost.pickups[0]
 	check(pickup.caption.text == "POW" and pickup.caption.get_parent() == pickup.visual, "POW belongs to the floating module and follows its blink visibility")
+	var preview := FirePickup.new()
+	game.add_child(preview)
+	preview.setup(0.0)
+	var rigid_layers: bool = true
+	for layer: MeshInstance3D in [preview.core, preview.aura]:
+		var half: Vector2 = (layer.mesh as PlaneMesh).size * 0.5
+		var initial_edges := Vector2.ZERO
+		# Cover more than one complete aura revolution at its normal animation speed.
+		for frame: int in range(64):
+			preview.advance(0.2)
+			var a: Vector2 = game.camera.unproject_position(layer.to_global(Vector3(-half.x, 0, -half.y)))
+			var b: Vector2 = game.camera.unproject_position(layer.to_global(Vector3(half.x, 0, -half.y)))
+			var c: Vector2 = game.camera.unproject_position(layer.to_global(Vector3(-half.x, 0, half.y)))
+			var edges := Vector2(a.distance_to(b), a.distance_to(c))
+			if frame == 0:
+				initial_edges = edges
+			rigid_layers = rigid_layers and edges.distance_to(initial_edges) < 0.001 and absf((b - a).normalized().dot((c - a).normalized())) < 0.001
+	check(rigid_layers, "POW core and aura keep constant projected dimensions and right angles throughout animation")
+	preview.free()
 	pickup.advance(4.999)
 	check(pickup.visual.visible and not pickup.expired(), "Fire module remains visible during the five-second protection interval")
 	pickup.advance(0.182)

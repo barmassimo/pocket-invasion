@@ -18,8 +18,13 @@ func setup(drift: float) -> void:
 	velocity = Vector2(clampf(drift * 0.2, -0.20, 0.20), Rules.PICKUP_DRIFT_SPEED)
 	visual = Node3D.new()
 	add_child(visual)
-	aura = Art.layer(AURA, Vector2.ONE * 1.12, Vector3(0, Art.PLANE_HEIGHT, 0))
-	visual.add_child(aura)
+	# Apply projection compensation outside the rotation, preserving a screen circle.
+	var aura_plane := Node3D.new()
+	aura_plane.position.y = Art.PLANE_HEIGHT
+	aura_plane.scale.z = 1.0 / Art.projection_scale()
+	visual.add_child(aura_plane)
+	aura = Art.layer(AURA, Vector2(1.12, 1.12 * Art.projection_scale()), Vector3.ZERO)
+	aura_plane.add_child(aura)
 	core = Art.layer(CORE, Vector2.ONE * 0.64, Vector3(0, Art.PLANE_HEIGHT + 0.01, 0))
 	(core.material_override as StandardMaterial3D).render_priority = 1
 	visual.add_child(core)
@@ -45,9 +50,11 @@ func advance(delta: float) -> void:
 	if absf(position.x) > limit:
 		position.x = clampf(position.x, -limit, limit)
 		velocity.x = -velocity.x
-	# Rock and float without hiding the recognizable human module's face.
+	# Translate only: rotating compensated ground planes shears their screen shape.
 	visual.position.z = sin(age * 2.5) * 0.06
-	visual.rotation.y = sin(age * 1.7) * 0.08
+	# Rotate only the energy inside its compensated plane; the core stays rigid.
+	aura.rotation.y = age * 0.6
+	(aura.material_override as StandardMaterial3D).albedo_color.a = 0.82 + sin(age * 3.0) * 0.18
 	visual.visible = age < Rules.PICKUP_BLINK_SECONDS or fmod(age - Rules.PICKUP_BLINK_SECONDS, Rules.PICKUP_BLINK_INTERVAL * 2.0) < Rules.PICKUP_BLINK_INTERVAL
 
 func expired() -> bool:

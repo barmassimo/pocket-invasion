@@ -8,6 +8,8 @@
 
 ### Changed
 
+- Keep waiting POW modules rigid with a gentle bob; slowly rotate the surrounding
+  energy in screen space and pulse its opacity without deforming either layer.
 - Recaptured fighters return as 5-HP containment ships beside their captor,
   keeping their fighter reward and the tractor-beam animation. The new hull
   grows against the captor's side and detaches into independent movement in

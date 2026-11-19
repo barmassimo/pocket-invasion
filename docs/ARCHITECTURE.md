@@ -80,7 +80,11 @@ at least 30; the current small tier uses
 
 Destroying a carrier only drops a module; it grants no points or fighters.
 `fire_pickup.gd` owns the drifting human module, its alien-energy artwork and
-the `POW` label. They share a visual parent so all blink together after
+the `POW` label. The visual parent gently bobs without rotating or scaling;
+only the energy layer rotates and pulses in opacity. Its square mesh rotates
+inside a parent with camera-projection compensation, preserving its circular
+screen contour through the full turn. This keeps the projected silhouettes rigid
+and the collection footprint unchanged. They all blink together after
 `PICKUP_BLINK_SECONDS` (five seconds), then expire three seconds later.
 `fire_boost.gd` owns these modules, swept collection by surviving formation
 members and the ten-second bonus timer. Modules are separate from rescue

@@ -30,7 +30,10 @@ removes touched fighters just like other intact targets. They do not recapture
 freed fighters.
 
 Destroying an egg ship releases a floating human weapon module surrounded by
-alien energy and labeled `POW`. Destroying the carrier grants neither points
+gently pulsing alien energy and labeled `POW`. The module gently bobs without
+turning or changing shape; the surrounding energy slowly rotates without
+distortion and varies in intensity
+while waiting for collection. Destroying the carrier grants neither points
 nor fighters and does not activate the bonus: touch the module with a surviving
 formation member to collect it. Shots pass through modules, and enemies cannot
 recapture them. An uncollected module drifts down the course; after five seconds
