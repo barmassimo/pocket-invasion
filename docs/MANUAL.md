@@ -15,16 +15,17 @@ an intact enemy removes only fighters actually touched. The run ends at zero shi
 The first three containment ships in each run have 5 HP, regardless of size,
 and keep their normal fighter rewards. Restart restores this easier opening.
 Small containment ships grant +1 fighter. The first wave always includes one.
-After the first three containment ships, small ones have 5 or 10 HP, each equally
-likely regardless of difficulty or fleet size; larger ones use normal tier HP.
-After the first wave, each wave has about a 45.7%
-chance of including one, with a guaranteed appearance after
-two consecutive waves without one. This gives about 54.4% of waves a small
-containment ship on average. You must still free and collect the fighter.
+After the first three containment ships, small ones have 5 or 10 HP, each
+equally likely at any difficulty. While the fleet has fewer than 30 fighters,
+each wave after the first has about a 45.7% chance of including one, with a
+guaranteed appearance after two consecutive waves without one. At 30 fighters
+or more, new waves use tougher containment ships with normal tier HP. Once
+recovery ships have been suspended, they return in the first wave below 30.
+The threshold applies to new waves. You must still free and collect the fighter.
 
 Rare egg/medallion ships show HP above the hull and `FIRE x2` below it. They
 appear first in the seventh wave, then once every ten waves, without replacing
-the guaranteed reinforcement opportunity. They have at least 30 HP, increasing
+the wave's containment ship. They have at least 30 HP, increasing
 with mission time, and fire hostile energy globes. Contact with their hulls
 removes touched fighters just like other intact targets. They do not recapture
 freed fighters.

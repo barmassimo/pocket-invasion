@@ -466,7 +466,7 @@ func spawn_target(x: float, z: float, kind: int, hp: int, reward: int, tier: int
 	return target
 
 func spawn_wave() -> void:
-	for encounter: Dictionary in encounters.plan(Rules.difficulty_time(elapsed), wave):
+	for encounter: Dictionary in encounters.plan(Rules.difficulty_time(elapsed), wave, squad.size()):
 		var target: CourseTarget = spawn_target(encounter.x, encounter.z, encounter.kind, encounter.hp, encounter.reward, encounter.tier)
 		if target != null:
 			target.velocity.x = encounter.drift

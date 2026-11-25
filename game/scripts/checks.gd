@@ -34,6 +34,25 @@ func course_plan(seed_value: int) -> Array:
 		result.append(generator.next_interval(difficulty))
 	return result
 
+func check_recovery_fleet_threshold(game: Node3D) -> void:
+	game.reset_run(true, 123)
+	for fleet_size: int in [29, 30, 31, 29]:
+		while game.squad.size() < fleet_size:
+			game.add_soldier()
+		while game.squad.size() > fleet_size:
+			var removed: Node3D = game.squad.pop_back()
+			removed.free()
+		game.arrange()
+		var previous_targets: int = game.targets.size()
+		game.spawn_wave()
+		var containment_hp: Array[int] = []
+		for target: CourseTarget in game.targets.slice(previous_targets):
+			if target.kind == 0:
+				containment_hp.append(target.hp)
+		var expected_easy: bool = fleet_size < 30
+		check(containment_hp.size() == 1 and (containment_hp[0] <= 15) == expected_easy,
+			"Wave %d at %d fighters spawns the expected containment health tier" % [game.wave, fleet_size])
+
 func parallel_damage(game: Node3D, count: int) -> int:
 	game.reset_run(true, 123)
 	game.spawn_clock = 999.0
@@ -758,6 +777,7 @@ func run() -> void:
 					reward_count += 1
 			generation_valid = generation_valid and reward_count >= 1 and plan.size() <= 3
 	check(generation_valid, "Random encounters stay inside road and preserve reinforcement opportunities")
+	check_recovery_fleet_threshold(game)
 	game.reset_run(true, 123)
 	game.spawn_wave()
 	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and game.targets.size() >= 2, "Run starts at internal level two with a fresh survival timer and immediate threats")

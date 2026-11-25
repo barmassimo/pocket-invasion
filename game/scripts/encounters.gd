@@ -20,7 +20,7 @@ func reset(seed_override: int = -1) -> void:
 func next_interval(elapsed: float = 0.0) -> float:
 	return maxf(0.65, rng.randf_range(2.3, 3.3) / Rules.encounter_pressure(elapsed))
 
-func plan(elapsed: float, wave: int) -> Array[Dictionary]:
+func plan(elapsed: float, wave: int, fleet_size: int = Rules.START_SOLDIERS) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var lanes: Array[float] = [-3.4, 0.0, 3.4]
 	for i: int in range(lanes.size() - 1, 0, -1):
@@ -28,8 +28,13 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 		var temporary: float = lanes[i]
 		lanes[i] = lanes[pick]
 		lanes[pick] = temporary
-	var recovery: bool = waves_since_recovery >= Rules.RECOVERY_MAX_SKIPPED_WAVES or rng.randf() < Rules.RECOVERY_CHANCE
-	waves_since_recovery = 0 if recovery else waves_since_recovery + 1
+	var recovery_allowed: bool = fleet_size < Rules.RECOVERY_FLEET_THRESHOLD
+	var recovery: bool = false
+	if recovery_allowed:
+		recovery = waves_since_recovery >= Rules.RECOVERY_MAX_SKIPPED_WAVES or rng.randf() < Rules.RECOVERY_CHANCE
+		waves_since_recovery = 0 if recovery else waves_since_recovery + 1
+	else:
+		waves_since_recovery = Rules.RECOVERY_MAX_SKIPPED_WAVES
 	var count: int = rng.randi_range(1, 2)
 	if wave == 0:
 		count = 2
@@ -50,7 +55,7 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 		if kind == 0 and tier == 0:
 			hp = Rules.RECOVERY_HEALTH_OPTIONS[rng.randi_range(0, Rules.RECOVERY_HEALTH_OPTIONS.size() - 1)]
 		if kind == 0:
-			if captive_ships_planned < Rules.OPENING_CAPTIVE_SHIPS:
+			if recovery_allowed and captive_ships_planned < Rules.OPENING_CAPTIVE_SHIPS:
 				hp = Rules.RECOVERY_HEALTH
 			captive_ships_planned += 1
 		result.append({"x": x, "z": -24.0 - float(i) * rng.randf_range(2.0, 3.5), "kind": kind, "tier": tier, "hp": hp, "reward": Rules.target_reward(kind, tier, rng.randi_range(4, 7))})
@@ -58,7 +63,7 @@ func plan(elapsed: float, wave: int) -> Array[Dictionary]:
 		item["drift"] = rng.randf_range(TargetMotion.DRIFT_MIN, TargetMotion.DRIFT_MAX) * (-1.0 if rng.randf() < 0.5 else 1.0)
 	ease_opening(result, elapsed)
 	# A regular extra reward replaces a score slot only when the wave is full.
-	# Keep the guaranteed recovery ship and at least one score alien.
+	# Keep the containment ship and at least one score alien.
 	if wave % Rules.BOOST_WAVE_INTERVAL == Rules.BOOST_FIRST_WAVE:
 		var egg: Dictionary = {"x": lanes[2], "z": -31.0, "kind": Rules.BOOST_KIND,
 			"tier": 0, "hp": Rules.target_health(Rules.BOOST_KIND, elapsed, 1.0, 0),
