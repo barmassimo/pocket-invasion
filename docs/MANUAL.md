@@ -18,10 +18,13 @@ Small containment ships grant +1 fighter. The first wave always includes one.
 After the first three containment ships, small ones have 5 or 10 HP, each
 equally likely at any difficulty. While the fleet has fewer than 30 fighters,
 each wave after the first has about a 45.7% chance of including one, with a
-guaranteed appearance after two consecutive waves without one. At 30 fighters
-or more, new waves use tougher containment ships with normal tier HP. Once
+guaranteed appearance after two consecutive waves without one. From 30 to 44
+fighters, new waves use tougher containment ships with normal tier HP. Once
 recovery ships have been suspended, they return in the first wave below 30.
-The threshold applies to new waves. You must still free and collect the fighter.
+At 45 fighters or more, new waves bring no containment ships, and the `SHIPS`
+label blinks while the number stays visible. You can exceed 45 by freeing
+and collecting fighters already on the field. Below 45, containment ships
+return with the next wave and the label stays visible.
 
 Rare egg/medallion ships show HP above the hull and `FIRE x2` below it. They
 appear first in the seventh wave, then once every ten waves, without replacing
@@ -71,8 +74,6 @@ fighters add rows behind the front row; incomplete rows stay centered.
 Rocket exhaust animates on fighters with no fighter directly behind them,
 including exposed fighters ahead of a shorter last row. Pause freezes the flame.
 Larger formations occupy more space and leave less room to move.
-There is no fixed fighter-count cap: the growing footprint and exposure to
-enemy contact are the intended natural constraint on fleet size.
 
 Freed fighters are protected from recapture for five seconds. As soon as they
 show the blinking HELP! sign, alien-piloted ships can recapture them on

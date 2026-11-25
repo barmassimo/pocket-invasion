@@ -8,7 +8,9 @@
 
 ### Changed
 
-- At 30 fighters or more, spawn tougher containment ships in new waves.
+- Suspend new containment arrivals at 45 fighters and blink the `SHIPS` label.
+  Collection can still take the fleet above 45, and arrivals resume below 45.
+- From 30 to 44 fighters, spawn tougher containment ships in new waves.
   The first wave after dropping below 30 includes a small recovery ship.
 - Keep waiting POW modules rigid with a gentle bob; slowly rotate the surrounding
   energy in screen space and pulse its opacity without deforming either layer.

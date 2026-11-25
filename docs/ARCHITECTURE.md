@@ -10,10 +10,13 @@ with a 45.7276% per-wave chance or forcibly after two skipped waves (54.43% of
 waves on average). Their +1 reward stays fixed. The first three planned
 containment ships have 5 HP when the fleet is below the threshold, with their
 normal tier rewards. After these three ships, small recovery HP is sampled
-uniformly from 5 and 10, independent of difficulty. At 30 fighters or more, the
-wave planner uses normal containment tiers and health, and primes the recovery
+uniformly from 5 and 10, independent of difficulty. Starting at 30 fighters, the
+wave planner uses normal containment tiers and health and primes the recovery
 counter so the first wave after dropping below 30 includes a recovery ship.
-Restart resets the encounter counters.
+Starting at 45, the planner drops the containment slot after rolling the wave,
+preserving score and POW encounters and existing rescue chains. The HUD uses
+the same threshold to blink only the `SHIPS` caption on the mission clock.
+Restart resets the encounter counters and the caption.
 Targets, target motion and rescue pickups have focused scripts. MultiMesh batches
 render fighters and bullets while simulation positions remain separate.
 Normal bullets and hollow POW bullets use separate MultiMesh batches under one

@@ -14,6 +14,7 @@ const PLAYFIELD_CENTER_X: float = 528.0
 const PLAYFIELD_RECT := Rect2(359, 27, 338, 746)
 const PAGE_COUNT: int = 3
 const NAME_ERROR_FLASH_SECONDS: float = 0.22
+const SHIPS_BLINK_INTERVAL: float = 0.5
 const INK := Color("253820")
 const GHOST := Color(0.16, 0.22, 0.12, 0.09)
 const DIGITS: Array[int] = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
@@ -22,6 +23,7 @@ var intro: StoryIntro
 var attract_clock: float = 0.0
 var attract_active: bool = false
 var soldiers: int = 4
+var ships_caption_visible: bool = true
 var score: int = 0
 var seconds: int = 0
 var muted: bool = false
@@ -265,6 +267,7 @@ func _process(delta: float) -> void:
 
 func update_status(count: int, points: int, time: float) -> void:
 	soldiers = count
+	ships_caption_visible = count < Rules.CONTAINMENT_FLEET_THRESHOLD or fposmod(time, SHIPS_BLINK_INTERVAL * 2.0) < SHIPS_BLINK_INTERVAL
 	score = points
 	seconds = floori(time)
 	queue_redraw()
@@ -307,7 +310,8 @@ func _draw() -> void:
 		draw_set_transform(Vector2.ZERO)
 
 func draw_game_status() -> void:
-	caption(Vector2(46, 98), "SHIPS")
+	if ships_caption_visible:
+		caption(Vector2(46, 98), "SHIPS")
 	segment_text("%02d" % soldiers, Vector2(47, 109), 34)
 	caption(Vector2(46, 171), "SCORE")
 	segment_text("%07d" % score, Vector2(47, 181), 34)

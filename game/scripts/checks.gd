@@ -53,6 +53,52 @@ func check_recovery_fleet_threshold(game: Node3D) -> void:
 		check(containment_hp.size() == 1 and (containment_hp[0] <= 15) == expected_easy,
 			"Wave %d at %d fighters spawns the expected containment health tier" % [game.wave, fleet_size])
 
+func check_containment_fleet_threshold(game: Node3D) -> void:
+	var below := Encounters.new()
+	var at_limit := Encounters.new()
+	below.reset(123)
+	at_limit.reset(123)
+	var waves_match: bool = true
+	for wave_index: int in range(20):
+		var difficulty: float = Rules.difficulty_time(float(wave_index) * 12.0)
+		var regular_wave: Array[Dictionary] = below.plan(difficulty, wave_index, 44)
+		var limited_wave: Array[Dictionary] = at_limit.plan(difficulty, wave_index, 45)
+		waves_match = waves_match and regular_wave[0].kind == 0 and limited_wave == regular_wave.slice(1)
+	check(waves_match, "At 45 fighters only the incoming containment slot is removed, including on POW waves")
+
+	game.reset_run(true, 123)
+	for i: int in range(44 - Rules.START_SOLDIERS):
+		game.add_soldier()
+	game.arrange()
+	game.spawn_wave()
+	var captive: CourseTarget = game.targets[0]
+	game.spawn_pickup(game.squad[0].position, 1)
+	game.collect_pickups()
+	game.spawn_wave()
+	check(game.squad.size() == 45 and captive in game.targets, "Reaching 45 keeps containment ships already on the field")
+	game.elapsed = 0.25
+	game.update_hud()
+	check(game.lcd.ships_caption_visible, "SHIPS caption is visible in the first blink phase at 45 fighters")
+	game.elapsed = 0.75
+	game.update_hud()
+	check(not game.lcd.ships_caption_visible and game.lcd.soldiers == 45, "SHIPS caption blinks off while the count stays at 45")
+	captive.position = game.squad[0].position
+	game.destroy_target(captive)
+	game.collect_pickups()
+	var previous_targets: int = game.targets.size()
+	game.spawn_wave()
+	var has_new_captive: bool = false
+	for target: CourseTarget in game.targets.slice(previous_targets):
+		has_new_captive = has_new_captive or target.kind == 0
+	check(game.squad.size() > 45 and not has_new_captive, "Existing reinforcements can take the fleet above 45 without restarting containment arrivals")
+	game.resolve_contacts(game.squad.slice(44))
+	game.update_hud()
+	previous_targets = game.targets.size()
+	game.spawn_wave()
+	check(game.squad.size() == 44 and game.lcd.ships_caption_visible and game.targets.size() > previous_targets
+		and game.targets[previous_targets].kind == 0 and game.targets[previous_targets].hp > 15,
+		"At 44 fighters the caption stays visible and tough containment ships return on the next wave")
+
 func parallel_damage(game: Node3D, count: int) -> int:
 	game.reset_run(true, 123)
 	game.spawn_clock = 999.0
@@ -778,6 +824,7 @@ func run() -> void:
 			generation_valid = generation_valid and reward_count >= 1 and plan.size() <= 3
 	check(generation_valid, "Random encounters stay inside road and preserve reinforcement opportunities")
 	check_recovery_fleet_threshold(game)
+	check_containment_fleet_threshold(game)
 	game.reset_run(true, 123)
 	game.spawn_wave()
 	check(game.elapsed == 0.0 and Rules.difficulty_time(game.elapsed) == 60.0 and game.targets.size() >= 2, "Run starts at internal level two with a fresh survival timer and immediate threats")

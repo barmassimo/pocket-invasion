@@ -63,7 +63,6 @@ func plan(elapsed: float, wave: int, fleet_size: int = Rules.START_SOLDIERS) -> 
 		item["drift"] = rng.randf_range(TargetMotion.DRIFT_MIN, TargetMotion.DRIFT_MAX) * (-1.0 if rng.randf() < 0.5 else 1.0)
 	ease_opening(result, elapsed)
 	# A regular extra reward replaces a score slot only when the wave is full.
-	# Keep the containment ship and at least one score alien.
 	if wave % Rules.BOOST_WAVE_INTERVAL == Rules.BOOST_FIRST_WAVE:
 		var egg: Dictionary = {"x": lanes[2], "z": -31.0, "kind": Rules.BOOST_KIND,
 			"tier": 0, "hp": Rules.target_health(Rules.BOOST_KIND, elapsed, 1.0, 0),
@@ -72,6 +71,9 @@ func plan(elapsed: float, wave: int, fleet_size: int = Rules.START_SOLDIERS) -> 
 			result[2] = egg
 		else:
 			result.append(egg)
+	if fleet_size >= Rules.CONTAINMENT_FLEET_THRESHOLD:
+		# The first slot is the containment ship. Keep the other encounter rolls.
+		result.remove_at(0)
 	return result
 
 func ease_opening(result: Array[Dictionary], elapsed: float) -> void:
